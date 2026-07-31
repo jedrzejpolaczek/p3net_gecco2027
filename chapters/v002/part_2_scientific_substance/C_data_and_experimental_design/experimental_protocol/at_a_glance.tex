@@ -1,0 +1,31 @@
+% =========================
+% Protocol at a glance
+% =========================
+\subsection*{Protocol at a glance}
+\begin{itemize}
+    \item \textbf{Study type:} Quantitative benchmarking of stochastic HPO/NAS under identical search spaces, budgets, and evaluation pipelines.
+
+    \item \textbf{Core question:} Does \ProposedMethodName{} reach better objective values / Pareto fronts faster (in number of evaluations)
+    than strong baselines?
+
+    \item \textbf{Fairness controls:} Identical encoding, training recipe, budgets, seed policy, stopping rules, and parallelism policy.
+
+    \item \textbf{Budgets:} At least three tiers (default \BudgetTiersText{} evaluations), plus optional \(\BmaxSymbol\) for oracle construction.
+
+    \item \textbf{Metrics:} Fixed-budget regret and fixed-target time-to-threshold; for multiobjective settings, hypervolume and
+    \(\epsilon\)-indicator plus Pareto recovery time. Runtime is measured as \#evaluations (\#trained models).
+
+    \item \textbf{Baselines:} Random Search; Bayesian Optimization (BO) variants including TPE (Tree-structured Parzen Estimator)
+    and SMAC (Sequential Model-based Algorithm Configuration); CMA-ES (Covariance Matrix Adaptation Evolution Strategy);
+    Hyperband/ASHA (Asynchronous Successive Halving Algorithm; when multi-fidelity is allowed); NSGA-Net (evolutionary Pareto baseline when applicable);
+    vanilla \BackboneName{}; and domain-specific state-of-the-art methods where feasible.
+
+    \item \textbf{Statistics:} Pre-registered nonparametric tests with multiple-comparisons control and effect sizes; robustness reported via
+    median/IQR and ECDFs (performance profiles).
+
+    \item \textbf{Diagnostics:} Convergence curves vs.\ evaluations, Pareto-front progression, stability across seeds, compute--performance trade-offs,
+    and failure mode analysis.
+
+    \item \textbf{Reproducibility:} Exact reproducibility for deterministic/tabular benchmarks; ``broad'' reproducibility for GPU training
+    (documented nondeterminism), with full artifacts released.
+\end{itemize}

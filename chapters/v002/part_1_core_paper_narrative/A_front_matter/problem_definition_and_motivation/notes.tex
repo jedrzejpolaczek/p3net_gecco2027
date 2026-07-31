@@ -1,0 +1,39 @@
+\subsection*{Notes for II. PROBLEM DEFINITION}
+\paragraph{Objective}
+Define the problem setting at a high level: what is being optimized, under which constraints, and what counts as budget/cost.
+
+\paragraph{Keep}
+\begin{itemize}
+  \item The focus on evaluation cost and realistic constraints.
+\end{itemize}
+
+\textbf{TODO}:
+\begin{itemize}
+    \item \paragraph{Rewrite / move}
+\end{itemize}
+\begin{itemize}
+  \item \begin{itemize}
+      \item Centralize the definitions that currently appear later in your protocol: define the evaluation unit, budgets, and objective measurement rules here (with full math in the formulation section).
+  \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+    \item \paragraph{Add first}
+\end{itemize}
+\begin{itemize}
+      \begin{itemize}
+          \item Define what an “evaluation” is (architecture instantiation + training recipe + returned metrics).
+          \end{itemize}
+          \begin{itemize}
+          \item Define budget accounting: whether $B$ counts (i) complete evaluations, (ii) total epochs across ASHA rungs, or (iii) another compute-normalized unit (be explicit).
+          \item Define multi-fidelity setting at a conceptual level (ASHA/Hyperband-style partial training).
+          \item Define the goal: maximize performance under budget, optionally with multiobjective trade-off.
+      \end{itemize}
+  \end{itemize}
+
+
+\paragraph{Peer-review must-haves}
+\begin{itemize}
+  \item A definition that makes baseline comparisons fair and auditable.
+  \item A clear statement of what is held constant across methods (evaluator, search space, constraints).
+\end{itemize}

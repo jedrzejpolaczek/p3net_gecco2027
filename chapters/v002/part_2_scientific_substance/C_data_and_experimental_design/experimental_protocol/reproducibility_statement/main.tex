@@ -1,0 +1,39 @@
+% =========================
+% H) Reproducibility Statement (Exact vs Broad) + Artifact Plan
+% =========================
+\subsection{Reproducibility Statement (Exact vs Broad) + Artifact Plan}
+\label{subsec:repro}
+
+\paragraph{Exact reproducibility.}
+We label experiments as \emph{exactly reproducible} when objective evaluations are deterministic:
+either (i) the benchmark is tabular/deterministic, or (ii) the full training/evaluation pipeline can be made deterministic under our stack
+by enforcing the determinism controls in \DeterminismConstraints{} (including fixed Python/NumPy/framework RNG seeds, fixed dataloader order,
+and deterministic algorithm settings where supported).
+In this regime, rerunning the same container with the same configurations and seed lists should reproduce results bitwise
+(or as close to bitwise as the deterministic stack permits).
+We therefore release the complete configurations, seed lists, and raw per-evaluation logs required to rerun these experiments exactly.
+
+\paragraph{Broad reproducibility.}
+For GPU-based training where nondeterminism may remain (e.g., non-deterministic kernels), experiments are \emph{broadly reproducible}:
+reruns with the same container and seeds may yield small numeric differences, but results should match within statistical uncertainty
+and preserve the reported conclusions (rankings, effect sizes, and confidence intervals).
+
+\paragraph{Artifacts to release.}
+We will release the following artifacts to support reproduction of all reported tables, figures, and statistical tests:
+\begin{itemize}
+    \item Source code for \ProposedMethodName{} and all runnable baselines (or pinned commits and wrappers for upstream implementations).
+    \item A unified experiment harness and evaluator shared across methods (enforcing budgets, stopping, failure handling, and seeding).
+    \item Machine-readable config files specifying benchmarks, methods, budgets, and seed lists.
+    \item Environment specifications (Docker image / digest and/or Conda lockfile), plus \SoftwareVersions{}.
+    \item Dataset version identifiers and preprocessing scripts, or immutable benchmark references where applicable.
+    \item Raw per-evaluation logs (configurations, objective values, seeds, and failure codes) and aggregated results tables.
+    \item Scripts to regenerate all figures and tables and to rerun the full statistical analysis pipeline.
+    \item A run manifest recording benchmark id, method, budget, seed, worker count, git hash, and container hash.
+    \item Artifact scope notes: \ArtifactReleaseScope{}.
+\end{itemize}
+
+\paragraph{Comparability and limitations.}
+We explicitly delineate:
+(i) which baselines are directly comparable under the same evaluation model,
+(ii) which are not and why (see \BaselinesNotRunWhy{}),
+and (iii) how this bounds claims (e.g., no claims about methods requiring different fidelities, priors, or search spaces).

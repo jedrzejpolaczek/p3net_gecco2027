@@ -1,0 +1,8 @@
+\section{Conclusions}
+
+\begin{itemize}
+    \item P3Net combines two complementary ideas: P3 builds a model of structural dependencies in the genotype, the surrogate eliminates costly evaluations of unpromising candidates.
+    \item Answer to the research question: whether P3's dependency modelling translates into better surrogate loop efficiency compared to NSGANetV2.
+    \item Limitations: surrogate quality depends on genotype encoding quality; the MST assumes pairwise dependencies, which may be too coarse for deeply structured spaces.
+    \item Future directions: stronger surrogate model (GNN over the cell graph), active learning to decide which candidates to evaluate fully, extension to architecture spaces with variable depth; training the surrogate on lower-fidelity observations $f_1^{(k)}$, $k<K$, rather than exclusively on full evaluations at $r_K$ as in the present work, using the fidelity ladder already introduced in Problem Formulation -- left out here to keep the search loop's cost reduction cleanly attributable to the relative surrogate alone, but a natural next lever once that attribution is established.
+\end{itemize}

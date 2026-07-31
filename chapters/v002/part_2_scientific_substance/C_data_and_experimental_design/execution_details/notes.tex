@@ -1,0 +1,16 @@
+\subsection*{Notes for XI. EXECUTION DETAILS}
+\paragraph{Objective}
+Report operational facts: hardware/software, compute accounting, determinism controls, and any deviations.
+
+\paragraph{TODO (Write next):}
+\begin{itemize}
+  \item Hardware: GPU model/count, CPU, RAM; cluster policy, if applicable.
+  \item Software: OS, CUDA/cuDNN, framework versions; container digest if used.
+  \item Determinism: seed setting, deterministic ops flags, and known nondeterministic components.
+  \item Compute accounting: total epochs and GPU-hours per method per budget; include overhead from resampling/repair.
+\end{itemize}
+
+\paragraph{Peer-review must-haves}
+\begin{itemize}
+  \item Transparent computation accounting (reviewers are sensitive to hidden computation).
+\end{itemize}

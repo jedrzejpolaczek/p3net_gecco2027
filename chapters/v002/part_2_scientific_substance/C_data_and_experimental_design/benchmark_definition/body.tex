@@ -1,0 +1,62 @@
+\section{Benchmarking for HPO}
+
+\subsection{Foundational and Early Benchmarking Studies}
+
+Early works in the field of optimization, particularly in Evolutionary Computation (EC), have historically been accompanied by benchmarking studies since the 1960s. Hans-Paul Schwefel's 1975 PhD thesis, for instance, highlighted the need for effective strategies to evaluate optimization methods due to their increasing number. Pioneering studies by Mor\'e et al.\ (1981) established well-known test functions, some of which are still used today, such as Rosenbrock's function (1960). Hooker and Johnson (1994, 1996) and Johnson et al.\ (1989, 1991, 2002b) have also published excellent papers on setting up benchmark tests, with McGeoch's 1986 work considered a milestone in experimental algorithmics.
+
+\subsection{No Free Lunch Theorems and Their Implications}
+
+The introduction of No Free Lunch Theorems (NFLTs) by Wolpert and Macready (1997) significantly changed the perspective on benchmarking, emphasizing that performance statements about algorithms should be tied to specific problem classes or instances. Brownlee (2007) summarized NFLT consequences, recommending that claims of algorithm suitability be bounded to tested problem instances and cautioning against generalizing performance to other problem instances or domains. Recent research continues to discuss the implications and paradoxes of NFLT in numerical comparison of optimization algorithms.
+
+\subsection{Methodologies for Experimental Design and Analysis}
+
+Despite the long history of benchmarking, a general methodology for conducting benchmark studies, similar to those in statistical Design of Experiments (DOE) or data mining, has not been universally adopted in EC. However, several authors have proposed methodologies for experimental design and analysis. Bartz-Beielstein and Preuss (2010) proposed organizing the presentation of experiments into seven parts, covering research questions, pre-experimental planning, task definition, setup, results/visualization, observations, and discussion. Barr et al.\ (1995) also outlined a methodology for reporting empirical results, emphasizing steps like defining goals, selecting performance measures, designing experiments, analyzing data, and reporting results.
+
+\subsection{Data Repositories and Reproducibility Initiatives}
+
+The increasing complexity of benchmark suites and the need for reproducibility have led to the development of platforms and initiatives. The Comparing Continuous Optimizers (COCO) platform \citep{Hansen2016b} is example of sophisticated benchmark suites. Several benchmark environments offer data repositories to facilitate the reuse of experimental results, though a common standard for data formats is still desirable. Initiatives like the Benchmarking Network aim to consolidate and stimulate activities on benchmarking iterative optimization heuristics.
+
+In summary, the field of benchmarking in optimization has a rich history with foundational works establishing key principles and test functions. The advent of NFLTs underscored the importance of problem-specific evaluations, leading to more nuanced approaches. Ongoing efforts focus on developing standardized methodologies for experimental design, analysis, and ensuring reproducibility through platforms and collaborative initiatives.
+
+\subsection{Recommended Approaches for Benchmarking Hyperparameter Optimization (HPO) Algorithms}
+
+Benchmarking Hyperparameter Optimization (HPO) algorithms involves careful consideration of several factors to ensure fair comparisons and meaningful results. The process often aligns with general benchmarking best practices, with specific emphasis on how hyperparameters are handled and how problem instances are selected and characterized.
+
+\subsubsection{General Principles for Benchmarking}
+
+\begin{itemize}[leftmargin=*,itemsep=0.4em]
+  \item \textbf{Clear Goals and Problem Definition:} Any benchmark study should start with clearly stated goals and well-defined problems.
+  \item \textbf{Suitable Algorithms and Performance Measures:} The selection of appropriate algorithms and adequate performance measures is crucial.
+  \item \textbf{Thoughtful Analysis and Presentation:} Results require thoughtful analysis, effective and efficient experimental designs, and comprehensible presentations.
+  \item \textbf{Guaranteed Reproducibility:} Ensuring reproducibility is a paramount goal, involving precise descriptions of algorithms and problem instances, and careful handling of random number generators and seeds.
+\end{itemize}
+
+\subsubsection{Specific Recommendations for HPO Algorithms}
+
+\subsubsubsection{Hyperparameter Handling}
+
+\begin{itemize}[leftmargin=*,itemsep=0.4em]
+  \item \textbf{Automated Tuning is State-of-the-Art:} Since all algorithm families typically require control parameters, automated tuning is highly recommended over manual tuning, which can be biased. Tools like irace, ParamILS, SPOT, SMAC, GGA, and Hyperband are available for automatic parameter configuration.
+  \item \textbf{Robustness Analysis:} It is important to assess the robustness of algorithm performance to mild changes in parameters. Parameter recommendations that offer better robustness might be preferable, even if they slightly compromise peak performance.
+  \item \textbf{Fair Comparison:} To ensure a fair comparison, it is crucial to avoid poor parameter configurations and properly tune the algorithms under consideration. A well-performing parameter configuration for a specific setup might perform worse under a different budget, highlighting the importance of considering hyperparameter robustness in benchmarking studies.
+\end{itemize}
+
+\subsubsubsection{Problem Instances and Data Repositories}
+
+\begin{itemize}[leftmargin=*,itemsep=0.4em]
+  \item \textbf{Diverse and Representative Problem Sets:} The choice of problem instances is critical, as it heavily influences benchmarking results. Problem sets should be diverse, containing a range of difficulties and characteristics, and representative of the real-world scenarios under investigation.
+  \item \textbf{Scalable and Tunable Instances:} Ideally, benchmark sets should allow for tuning characteristics like problem dimension, variable dependence, and number of objectives.
+  \item \textbf{Publicly Available Benchmark Sets:} Numerous benchmark sets are available through competitions and special sessions at conferences like GECCO and CEC, covering artificial discrete, real-parameter, mixed-representation, black-box, constrained real-parameter, and dynamic single-objective optimization problems. Platforms like COCO and Nevergrad offer sophisticated benchmark suites.
+  \item \textbf{Addressing Drawbacks of Test Suites:} It's important to acknowledge that some test problem suites can be artificial, lack direct links to real-world settings, and have a fixed number of instances, which can lead to algorithms being overfitted or tuned to these specific sets.
+\end{itemize}
+
+\subsubsubsection{Experimental Design and Reproducibility}
+
+\begin{itemize}[leftmargin=*,itemsep=0.4em]
+  \item \textbf{Design of Experiments (DOE):} Many empirical evaluations lack proper experimental design. Using DOE helps make comparisons transparent and objective, guiding how many algorithm runs are needed for desired information with minimal runs.
+  \item \textbf{Systematic Approach:} The design of experiments should consider problem-specific factors (e.g., objective function) and algorithm-specific factors (e.g., population size, other parameters).
+  \item \textbf{Randomization and Replicability:} Reproducibility is achieved by fixing the random number generator and storing the random seed. All candidate algorithms should use the same starting points when comparing algorithms or analyzing search behavior.
+  \item \textbf{Automated Configuration Tools:} The use of automated tools for parameter configuration is highly recommended to ensure unbiased tuning, especially for algorithms unfamiliar to the experimenter.
+\end{itemize}
+
+In conclusion, benchmarking HPO algorithms requires a structured approach that prioritizes clear goals, robust experimental design, and rigorous analysis. The focus on automated tuning, diverse problem instances, and strict reproducibility measures is essential for generating reliable and generalizable insights into algorithm performance.

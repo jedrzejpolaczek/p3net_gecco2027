@@ -1,0 +1,130 @@
+% Take a look on checklist from utils/check_list.tex
+
+\documentclass[conference]{IEEEtran}
+\usepackage{titlesec}
+\IEEEoverridecommandlockouts
+
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage[T1]{fontenc}
+\usepackage{titlesec}
+\titleclass{\subsubsubsection}{straight}[\subsubsection]
+\newcounter{subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection.oman{subsubsubsection}}
+\titleformat{\subsubsubsection}[runin]{\normalfont\normalsize\bfseries}{\thesubsubsubsection}{1em}{}\titlespacing*{\subsubsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+\newcommand{\PaperTitle}{}
+\newcommand{\TaskDomain}{}
+\newcommand{\ClaimedDomain}{}
+\newcommand{\DatasetsSplits}{}
+\newcommand{\PreprocessingDetails}{}
+\newcommand{\ModelClass}{}
+\newcommand{\PrimaryObjective}{}
+\newcommand{\SecondaryObjectives}{}
+\newcommand{\ObjectiveDirectionNote}{}
+\newcommand{\ObjectiveNormalizationPolicy}{}
+\newcommand{\NoiseControlPolicy}{}
+\newcommand{\SearchSpaceList}{}
+\newcommand{\SearchSpaceConditionals}{}
+\newcommand{\SearchSpaceEncoding}{}
+\newcommand{\EvaluationUnit}{}
+\newcommand{\BudgetTiersText}{}
+\newcommand{\BudgetSet}{}
+\newcommand{\BmaxSymbol}{}
+\newcommand{\MultiFidelityPolicy}{}
+\newcommand{\ParallelismPolicy}{}
+\newcommand{\NumWorkers}{}
+\newcommand{\ProposedMethodName}{}
+\newcommand{\BackboneName}{}
+\newcommand{\NetAdaptationMeaning}{}
+\newcommand{\PThreeCoreDetails}{}
+\newcommand{\PThreeNetDetails}{}
+\newcommand{\PThreeProposalModel}{}
+\newcommand{\PThreeSelectionRule}{}
+\newcommand{\PThreeDiversityRule}{}
+\newcommand{\PThreeConstraintHandling}{}
+\newcommand{\PThreeBatchingParallelism}{}
+\newcommand{\PThreeUpdateSchedule}{}
+\newcommand{\KnownParts}{}
+\newcommand{\NoveltyDetails}{}
+\newcommand{\HPOHyperparameters}{}
+\newcommand{\BaselinesRun}{}
+\newcommand{\BaselinesNotRunWhy}{}
+\newcommand{\BaselineConfigPolicy}{}
+\newcommand{\Framework}{}
+\newcommand{\Hardware}{}
+\newcommand{\DeterminismConstraints}{}
+\newcommand{\SoftwareVersions}{}
+\newcommand{\VenueChecklistItems}{}
+\newcommand{\ArtifactReleaseScope}{}
+\newcommand{\NumRepeats}{}
+\newcommand{\SeedSetText}{}
+\newcommand{\FinalistReevalK}{}
+\newcommand{\InitDesignSize}{}
+\newcommand{\NearOracleEta}{}
+\newcommand{\RecoveryTolerance}{}
+\newcommand{\CoverageFraction}{}
+
+\titleformat{\subparagraph}[runin]{\normalfont\normalsize\bfseries}{\thesubparagraph}{1em}{}
+\titlespacing*{\subparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+\begin{document}
+% % ==========================================================
+% % PART 1 - Core Paper Narrative (What/Why)
+% % ==========================================================
+% % Part A
+\input{chapters/part_1_core_paper_narrative/A_front_matter/claims_and_scope/title}
+\input{chapters/part_1_core_paper_narrative/A_front_matter/claims_and_scope/abstract/main}
+\input{chapters/part_1_core_paper_narrative/A_front_matter/claims_and_scope/introduction/main}
+\input{chapters/part_1_core_paper_narrative/A_front_matter/positioning_in_literature/main}
+\input{chapters/part_1_core_paper_narrative/A_front_matter/problem_definition_and_motivation/main}
+\input{chapters/part_1_core_paper_narrative/A_front_matter/contribution_snapshot/main}
+
+% % ==========================================================
+% % PART 2 - Scientific Substance (How/Evidence)
+% % ==========================================================
+% % Part B
+\input{chapters/part_2_scientific_substance/B_methods_and_formalization/research_method/main}
+\input{chapters/part_2_scientific_substance/B_methods_and_formalization/optimization_problem_formulation/main}
+\input{chapters/part_2_scientific_substance/B_methods_and_formalization/theoretical_foundations/main}
+% % Part C
+\input{chapters/part_2_scientific_substance/C_data_and_experimental_design/data_subjects_and_sampling/main}
+\input{chapters/part_2_scientific_substance/C_data_and_experimental_design/experimental_protocol/main}
+\input{chapters/part_2_scientific_substance/C_data_and_experimental_design/benchmark_definition/main}
+\input{chapters/part_2_scientific_substance/C_data_and_experimental_design/execution_details/main}
+% % Part D
+\input{chapters/part_2_scientific_substance/D_analysis_and_results/statistical_methodology/main}
+\input{chapters/part_2_scientific_substance/D_analysis_and_results/results/main}
+\input{chapters/part_2_scientific_substance/D_analysis_and_results/robustness_and_boundaries/main}
+
+% % ==========================================================
+% % PART 3 - Extras (Transparency, Responsibility, etc.)
+% % ==========================================================
+% % Part E
+\input{chapters/part_3_extras/E_reproducibility_artifacts_and_compliance/reproducibility_route/main}
+\input{chapters/part_3_extras/E_reproducibility_artifacts_and_compliance/legal_attribution_compliance/main}
+\input{chapters/part_3_extras/E_reproducibility_artifacts_and_compliance/tool_disclosure/main}
+% % Part F
+\input{chapters/part_3_extras/F_ethics_and_human-related_requirements/ethics_and_impact/main}
+\input{chapters/part_3_extras/F_ethics_and_human-related_requirements/author_transparency/main}
+% % Part G
+\input{chapters/part_3_extras/G_presentation_quality_and_transparency/writing_notation_and_visualization_quality/main}
+\input{chapters/part_3_extras/G_presentation_quality_and_transparency/lessons_learned/main}
+% % Part H
+\input{chapters/part_3_extras/H_bonus_rigor/pre-registration_rigor/main}
+\input{chapters/part_3_extras/H_bonus_rigor/subjective_assessment_rigor/main}
+\input{chapters/part_3_extras/H_bonus_rigor/real-world_grounding/main}
+\input{chapters/part_3_extras/H_bonus_rigor/benchmark_impact_evidence/main}
+\input{chapters/part_3_extras/H_bonus_rigor/methodological_triangulation/main}
+\input{chapters/part_3_extras/H_bonus_rigor/deeper_optimization_diagnostics/main}
+
+% % ==========================================================
+% % Bibliography
+% % ==========================================================
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

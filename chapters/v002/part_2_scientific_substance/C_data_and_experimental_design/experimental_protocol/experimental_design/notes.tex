@@ -1,0 +1,63 @@
+% =========================
+% Explanation: Experimental Design (informal, readable)
+% =========================
+\subsection*{Explanation of Experimental Design (informal)}
+This section explains how we run the benchmarking experiments so results are statistically meaningful and comparisons are fair.
+It specifies budgets, repeats, seeds, stopping rules, parallelism, and any early-stopping / multi-fidelity mechanisms.
+
+\begin{itemize}
+    \item \textbf{Evaluation unit (what counts as one trial).}
+    We define precisely what ``one evaluation'' means (e.g., a full training run for a fixed number of epochs,
+    a fixed token budget, or a tabular lookup).
+    This matters because the primary notion of runtime in optimization benchmarking is the number of objective evaluations.
+    All methods are charged identically: each evaluated configuration counts as one evaluation,
+    including invalid or failed trials (handled consistently).
+
+    \item \textbf{Budget tiers (and why multiple budgets).}
+    We test at least three evaluation budgets \(B\in\{B_1,B_2,B_3\}\) (e.g., 25/50/100).
+    Multiple budgets matter because optimizers can behave differently in the low-budget regime (cold start) versus higher budgets
+    (refinement and exploitation). Reporting across tiers prevents cherry-picking and makes scaling behavior explicit.
+
+    \item \textbf{Stopping rules.}
+    Each optimizer run stops when it reaches its evaluation budget \(B\); no method may exceed \(B\) evaluations.
+    If additional constraints are used (e.g., wall-clock caps), they are applied uniformly across methods and reported explicitly.
+    If a run terminates early due to unrecoverable failures, the failure is logged and handled consistently in the analysis.
+
+    \item \textbf{Random seeds and independent repetitions.}
+    Because HPO/NAS methods are stochastic, a single run is not representative.
+    We therefore run \(R\) independent repetitions per (method, benchmark instance, budget), each with a different optimizer seed.
+    Performance is aggregated across these \(R\) runs (e.g., median and IQR), and statistical tests account for run-to-run variability.
+
+    \item \textbf{Controlling training stochasticity (evaluation seeds).}
+    Training itself can be stochastic (random initialization, data order, dropout, nondeterministic GPU operations).
+    To improve comparability, we optionally use \emph{common random numbers} (CRN):
+    the evaluation seed for a configuration \(\lambda\) is deterministically derived from the benchmark id and \(\lambda\).
+    Thus, if different optimizers evaluate the same \(\lambda\), they observe the same training realization, reducing noise in comparisons.
+    Optionally, final selected configurations are re-evaluated with multiple fresh seeds for more stable reporting;
+    these re-evaluations are reported separately and do not count toward the HPO budget.
+
+    \item \textbf{Initialization policy.}
+    Some methods (e.g., Bayesian optimization) require an initial design before model-based proposals are meaningful.
+    To keep comparisons fair, we use a shared initialization policy (e.g., Sobol or Latin hypercube for continuous dimensions
+    and uniform sampling for categorical variables), allocate the same number of initial evaluations \(n_0\) when required,
+    and count these evaluations toward the total budget \(B\).
+
+    \item \textbf{Multi-fidelity / early stopping (if allowed).}
+    If the benchmark supports multi-fidelity evaluation (e.g., fewer epochs, smaller dataset fraction, lower resolution),
+    we specify a shared fidelity ladder and a shared scheduler policy (e.g., ASHA/Hyperband).
+    In this setting, all methods follow the same resource allocation logic and differ only in how they propose configurations.
+    We report both the number of evaluated configurations and the total consumed resources (e.g., total epochs/tokens),
+    but define the primary runtime axis for benchmarking metrics as completed evaluations for consistency with fixed-budget/fixed-target definitions.
+
+    \item \textbf{Parallel evaluation policy (synchronous vs.\ asynchronous).}
+    Optimizers can gain unfair advantages if they exploit asynchrony or different degrees of parallelism.
+    We therefore fix a parallelism policy:
+    either (i) synchronous batches with a fixed worker count \(W\), or (ii) asynchronous execution with shared dispatcher semantics
+    applied to all methods. The policy, worker count, and how partial results are handled are stated explicitly.
+    Regardless of wall-clock behavior, our primary runtime axis for benchmarking is completed evaluation count.
+
+    \item \textbf{Hardware/software and determinism constraints.}
+    We report the framework, hardware, and determinism controls (fixed RNG seeds, deterministic kernels where supported,
+    fixed data loader order). This is essential for reproducibility and for interpreting variability, especially in GPU-based training
+    where strict determinism may not always be achievable.
+\end{itemize}

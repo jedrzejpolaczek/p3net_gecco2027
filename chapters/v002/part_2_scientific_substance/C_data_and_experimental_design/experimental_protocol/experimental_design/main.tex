@@ -1,0 +1,47 @@
+% =========================
+% D) Experimental Design (Budgets, Seeds, Repeats, Stopping)
+% =========================
+\subsection{Experimental Design (Budgets, Seeds, Repeats, Stopping)}
+\label{subsec:design}
+
+\paragraph{Evaluation unit and budget tiers.}
+We define one evaluation as: \EvaluationUnit{}.
+Each method is evaluated at (at least) three evaluation budgets:
+\begin{equation}
+    B \in \{B_1,B_2,B_3\} = \BudgetSet
+    \qquad
+    \text{(default: \(\BudgetSet\)).}
+\end{equation}
+We set \(\BmaxSymbol = \max\{B_1,B_2,B_3\}\) and use it to construct empirical oracle targets when the true optimum/front is unknown.
+
+\paragraph{Multi-fidelity / pruning policy.}
+\MultiFidelityPolicy{}.
+If multi-fidelity is disallowed, all methods evaluate at full fidelity and may not use early termination beyond globally fixed training stops.
+If multi-fidelity is allowed, we enforce a single shared fidelity ladder and shared scheduler semantics across all methods,
+so differences arise only from proposal generation (not from resource allocation rules).
+
+\paragraph{Seeds and repetitions.}
+For each benchmark instance and method, we run \(R=\NumRepeats\) independent optimization runs with optimizer seeds \(s \in \SeedSetText\).
+To reduce noise and improve comparability, each evaluated configuration \(\lambda\) is trained/evaluated using a deterministic evaluation seed
+\begin{equation}
+    s_{\mathrm{eval}} = \mathrm{Hash}(\mathrm{id}_{\mathrm{bench}}, \lambda)\ \bmod\ (2^{31}-1),
+\end{equation}
+so that the same \(\lambda\) yields the same stochastic training realization across different optimizers (common random numbers).
+Optionally, the best-found configuration(s) are retrained with \(K=\FinalistReevalK\) fresh seeds for reporting only
+(these re-evaluations are reported separately and do not count toward the HPO budget).
+Noise control policy: \NoiseControlPolicy{}.
+
+\paragraph{Initialization and warm-starting.}
+All methods start from scratch with no external data.
+If an initial design is required (e.g., Bayesian optimization), we allocate the first \(n_0=\InitDesignSize\) evaluations to a shared
+initialization scheme (e.g., Sobol/LHS for continuous variables and uniform sampling for categoricals), counted toward the budget.
+
+\paragraph{Parallel evaluation policy.}
+We use a fixed parallel execution policy across methods: \ParallelismPolicy{} with \(W=\NumWorkers\).
+The primary ``runtime'' axis for all reported metrics is the number of completed evaluations (trained models), not wall-clock time.
+
+\paragraph{Hardware and software.}
+Framework: \Framework{}.
+Hardware: \Hardware{}.
+Determinism controls: \DeterminismConstraints{}.
+Software versions / environment pinning: \SoftwareVersions{}.

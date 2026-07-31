@@ -1,0 +1,43 @@
+% =========================
+% Explanation: Notation (informal, readable)
+% =========================
+\subsection*{Explanation of notation (informal)}
+We use standard notation for budgeted hyperparameter optimization (HPO) / neural architecture search (NAS).
+
+\begin{itemize}
+    \item \textbf{Search space and configurations.}
+    \(\Lambda\) denotes the shared search space, i.e., the set of all admissible configurations.
+    A single configuration (a hyperparameter assignment or an architecture encoding) is written as \(\lambda \in \Lambda\).
+    In practice, \(\lambda\) may be a vector of continuous/integer/categorical hyperparameters (e.g., learning rate, dropout),
+    or a structured encoding (e.g., a NAS genotype).
+
+    \item \textbf{Evaluations and objective values.}
+    An \emph{evaluation} is one call to the objective function at \(\lambda\), corresponding to one trained model
+    (or a benchmark lookup) under the fixed evaluation pipeline.
+    In the single-objective case, an evaluation returns a scalar
+    \[
+        f(\lambda) \in \mathbb{R},
+    \]
+    such as validation loss or validation error.
+    In the multiobjective case, an evaluation returns an \(m\)-dimensional objective vector
+    \[
+        \mathbf{F}(\lambda) = \big(f_1(\lambda),\ldots,f_m(\lambda)\big) \in \mathbb{R}^m,
+    \]
+    where \(m\) is the number of objectives (e.g., error, FLOPs, latency, memory).
+    Unless stated otherwise, we treat all objectives as \emph{minimization} objectives; any maximization metric is converted to minimization
+    (e.g., \(f(\lambda) = -\mathrm{metric}(\lambda)\) or \(f(\lambda)=1-\mathrm{metric}(\lambda)\)).
+
+    \item \textbf{Budget.}
+    \(B\) denotes the evaluation budget, i.e., the maximum number of configurations that may be evaluated in one optimization run.
+    Thus, each method may perform at most \(B\) evaluations, and comparisons are made under identical \(B\).
+
+    \item \textbf{Stochastic optimization traces and repetitions.}
+    Because HPO/NAS methods are typically stochastic, a single run produces a (random) sequence of evaluated configurations
+    \[
+        \{\lambda_t\}_{t=1}^{B},
+    \]
+    where \(\lambda_t\) is the configuration evaluated at step \(t\).
+    Formally, each optimizer induces a distribution over such length-\(B\) sequences through its internal randomness.
+    To estimate performance and variability, we run \(R\) independent repetitions (different random seeds) per method and benchmark instance,
+    and aggregate results across these \(R\) runs.
+\end{itemize}

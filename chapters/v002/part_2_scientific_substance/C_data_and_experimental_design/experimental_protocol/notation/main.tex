@@ -1,0 +1,24 @@
+% =========================
+% Notation
+% =========================
+\subsection*{Notation}
+We use the following notation throughout.
+
+\begin{itemize}
+    \item \textbf{Search space and configurations.}
+    Let \(\Lambda\) denote the shared search space, and let \(\lambda \in \Lambda\) denote a single configuration
+    (hyperparameter assignment and/or architecture encoding).
+
+    \item \textbf{Evaluations and objectives.}
+    An \emph{evaluation} is one call to the objective function at \(\lambda\), returning either
+    a scalar \(f(\lambda)\) in the single-objective case or an objective vector
+    \(\mathbf{F}(\lambda) \in \mathbb{R}^m\) in the multiobjective case.
+    \ObjectiveDirectionNote{}
+
+    \item \textbf{Budget.}
+    Let \(B\) denote the evaluation budget, i.e., the maximum number of configurations that may be evaluated in one optimizer run.
+
+    \item \textbf{Stochastic optimization runs.}
+    Because at least one source of randomness is present in either (i) the optimizer’s proposal mechanism (e.g., sampling, mutation, randomized initialization) or (ii) the evaluation pipeline (e.g., random initialization, minibatch order, augmentation, nondeterministic GPU kernels), each method induces a distribution over optimization traces \(\{\lambda_t\}_{t=1}^{B}\).\footnote{Stochasticity arises from randomized proposal mechanisms (e.g., sampling, mutation, randomized initialization) and/or from the evaluation pipeline (e.g., random initialization, minibatch order, augmentation, nondeterministic GPU kernels). We therefore report results over \(R\) independent seeds and release per-run logs to enable auditability.}
+
+\end{itemize}

@@ -1,0 +1,66 @@
+% =========================
+% Explanation: Benchmarks / Problem Instances (informal, readable)
+% =========================
+\subsection*{Explanation of Benchmarks / Problem Instances (informal)}
+This section specifies what problems we run the optimizers on and what exactly an objective evaluation means.
+In benchmarking, these definitions are critical: they determine what is comparable and what claims are valid.
+
+\begin{itemize}
+    \item \textbf{What is a ``problem instance''?}
+    A benchmark \emph{problem instance} is a fully specified optimization task given to an HPO/NAS method.
+    In practice, an instance can be written as
+    \[
+        \text{instance} =
+        (\text{dataset},\ \text{split},\ \text{preprocessing},\ \text{training recipe},\ \Lambda,\ \text{objective definition}),
+    \]
+    where \(\Lambda\) is the search space and the objective definition specifies how a configuration \(\lambda\) is mapped to objective value(s).
+
+    \item \textbf{Datasets and splits.}
+    For each dataset we specify:
+    (i) dataset name and version,
+    (ii) the train/validation/test split policy (or cross-validation folds),
+    and (iii) any access constraints (e.g., an official test server).
+    Fixing splits is important because different splits can change the objective landscape and confound algorithm comparisons.
+    We therefore either use canonical public splits or publish a split manifest so the same examples are used across methods.
+
+    \item \textbf{Preprocessing and evaluation pipeline.}
+    We specify the preprocessing steps applied to the raw data (e.g., normalization, augmentation, tokenization, feature extraction)
+    and define the full evaluation pipeline that turns \(\lambda\) into objective value(s).
+    The pipeline typically includes model instantiation, training under a fixed recipe, validation scoring,
+    and (optionally) measurement of secondary objectives such as FLOPs, latency, memory, energy, or parameter count.
+    For fairness, this pipeline is identical for all optimizers.
+
+    \item \textbf{Objective function(s) \(f(\lambda)\) and \(\mathbf{F}(\lambda)\).}
+    The objective function formalizes what is being optimized.
+    In the single-objective case, we define a scalar objective
+    \[
+        f(\lambda) \in \mathbb{R},
+    \]
+    such as validation error or negative log-likelihood.
+    In the multiobjective case, we define a vector-valued objective
+    \[
+        \mathbf{F}(\lambda) = (f_1(\lambda),\ldots,f_m(\lambda)) \in \mathbb{R}^m,
+    \]
+    where \(m\) is the number of objectives.
+    We also specify the optimization direction (minimize vs.\ maximize) and any transformations used to convert maximization metrics to minimization.
+
+    \item \textbf{Normalization/scaling for Pareto metrics (multiobjective).}
+    Pareto-quality metrics such as hypervolume and the \(\epsilon\)-indicator can be sensitive to objective scaling.
+    Therefore, when we compute these metrics, we specify a fixed monotone normalization rule
+    (e.g., affine scaling to \([0,1]\) using predefined bounds) and apply it identically across methods on each instance.
+    This ensures metric differences reflect Pareto quality rather than arbitrary units.
+
+    \item \textbf{Search space \(\Lambda\) and constraints.}
+    The benchmark definition includes the complete search space:
+    all hyperparameters/architecture choices, their types (continuous/integer/categorical/structured),
+    ranges, and any conditional dependencies.
+    Constraints define which configurations are valid; invalid configurations must be handled consistently
+    (repair, rejection, or penalty).
+    Sharing the same \(\Lambda\) is a core fairness requirement: no method may use a different space.
+
+    \item \textbf{Representativeness and claim support.}
+    The benchmark suite should reflect the intended use case of the proposed method.
+    We justify why the chosen tasks/datasets (including their sizes, modalities, and regimes) are representative of the paper’s claims.
+    Importantly, conclusions are bounded to the tested instances: performance on this suite supports claims about this regime,
+    but does not automatically imply performance on substantially different tasks unless those are included explicitly.
+\end{itemize}

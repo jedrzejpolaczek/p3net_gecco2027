@@ -1,0 +1,42 @@
+% =========================
+% F) Statistical Analysis Plan (Pre-specified)
+% =========================
+\subsection{Statistical Analysis Plan (Pre-specified)}
+\label{subsec:stats}
+
+\paragraph{Aggregation.}
+We report the median and interquartile range (IQR) across \(R=\NumRepeats\) independent runs as the primary summary,
+and mean$\pm$std as a secondary summary.
+For fixed-target times that can take value \(\infty\) (target not reached within budget), we treat outcomes as right-censored:
+we report Kaplan--Meier summaries and/or use the conservative imputation \(T=\BmaxSymbol+1\) for rank-based tests
+(this choice is always stated explicitly when used).
+
+\paragraph{Hypothesis tests and multiple comparisons.}
+We use nonparametric tests appropriate for repeated runs of stochastic optimizers:
+\begin{itemize}
+    \item \textbf{Per-benchmark pairwise comparisons:} paired Wilcoxon signed-rank tests across shared seeds
+    (when common random numbers or paired seed schedules are used).
+    \item \textbf{Across-benchmark summaries:} stratified bootstrap over benchmark instances and seeds to quantify uncertainty
+    in macro-averaged differences.
+\end{itemize}
+We correct for multiple comparisons using Holm--Bonferroni and report effect sizes (Vargha--Delaney \(\hat{A}_{12}\) and Cliff's delta)
+alongside corrected \(p\)-values.
+
+\paragraph{Outliers and failed runs.}
+Invalid evaluations (NaNs, divergence, OOM, invalid configurations) are handled uniformly across methods:
+they receive a penalized objective (worst observed on that benchmark plus a fixed margin) and still count toward the evaluation budget.
+We report failure rates and categorize failure modes by type.
+
+\paragraph{Ablations and sensitivity.}
+We run the following ablations under identical budgets, seeds, and evaluation pipelines:
+\begin{enumerate}
+    \item \textbf{Vanilla \BackboneName{}:} remove all \ProposedMethodName{} ``Net'' adaptations (elite rule, diversity, constraint handling,
+    batching, update schedule) by fitting a basic factorized model on the top-\(k\) configurations under the scalar objective (single objective)
+    or on a simple nondominated set (multiobjective), and sampling without additional mechanisms.
+    \item \textbf{Component-wise ablation:} remove each novel component in \NoveltyDetails{} one at a time.
+    \item \textbf{Diversity ablation:} disable \PThreeDiversityRule{} to test sensitivity to mode collapse.
+    \item \textbf{Constraint-handling ablation:} swap repair/masked sampling with rejection sampling (or vice versa), keeping evaluation accounting fixed.
+    \item \textbf{Sensitivity analysis:} vary key \ProposedMethodName{} hyperparameters over a pre-specified grid:
+    \HPOHyperparameters{}.
+\end{enumerate}
+When applicable (e.g., multiobjective NAS), we additionally include \emph{NSGA-Net} as an external baseline to contextualize Pareto performance.

@@ -1,0 +1,40 @@
+\subsection*{Notes for I. INTRODUCTION}
+\paragraph{Objective}
+Motivate the problem, state the gap, define the contribution in a reviewer-friendly way, and set expectations (scope/limits). This section should read like a standard NAS/HPO paper introduction (not a checklist).
+
+\paragraph{Keep (from current draft)}
+\begin{itemize}
+  \item The emphasis is on claim–evidence alignment and stating assumptions/limitations.
+  \item The intent is to explain the practical reason why brute-force is infeasible.
+\end{itemize}
+
+\textbf{TODO}:
+\begin{itemize}
+    \item Rewrite / move:
+    \begin{itemize}
+    \item Convert the checklist language into normal narrative paragraphs.
+    \item Move formal definitions (evaluation/budgets/objectives/encoding) out of the Introduction and into Problem Definition / Formulation.
+    \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+    \item Add first (highest leverage):
+    \begin{itemize}
+    \item Motivation paragraph: evaluation-limited NAS/HPO in discrete structured search spaces; why multiobjective (accuracy vs compute proxy) matters.
+    \item Gap: why (a) NSGA-style methods can be sample-inefficient under tight budgets, (b) model-based HPO struggles with structured genotypes/constraints, and (c) multi-fidelity + parallelism complicate learning and fair comparison.
+    \item Numbered contributions (1–2 items) that map to later sections and figures/tables.
+    \item Scope statement: what you evaluate (datasets/search space/fidelity regime) and what you do not claim.
+    \end{itemize}
+\end{itemize}
+
+\paragraph{Peer-review must-haves}
+\begin{itemize}
+  \item A clear, non-overlapping contribution list.
+  \item A crisp statement of novelty: “what is integrated” and “why it is nontrivial.”
+  \item No performance claims without results.
+\end{itemize}
+
+\paragraph{Suggested figure/table}
+\begin{itemize}
+  \item Later: a small overview diagram of the P3Net loop (propose $\rightarrow$ evaluate $\rightarrow$ update).
+\end{itemize}

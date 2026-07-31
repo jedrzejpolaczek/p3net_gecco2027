@@ -1,0 +1,87 @@
+% =========================
+% Explanation: Statistical Analysis Plan (informal, readable)
+% =========================
+\subsection*{Explanation of Statistical Analysis Plan (Pre-specified) (informal)}
+This section explains how we analyze results across stochastic runs and how we avoid common pitfalls:
+overstating significance, ignoring multiple comparisons, or drawing conclusions from too few seeds.
+Because each optimizer run is random, we treat performance as a distribution and compare methods using robust summaries
+and appropriate statistical tests.
+
+\begin{itemize}
+    \item \textbf{Why pre-specify the plan?}
+    Benchmarking involves many degrees of freedom (which budgets to show, which metrics to emphasize, which baselines to compare,
+    and which seeds to include). Pre-specifying the analysis plan reduces ``researcher degrees of freedom'' and increases credibility,
+    because it prevents selecting tests or metrics after seeing the outcomes.
+
+    \item \textbf{Aggregation across repetitions.}
+    For each (method, benchmark instance, budget) we run \(R\) independent repetitions (different optimizer seeds).
+    We report robust summaries:
+    \begin{itemize}
+        \item \emph{Primary:} median with interquartile range (IQR), because distributions can be skewed and may contain occasional failures.
+        \item \emph{Secondary:} mean \(\pm\) standard deviation, to support comparisons with prior work.
+    \end{itemize}
+    For traces (e.g., best-so-far vs.\ evaluations), we aggregate pointwise medians with IQR bands.
+
+    \item \textbf{Handling right-censoring for fixed-target metrics.}
+    Fixed-target metrics (e.g., time to reach a threshold) can be \(\infty\) if a run never reaches the target within budget.
+    Such outcomes are \emph{right-censored}.
+    We handle this explicitly by:
+    (i) reporting Kaplan--Meier survival curves (probability of not having reached the target by evaluation \(t\)),
+    and/or (ii) using a conservative imputation such as \(T = B_{\max}+1\) for rank-based tests, with this choice stated clearly.
+
+    \item \textbf{Inferential tests for stochastic optimizers.}
+    Because performance distributions are rarely Gaussian and sample sizes per benchmark are modest, we prefer nonparametric tests.
+    Typical choices include:
+    \begin{itemize}
+        \item \emph{Paired Wilcoxon signed-rank test} when runs can be paired by shared seeds or common random numbers
+        (reduces variance and increases power).
+        \item \emph{Mann--Whitney U test} when pairing is not justified (independent samples).
+        \item \emph{Permutation tests} as a robust alternative when assumptions are unclear.
+    \end{itemize}
+    Tests are applied to per-run scalar outcomes (e.g., regret or HV at budget \(B\), or time-to-target).
+
+    \item \textbf{Multiple comparisons control.}
+    Benchmarking typically compares many methods across multiple datasets, budgets, and metrics.
+    Without correction, false positives are likely.
+    We therefore control family-wise error rate using Holm--Bonferroni (or control FDR via Benjamini--Hochberg if explicitly chosen),
+    and report corrected \(p\)-values or adjusted significance thresholds.
+
+    \item \textbf{Effect sizes (practical significance).}
+    Statistical significance alone does not imply a meaningful improvement.
+    We therefore report effect sizes alongside \(p\)-values, such as:
+    \begin{itemize}
+        \item Vargha--Delaney \(\hat{A}_{12}\) (probability that method A outperforms method B on a randomly chosen run),
+        \item Cliff's delta (magnitude and direction of stochastic dominance),
+        \item or standardized median differences where appropriate.
+    \end{itemize}
+    These quantify practical impact and robustness.
+
+    \item \textbf{Outliers, failed runs, and invalid configurations.}
+    HPO/NAS frequently produces failed evaluations (OOM, NaNs, divergence, invalid architectures).
+    To avoid hidden bias, we specify a uniform handling rule:
+    failed/invalid trials are assigned a penalized objective value (worse than any valid value on that benchmark)
+    and still count toward the evaluation budget.
+    We report failure frequencies and causes. We do not discard outliers unless there is a documented logging/evaluation error.
+
+    \item \textbf{Across-benchmark summarization.}
+    When summarizing across benchmark instances, we avoid pooling raw objective values across incomparable scales.
+    Instead, we use (i) per-instance normalization (e.g., regret normalized by an oracle gap) and then (ii) macro-averaging across instances.
+    We also report performance profiles / ECDFs to show how often a method is within a given factor of the best.
+
+    \item \textbf{Ablations and sensitivity analysis.}
+    To attribute improvements to specific components, we pre-specify ablations:
+    \begin{itemize}
+        \item remove the ``Net'' adaptations (vanilla backbone only),
+        \item remove each novel component one at a time,
+        \item disable diversity control (tests mode-collapse sensitivity),
+        \item swap constraint handling mechanism (repair vs.\ rejection) while keeping accounting fixed,
+        \item vary key method hyperparameters (e.g., elite fraction, smoothing, mixture rate).
+    \end{itemize}
+    Ablations are run under the same budgets, seeds, and evaluation pipeline to ensure clean attribution.
+
+    \item \textbf{What constitutes evidence.}
+    We consider the method improved if it shows:
+    (i) consistent improvements in the primary metric across benchmark instances and seeds,
+    (ii) nontrivial effect sizes (not only tiny significant differences),
+    and (iii) robustness to reasonable hyperparameter perturbations (sensitivity analysis).
+\end{itemize}

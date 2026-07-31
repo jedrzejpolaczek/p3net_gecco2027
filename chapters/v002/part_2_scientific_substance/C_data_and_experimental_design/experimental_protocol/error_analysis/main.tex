@@ -1,0 +1,37 @@
+% =========================
+% G) Error Analysis / Diagnostic Plots
+% =========================
+\subsection{Error Analysis / Diagnostic Plots}
+\label{subsec:diagnostics}
+
+We pre-specify the following diagnostics to characterize optimization dynamics, robustness, and failure modes beyond headline metrics:
+\begin{enumerate}
+    \item \textbf{Convergence vs.\ evaluations.}
+    We plot median and IQR across runs of the incumbent best-so-far curve \(f_{\min}^{(r)}(t)\) for single-objective settings,
+    and median/IQR traces of Pareto-quality metrics (hypervolume and/or \(\epsilon\)-indicator) for multiobjective settings.
+
+    \item \textbf{Pareto-front progression (multiobjective).}
+    We visualize nondominated sets at fixed checkpoints \(t \in \{10,25,50,B\}\) (or analogous checkpoints matched to the budget tier)
+    in objective space, alongside the oracle reference front when defined.
+
+    \item \textbf{Stability across seeds.}
+    We report per-seed outcome distributions for primary metrics, include rank histograms, and plot ECDFs / performance profiles of
+    normalized regret (single objective) or hypervolume gap (multiobjective) to show how often each method attains a given quality level.
+
+    \item \textbf{Search behavior diagnostics.}
+    We track diversity of sampled configurations over time (e.g., entropy of categorical choices, coverage of continuous dimensions),
+    duplicate proposal rates, and archive growth/turnover to diagnose exploration--exploitation balance and detect sampling collapse.
+
+    \item \textbf{Compute--performance trade-offs.}
+    When secondary objectives capture compute proxies (e.g., FLOPs, latency, parameter count, energy, memory),
+    we report trade-off curves and compare recovered Pareto sets under equal evaluation budgets.
+\end{enumerate}
+
+\paragraph{Falsification criteria.}
+We treat the following outcomes as evidence against the stated hypotheses:
+\begin{enumerate}
+    \item \ProposedMethodName{} does not improve the primary metric over vanilla \BackboneName{} and does not outperform strong baselines
+    across budgets with a nontrivial effect size.
+    \item Improvements are not robust across benchmark instances and/or optimizer seeds (e.g., gains driven by a small number of outlier runs).
+    \item Improvements disappear under pre-specified ablations, indicating that apparent gains are due to confounding rather than the intended mechanism.
+\end{enumerate}

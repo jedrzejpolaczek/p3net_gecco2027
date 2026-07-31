@@ -1,0 +1,119 @@
+\section{Results}
+
+This section reports surrogate quality, convergence under fixed evaluation budgets, Pareto front and
+hypervolume comparisons, and a fixed-budget summary table (median, IQR, corrected $p$~values, effect sizes),
+in that order. The experimental setup and protocol are detailed first.
+
+\subsection*{Experimental Setup}
+
+The protocol must not allow P3Net to be read as ``P3 plus Pareto filtering.'' It states explicitly which
+selection mechanics NSGA-II contributes to the baseline, what P3 replaces (the variation operator and the
+proposal distribution), and, separately from the choice of search engine, which surrogate variant is used
+(linkage aware $\hat{\delta}_F$ vs.\ an absolute regressor), so that gains can be attributed to the correct
+component rather than conflated.
+
+\paragraph{Benchmark and search space.} P3Net targets the joint architecture and hyperparameter search
+setting rather than an architecture only space. Rather than resolving the Category~1 vs.\ Category~2
+question by picking a single benchmark, both are reported side by side, deliberately. The primary
+benchmark is JAHS-Bench-201~\citep{bansal2022jahsbench}, a surrogate benchmark over a joint space of
+fourteen dimensions combining categorical architecture choices with continuous training hyperparameters
+(e.g.\ learning rate, weight decay) across three datasets; it queries a learned surrogate over continuous
+inputs without live training, so no enumerable oracle front exists (see Metrics, below).
+NAS-HPO-Bench-II~\citep{hirose2021nashpobenchii}, a fixed grid lookup table over combinations of
+architecture and hyperparameters, is reported alongside it as the Category~1 counterpart: an
+exact oracle front is enumerable, enabling the Inverted Generational Distance plus (IGD+) on this benchmark specifically. Any result that holds on
+both benchmarks is reported as the primary finding; a result that holds on only one is reported as
+specific to that benchmark and not over generalised.
+
+\paragraph{Baselines.} NSGANetV2 (NSGA-II with an absolute regressor surrogate) as the primary baseline;
+NSGANetV2 in its native, real-valued encoding of $\Theta$ as an additional control baseline isolating the
+effect of discretisation itself, rather than of the search engine or surrogate (Fairness controls);
+NSGA-Net (NSGA-II with no surrogate, every candidate fully evaluated) as the engine-only ablation on the
+NSGA-II side, symmetric to the P3-only ablation below; P3 alone, without any surrogate, as the engine-only
+ablation on the P3 side; P3 with an absolute regressor surrogate (in the style of NSGANetV2) as an ablation
+isolating only the surrogate, separating the contribution of the linkage aware design from the contribution
+of the P3 engine itself; random search and the Tree-structured Parzen Estimator (TPE) as sanity baselines.
+This grid separates the engine and surrogate contributions as far as the design permits, not as a full
+orthogonal factorial: the relative, linkage aware surrogate $\hat{\delta}_F$ is defined only given a linkage
+tree, so an NSGA-II-plus-relative-surrogate cell is not constructible, and any gap attributed to ``the
+surrogate'' via the P3-only vs.\ P3Net comparison should be read against this asymmetry.
+
+Without a surrogate, P3 alone follows the canonical optimal-mixing acceptance rule: every proposed
+modification within a sweep is gated by a \emph{real} evaluation of $f_1$, exactly as step~3 of the P3Net
+loop (Proposed Optimizer) would be if $\hat{\delta}_F$ were replaced by $f_1$ itself, and as in the original
+P3 algorithm's own hill-climbing and cross-level mixing steps~\citep{goldman2014parameterless}. Under the
+$\{50,\, 100,\, 200\}$-evaluation budgets used here (Budgets, below), this is expected to exhaust most or
+all of the budget within a small number of sweeps: for a joint genotype with dozens of linkage subsets, a
+single parent's full sweep alone can approach the smallest tier. This is not a flaw in the ablation but its
+point: if P3 alone collapses under this budget, that result directly motivates pairing P3 with a cheap
+surrogate in the first place, which is what the central question (Introduction) actually compares. We
+report the number of full sweeps completed within budget for this ablation specifically, alongside its
+hypervolume, so a weak result reads as budget starvation rather than as a failure of the search engine
+itself.
+
+\paragraph{Surrogate error accumulation ($\kappa$ and acceptance threshold).} The main comparison above
+fixes $\kappa$ at its default value, eLyMPuS's own $2\lceil\log_2(n)\rceil$-step bound (Proposed Optimizer),
+and the step-3 acceptance rule at its default zero threshold ($\hat{\delta}_F \geq 0$). Both are swept
+jointly in the sensitivity analysis: $\kappa$ over a small grid (e.g.\ $\{1,\, \lceil\log_2(n)\rceil,\,
+2\lceil\log_2(n)\rceil,\, \infty\}$), and the acceptance threshold over a small margin grid (e.g.\ $\{0,\,
+\epsilon,\, 2\epsilon\}$ for a fixed $\epsilon > 0$), with P3Net otherwise unchanged, reporting fixed budget
+hypervolume and surrogate rank correlation as a function of both.
+
+\paragraph{Fairness controls.} Identical genotype encoding, decoding function $D$, validity handling,
+full evaluation budget, seed policy, stopping rule, and deduplication cache (Proposed Optimizer) across all
+compared methods, so that no method's apparent efficiency benefits from infrastructure the others lack. In
+particular, the discretisation of continuous hyperparameter coordinates (Proposed Optimizer) is applied
+identically to every baseline: NSGA-II/NSGANetV2 search the same discretised $\Theta$ as P3Net rather than
+their usual real-valued encoding, so that any gain is attributable to the search engine and surrogate rather
+than to a difference in genotype resolution. This equalises resolution but is not necessarily neutral:
+discretisation removes NSGA-II/NSGANetV2's native real-valued crossover on $\Theta$ while costing P3
+nothing, since P3 operates on a categorical genotype regardless. This asymmetry is bounded empirically
+rather than merely acknowledged: NSGANetV2 in its native continuous encoding is included as an additional
+control baseline (Baselines, above), so any P3Net advantage can be checked specifically against the
+discretised-NSGANetV2 comparison, rather than resting on the discretised comparison alone.
+
+\paragraph{Budgets, seeds, stopping.} Three full evaluation budget tiers, $\{50,\, 100,\, 200\}$ full
+evaluations, doubling at each step so convergence trends read on a natural, geometric scale. Each tier is
+anchored to a figure actually used in the surrounding literature rather than chosen arbitrarily: the middle
+tier matches JAHS-Bench-201's own suggested evaluation protocol of approximately 100 full evaluations, with
+a minimum of 10 seeds~\citep{bansal2022jahsbench}; the top tier stays at or below the 350 full evaluations
+NSGANetV2 itself uses to reach its reported results~\citep{lu2020nsganetv2}, so no tier exceeds the regime
+in which the primary baseline was originally shown to work well. This also keeps every tier below
+NAS-HPO-Bench-II's own convention of 500 trials for benchmarking search
+algorithms~\citep{hirose2021nashpobenchii} -- a deliberate choice, not an oversight: the central question
+concerns a \emph{limited} budget (Introduction), so all three tiers stress-test a regime tighter than either
+benchmark's own default, on both benchmarks alike. $R = 10$ independent runs per method with a fixed, published
+seed list, matching JAHS-Bench-201's recommended minimum~\citep{bansal2022jahsbench}; identical
+initialization scheme across methods; a stopping rule covering both the evaluation budget and, if the
+search space is small enough to converge prematurely, an exploration collapse criterion analogous to the
+one Bartnik~\cite{bartnik2026evolutionary} needed to add for spaces at the scale of NAS-Bench-201.
+
+\paragraph{Metrics.} Fixed budget hypervolume and, only if the search space admits an enumerable oracle
+front, IGD+; otherwise hypervolume relative to the best known front is used in its place. Surrogate quality
+is reported separately as rank correlation (or pairwise comparison accuracy, if the surrogate is relational)
+between predicted and true values as a function of $|\mathcal{H}_t|$.
+
+\paragraph{Statistical plan.} The comparison set is P3Net against each of the other seven arms (Baselines,
+above), per benchmark and per budget tier -- not every pairwise combination among all arms. Paired Wilcoxon
+signed rank tests are run per comparison in this set, with Holm--Bonferroni correction applied across it,
+and an effect size (e.g.\ Cliff's delta) reported alongside every corrected $p$ value. This is stricter than the uncorrected comparisons in the closest prior
+work~\cite{bartnik2026evolutionary}, which report no effect size, and the difference is treated as a
+deliberate methodological improvement, not an oversight to reconcile.
+
+\paragraph{Diagnostics.} Genotype duplication rate and archive turnover over the course of the search,
+motivated directly by the genotype-to-phenotype redundancy documented in NSGA-Net (Introduction)~\cite{lu2019nsganet},
+measured under the identical joint genotype encoding fixed for every compared method (Fairness controls),
+so that any difference in duplication rate reflects the search operator rather than a difference in
+encoding. The deduplication cache (Proposed Optimizer) is applied identically to every compared method as
+part of the shared evaluation harness (Fairness controls), so the measured duplication rate reflects what
+each search operator proposes, not an artifact of asymmetric caching. This rate is counted at proposal
+time -- every candidate a search operator generates, whether or not it is later intercepted by the cache --
+not at evaluation time, so it remains informative even though the cache itself suppresses re-evaluation of
+anything it counts. Convergence curves; Pareto front
+progression; stability across seeds.
+
+\paragraph{Reproducibility.} Every cached evaluation is keyed by genotype, experiment type, and a protocol
+version string covering every setting that affects the recorded value, so that a change in any of them
+invalidates stale cache entries automatically, following the pattern used
+by~\cite{bartnik2026evolutionary}.
+

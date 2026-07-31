@@ -1,0 +1,47 @@
+\subsection*{Notes for VI. OPTIMIZATION PROBLEM FORMULATION}
+\paragraph{Objective}
+Provide the formal mathematical definition: search space, encoding/decoding, constraints, objectives (single and multiobjective), and what objective measurements are used under multi-fidelity.
+
+\paragraph{Keep}
+\begin{itemize}
+  \item The formal definitions you already drafted (search space, encoding, constraints, metrics), but consolidate them here.
+\end{itemize}
+
+\textbf{TODO:}
+\begin{itemize}
+    \item \paragraph{Rewrite / move}
+\end{itemize}
+\begin{itemize}
+  \begin{itemize}
+      \item Move all “single source of truth” definitions (currently scattered in your protocol) into this section and then reference this section elsewhere to avoid duplication.
+  \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+    \item \paragraph{Write next (core elements)}
+\end{itemize}
+\begin{itemize}
+  \begin{itemize}
+      \item Define the search space $\Lambda$, the genotype $x \in \Lambda$, the decoding $D(x)$, and the validity constraints $g(x)\le 0$.
+      \item Define objectives:
+      \begin{itemize}
+      \item single-objective $f(x)$ (e.g. validation error at the final rung),
+      \item multiobjective $\mathbf{f}(x)=(f_1(x), f_2(x), \dots)$ (e.g., error, compute proxy).
+      \end{itemize}
+      \item Define a compute proxy precisely (params/FLOPs): input resolution, counting method, whether estimated or measured.
+      \item Define multi-fidelity measurement: which rung’s metric is used for selection/model-learning and why.
+      \item Define evaluation noise sources and how you handle them (seeds, retraining, aggregation).
+  \end{itemize}
+\end{itemize}
+
+\paragraph{Peer-review must-haves}
+\begin{itemize}
+  \item Unambiguous definitions of objectives and proxies (reviewers often challenge the validity of the proxy).
+  \item An explicit elite-selection rule under multi-fidelity (to prevent biased learning).
+\end{itemize}
+
+\paragraph{Suggested figure/table}
+\begin{itemize}
+  \item Table: search space specification (ops, nodes, constraints).
+  \item Figure: a working example of encoding/serialization for a cell.
+\end{itemize}

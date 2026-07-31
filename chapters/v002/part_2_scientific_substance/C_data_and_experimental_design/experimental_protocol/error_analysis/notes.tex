@@ -1,0 +1,65 @@
+% =========================
+% Explanation: Error Analysis / Diagnostic Plots (informal, readable)
+% =========================
+\subsection*{Explanation of Error Analysis / Diagnostic Plots (informal)}
+This section describes what we inspect \emph{in addition to headline metrics} in order to understand why an optimizer succeeds or fails.
+Diagnostic plots are essential in HPO/NAS benchmarking because two methods can end with similar final performance while exhibiting very different
+search dynamics, robustness, and failure modes.
+
+\begin{itemize}
+    \item \textbf{Why diagnostics matter.}
+    Summary metrics (e.g., regret at budget \(B\) or hypervolume) compress the full optimization trajectory into a single number.
+    Diagnostics reveal \emph{how} performance is achieved: exploration versus exploitation behavior, stability across seeds, sensitivity to noise,
+    and whether apparent improvements come from rare lucky runs or consistent progress.
+
+    \item \textbf{Convergence curves vs.\ evaluations (single objective).}
+    We plot the incumbent best-so-far curve \(f_{\min}(t)\) against evaluation count \(t\),
+    aggregated across runs (median with IQR bands).
+    These curves show whether a method:
+    (i) improves early (high sample efficiency),
+    (ii) stalls (premature convergence),
+    or (iii) improves only late (benefits mainly at large budgets).
+    Wide variability bands indicate instability across seeds.
+
+    \item \textbf{Pareto-front progression (multiobjective).}
+    For multiobjective problems, we visualize nondominated sets at fixed checkpoints (e.g., \(t\in\{10,25,50,B\}\))
+    and track Pareto-quality metrics over time (hypervolume and/or \(\epsilon\)-indicator).
+    This reveals whether improvements come from better extremes, improved coverage/diversity, or a uniform shift of the trade-off frontier.
+
+    \item \textbf{Stability across seeds and performance distributions.}
+    We plot per-run distributions (e.g., boxplots or violin plots) for primary metrics and/or show ECDFs (performance profiles).
+    These diagnostics answer: \emph{how often} does a method achieve good performance?
+    A method that wins only in a small fraction of runs may be less desirable than one that is consistently strong.
+
+    \item \textbf{Compute--performance trade-offs.}
+    When secondary objectives capture compute proxies (FLOPs, parameters, latency, memory, energy),
+    we compare trade-off curves and recovered Pareto sets under equal budgets.
+    This helps distinguish ``wins by spending more compute'' from genuinely better trade-offs.
+
+    \item \textbf{Search behavior and diversity diagnostics (method-specific).}
+    For sampling-based optimizers (e.g., P3Net), we examine indicators of search diversity and collapse:
+    \begin{itemize}
+        \item entropy or diversity of sampled categorical choices over time,
+        \item coverage of continuous dimensions (e.g., histograms of sampled learning rates),
+        \item duplicate proposal rates (how often the same \(\lambda\) is re-sampled),
+        \item archive turnover (how frequently elites are replaced).
+    \end{itemize}
+    These plots diagnose mode collapse (over-concentration) versus unproductive exploration (diffuse sampling without improvement).
+
+    \item \textbf{Failure mode analysis.}
+    We track and summarize failure rates over time and by region of the search space:
+    out-of-memory (OOM), NaNs/divergence, invalid configurations, and timeouts.
+    We report whether performance differences are driven by robustness (fewer failures) or by risk-taking in unstable regions.
+    We also verify that failure handling is applied consistently across methods (penalty assignment and budget counting).
+
+    \item \textbf{Falsification outcomes (what would disconfirm the hypothesis).}
+    Diagnostics support falsification: the proposed method is considered unsuccessful if we observe patterns such as:
+    \begin{itemize}
+        \item no improvement in convergence curves across most seeds (benefit not robust),
+        \item Pareto fronts that improve only in a narrow region (poor coverage/diversity),
+        \item strong mode collapse (entropy drops quickly, duplicates rise, progress stalls),
+        \item gains explained mainly by increased failures in baselines (unfair stability advantage),
+        \item improvements vanish under ablations (benefit not attributable to the intended mechanism).
+    \end{itemize}
+    These outcomes provide concrete criteria for rejecting or narrowing claims.
+\end{itemize}

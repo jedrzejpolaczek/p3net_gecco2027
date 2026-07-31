@@ -1,0 +1,68 @@
+% =========================
+% Explanation: Reproducibility (informal, readable)
+% =========================
+\subsection*{Explanation of Reproducibility Statement (Exact vs.\ Broad) and Artifact Plan (informal)}
+This section explains which parts of the study can be reproduced exactly, which can only be reproduced within statistical tolerance,
+and what artifacts we release so others can rerun the experiments and regenerate all reported results.
+
+\begin{itemize}
+    \item \textbf{Why distinguish ``exact'' vs.\ ``broad'' reproducibility?}
+    In HPO/NAS, reproducibility depends on whether objective evaluations are deterministic.
+    Tabular benchmarks or fully deterministic pipelines can often be reproduced \emph{bitwise}.
+    GPU training often has unavoidable nondeterminism (e.g., non-deterministic kernels, floating-point non-associativity, mixed precision),
+    so repeated runs with the same seed may differ slightly.
+    We therefore label which regime applies to each experiment to avoid overstating reproducibility.
+
+    \item \textbf{Exact reproducibility (bitwise-identical reruns).}
+    Experiments are labeled \emph{exactly reproducible} when:
+    \begin{itemize}
+        \item the evaluation function is deterministic given \(\lambda\) and a seed (e.g., tabular lookup, fixed CV with deterministic learners),
+        \item the software stack supports deterministic execution end-to-end (deterministic kernels, fixed dataloader order),
+        \item and all sources of randomness are controlled and recorded.
+    \end{itemize}
+    In this regime, releasing code, configs, seeds, and environment pins should enable identical results.
+
+    \item \textbf{Broad reproducibility (statistical reproducibility).}
+    Experiments are labeled \emph{broadly reproducible} when objective evaluations are stochastic or hardware-dependent,
+    so reruns may not be bitwise identical.
+    Here, reproducibility means that:
+    (i) rerunning the same protocol on the same stack yields results consistent within the reported variability, and
+    (ii) the main conclusions (rankings, effect sizes, confidence intervals) remain stable.
+    We therefore emphasize distributions across seeds and include repeated-seed re-evaluations of final configurations where appropriate.
+
+    \item \textbf{What we release (artifacts required for reproduction).}
+    To enable regeneration of all paper figures and tables, we release artifacts covering:
+    \begin{itemize}
+        \item \textbf{Code:} the proposed method and all runnable baselines (or wrappers around pinned upstream implementations).
+        \item \textbf{Unified harness:} a shared evaluator/runner enforcing identical budgets, stopping rules, failure handling,
+        seed policy, and parallelism semantics across methods.
+        \item \textbf{Configuration files:} machine-readable configs for search spaces, datasets/splits, training recipes,
+        method hyperparameters, budgets, and seed lists.
+        \item \textbf{Environment specification:} Docker image / digest or Conda lockfile, plus explicit versions of key libraries
+        (e.g., CUDA/cuDNN/PyTorch) and relevant hardware assumptions.
+        \item \textbf{Data provenance:} dataset versions/snapshots, download scripts where permitted, and split manifests
+        so that the same examples are used.
+        \item \textbf{Raw trial logs:} per-evaluation records including \(\lambda\), objective values, timestamps/evaluation index,
+        seeds, fidelity level (if applicable), and failure codes.
+        \item \textbf{Aggregation and plotting scripts:} scripts that consume raw logs and regenerate all tables/figures,
+        including statistical tests and multiple-comparisons corrections.
+        \item \textbf{Run manifest:} for every run, record benchmark id, method, budget, seeds, worker count, git hash, container hash,
+        and (when available) hardware identifier for provenance.
+    \end{itemize}
+
+    \item \textbf{Reproducibility checklist items (what we document).}
+    We document all details needed to interpret and reproduce results:
+    budgets, number of repetitions, seed policies, stopping rules,
+    handling of invalid/failed trials, and any deviations from reference baseline implementations.
+    We also document known sources of nondeterminism and quantify their impact (e.g., variance across reruns).
+
+    \item \textbf{Comparability and limitations.}
+    Not all methods are directly comparable under the same evaluation model.
+    We state explicitly:
+    \begin{itemize}
+        \item which baselines are \emph{directly comparable} (same search space, same evaluation unit, same budget accounting),
+        \item which are excluded or only reported under a separate setting (e.g., weight-sharing NAS, methods requiring different fidelities),
+        \item and how these feasibility constraints bound claims (no claims about methods that are not directly comparable).
+    \end{itemize}
+    This prevents overreach and clarifies what the evidence supports.
+\end{itemize}

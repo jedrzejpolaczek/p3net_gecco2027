@@ -1,0 +1,127 @@
+% =========================
+% E) Evaluation Metrics and Comparison Targets
+% =========================
+\subsection{Evaluation Metrics and Comparison Targets}
+\label{subsec:metrics}
+
+\paragraph{Performance traces.}
+For run \(r\), let \(y_t^{(r)}\) denote the observed objective value at evaluation \(t\)
+(or the objective vector \(\mathbf{y}_t^{(r)}\) in the multiobjective case).
+For minimization, the incumbent best-so-far value is
+\begin{equation}
+    f_{\min}^{(r)}(t) = \min_{1 \le i \le t} y_i^{(r)}.
+\end{equation}
+In the multiobjective setting, define the set of observed vectors
+\[
+    \mathcal{S}^{(r)}(t) = \{\mathbf{y}_1^{(r)},\dots,\mathbf{y}_t^{(r)}\},
+\]
+and let
+\[
+    \mathcal{N}^{(r)}(t) = \mathrm{ND}\!\big(\mathcal{S}^{(r)}(t)\big)
+\]
+denote its nondominated subset.
+
+\paragraph{Oracle targets (empirical reference).}
+When the true optimum / Pareto front is unknown, we construct an \emph{empirical oracle reference} at the largest tested budget \(\BmaxSymbol\):
+\begin{itemize}
+    \item \textbf{Single-objective oracle:}
+    \[
+        f^\star = \min_{\text{all methods},\ \text{all runs}} f_{\min}^{(r)}(\BmaxSymbol).
+    \]
+    \item \textbf{Multiobjective oracle front:}
+    \[
+        \mathcal{N}^\star =
+        \mathrm{ND}\!\left(
+        \bigcup_{\text{all methods},\ \text{all runs}} \mathcal{S}^{(r)}(\BmaxSymbol)
+        \right).
+    \]
+\end{itemize}
+This oracle is a benchmarking reference (best observed value/front), not a claim of global optimality.
+
+% ---------------------------------------------------------
+\subsubsection{Single-objective metrics (for \(m=1\))}
+
+\paragraph{Fixed-budget regret (fb).}
+At budget \(B\), regret is the gap to the best observed oracle value:
+\begin{equation}
+    \mathrm{Regret}^{(r)}(B) = f_{\min}^{(r)}(B) - f^\star.
+\end{equation}
+
+\paragraph{Fixed-target best (ftb): evaluations to reach oracle-best.}
+The evaluation count required to match the oracle-best value is
+\begin{equation}
+    T_{\mathrm{ftb}}^{(r)} =
+    \min\left\{t \in \{1,\dots,\BmaxSymbol\} : f_{\min}^{(r)}(t) \le f^\star \right\},
+\end{equation}
+with \(T_{\mathrm{ftb}}^{(r)}=\infty\) if the target is never reached within \(\BmaxSymbol\) evaluations.
+
+\paragraph{Fixed-target close (ftc): evaluations to reach near-oracle.}
+We define a near-oracle threshold
+\[
+    f^{\dagger} = f^\star + \delta,
+    \qquad
+    \delta = \NearOracleEta |f^\star|
+\]
+unless otherwise specified.
+The corresponding time-to-threshold is
+\begin{equation}
+    T_{\mathrm{ftc}}^{(r)} =
+    \min\left\{t : f_{\min}^{(r)}(t) \le f^{\dagger} \right\},
+\end{equation}
+with \(\infty\) if never reached.
+
+% ---------------------------------------------------------
+\subsubsection{Multiobjective metrics (for \(m>1\))}
+
+\paragraph{Dominance and recovery criteria.}
+We evaluate multiobjective recovery in normalized objective space (per \ObjectiveNormalizationPolicy{}).
+A point is considered ``recovered'' if it matches an oracle point within tolerance \(\tau\):
+\[
+    \|\tilde{\mathbf{y}} - \tilde{\mathbf{y}}^\star\|_{\infty} \le \tau,
+    \qquad
+    \tau=\RecoveryTolerance.
+\]
+
+\paragraph{Fixed-budget hypervolume (fbp-HV).}
+After monotone normalization, let \(\tilde{\mathcal{N}}^{(r)}(B)\) denote the nondominated set at budget \(B\) in normalized space.
+We compute
+\begin{equation}
+    \mathrm{HV}^{(r)}(B)
+    = \mathrm{HV}\!\big(\tilde{\mathcal{N}}^{(r)}(B); \mathbf{r}\big),
+\end{equation}
+with reference point \(\mathbf{r}\) specified by the normalization policy.
+We also report the hypervolume gap
+\[
+    \Delta \mathrm{HV}^{(r)}(B) = \mathrm{HV}^\star - \mathrm{HV}^{(r)}(B),
+\]
+where \(\mathrm{HV}^\star\) is the hypervolume of the oracle set \(\tilde{\mathcal{N}}^\star\).
+
+\paragraph{Fixed-budget additive \(\epsilon\)-indicator (fbp-\(\epsilon\)).}
+We compute the additive \(\epsilon\)-indicator relative to the oracle front:
+\begin{equation}
+    I_{\epsilon}^{(r)}(B) =
+    \inf\left\{\epsilon :
+    \forall \mathbf{u}\in\tilde{\mathcal{N}}^\star,\
+    \exists \mathbf{v}\in\tilde{\mathcal{N}}^{(r)}(B)
+    \ \text{s.t.}\ v_i \le u_i + \epsilon\ \forall i
+    \right\}.
+\end{equation}
+
+\paragraph{Fixed-target one (fto): evaluations to recover at least one oracle point.}
+We define
+\begin{equation}
+    T_{\mathrm{fto}}^{(r)} =
+    \min\left\{t :
+    \exists \mathbf{y}\in \mathcal{N}^{(r)}(t)\ \text{recovering some}\ \mathbf{y}^\star\in\mathcal{N}^\star
+    \right\}.
+\end{equation}
+
+\paragraph{Fixed-target all (fta): evaluations to recover the oracle front (approx.).}
+Exact recovery may be unrealistic under continuous/noisy objectives.
+We therefore use a coverage criterion: recover at least fraction \(q=\CoverageFraction\) of oracle points
+(under the recovery tolerance \(\tau\)). We report \(q\) and \(\tau\) explicitly.
+
+\paragraph{Primary vs.\ secondary metrics.}
+\textbf{Primary:} fixed-budget regret (single objective) or hypervolume gap \(\Delta\mathrm{HV}\) (multiobjective).
+\textbf{Secondary:} fixed-target times (\(\mathrm{ftb}, \mathrm{ftc}, \mathrm{fto}, \mathrm{fta}\)).
+All metrics are aggregated across runs using median and IQR (primary) and mean$\pm$std (secondary).

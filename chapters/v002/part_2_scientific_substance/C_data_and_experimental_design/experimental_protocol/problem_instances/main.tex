@@ -1,0 +1,55 @@
+% =========================
+% B) Benchmarks / Problem Instances
+% =========================
+\subsection{Benchmarks / Problem Instances}
+\label{subsec:benchmarks}
+
+\paragraph{Benchmark instances.}
+We evaluate on benchmark instances defined by the tuple
+\[
+    \text{dataset} \times \text{split} \times \text{training recipe}.
+\]
+All methods share the same instances and the same evaluation pipeline:
+\begin{itemize}
+    \item \textbf{Datasets and splits:} \DatasetsSplits{}.
+    \item \textbf{Preprocessing:} \PreprocessingDetails{}.
+    \item \textbf{Training recipe (fixed globally):} optimizer, learning-rate schedule, batch size, number of epochs/steps,
+    regularization, early-stopping policy (if any), and evaluation cadence are fixed across methods.
+\end{itemize}
+
+\paragraph{Objective functions.}
+\textbf{Single objective.}
+We define
+\begin{equation}
+    f(\lambda)
+    = \mathcal{L}_{\mathrm{val}}\!\left(
+        M_{\lambda, s_{\mathrm{eval}}}
+      \right),
+\end{equation}
+where \(M_{\lambda, s_{\mathrm{eval}}} = \mathrm{Train}(\lambda; \mathcal{D}_{\mathrm{train}}, s_{\mathrm{eval}})\) denotes the trained model
+obtained by instantiating the model specified by \(\lambda\) and optimizing its parameters on \(\mathcal{D}_{\mathrm{train}}\) under the fixed training recipe.
+\(\mathcal{L}_{\mathrm{val}}(\cdot)\) evaluates this trained model on \(\mathcal{D}_{\mathrm{val}}\).
+
+\textbf{Multiobjective (if applicable).}
+When optimizing multiple objectives, we define the vector-valued objective
+\begin{equation}
+    \mathbf{F}(\lambda) = \big(f_1(\lambda), \ldots, f_m(\lambda)\big),
+\end{equation}
+where \(f_1\) is the primary objective \PrimaryObjective{} and the remaining objectives are \SecondaryObjectives{}.
+When Pareto metrics require normalization (e.g., hypervolume), we apply a fixed monotone normalization policy:
+\ObjectiveNormalizationPolicy{}.
+
+\paragraph{Search space.}
+All methods optimize over an identical, explicitly defined search space \(\Lambda\):
+\begin{itemize}
+    \item \textbf{Hyperparameters and ranges/types:} \SearchSpaceList{}.
+    \item \textbf{Conditional parameters / constraints:} \SearchSpaceConditionals{}.
+    \item \textbf{Canonical encoding:} \SearchSpaceEncoding{}.
+\end{itemize}
+
+\paragraph{Representativeness rationale.}
+The benchmark suite is selected to represent \ClaimedDomain{} by including (where applicable):
+(i) at least one small/fast instance enabling many repetitions (noise characterization),
+(ii) at least one realistic instance reflecting intended deployment scale,
+and (iii) heterogeneous instances to test robustness.
+Conclusions are restricted to these regimes.

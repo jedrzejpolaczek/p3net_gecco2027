@@ -1,0 +1,119 @@
+\subsection*{Notes for IX. EXPERIMENTAL PROTOCOL}
+\paragraph{Objective}
+Specify the full experimental design and auditing details: benchmarks, baselines, budgets, seeds, metrics, statistical plan, diagnostics, and reproducibility artifacts.
+
+\paragraph{Critical clarity to add (highest priority)}
+The protocol must not allow the method to be interpreted as “P3 + Pareto filtering”. It must make explicit:
+\begin{itemize}
+  \item which NSGA-II mechanisms you retain (population/archive semantics, nondominated sorting, crowding, replacement),
+  \item what P3 replaces/augments (variation operator and proposal distribution),
+  \item how multi-fidelity affects elite definition and model updates.
+\end{itemize}
+
+\subsection*{Notes for IX: Protocol at a glance}
+\paragraph{Write next}
+\begin{itemize}
+  \item One compact bullet list: benchmarks, budgets, \#runs, proposed method, baselines, primary metric(s), stats tests, artifact.
+  \item One fairness bullet list: identical evaluator, encoding, ASHA schedule, budget accounting, parallelism, initialization.
+\end{itemize}
+
+\subsection*{Notes for IX: Notation}
+\paragraph{Write next}
+\begin{itemize}
+  \item Define symbols used throughout: $\Lambda$, $x$, $D(x)$, $\mathbf{f}(x)$, $B$, $R$, $W$, $A$, $\rho$, $U$, rungs, archive $\mathcal{A}$, elite set $\mathcal{E}$, distribution $q_\theta$.
+  \item Include a short “note on "units”": what counts as one evaluation/cost unit.
+\end{itemize}
+
+\subsection*{Notes for IX.A Empirical Methodology and Study Type}
+\paragraph{Write next}
+\begin{itemize}
+  \item Controlled benchmarking of stochastic optimizers with repeated independent runs.
+  \item Pre-specified hypotheses and falsification criteria (short form).
+  \item Seed policy: paired runs/common random numbers, evaluator determinism controls.
+\end{itemize}
+
+\subsection*{Notes for IX.C Algorithms Compared (Proposed + Baselines)}
+\paragraph{Write next}
+\begin{itemize}
+  \item Proposed: P3Net definition in 5--8 lines, referencing the full Method section.
+  \item Baseline list with feasibility notes:
+  \begin{itemize}
+    \item Random Search (RS), RS+ASHA,
+    \item NSGA-II/NSGA-Net-style baseline on the same encoding/evaluator,
+    \item P3 alone (without NSGA-II multiobjective selection mechanics),
+    \item BOHB/TPE/SMAC only if you can provide concrete encoding mapping and conditional support.
+  \end{itemize}
+  \item For each baseline: code source/version, key settings, tuning policy (none vs bounded and equal across methods).
+\end{itemize}
+
+\subsection*{Notes for IX.B Benchmarks / Problem Instances}
+\paragraph{Write next}
+\begin{itemize}
+  \item Enumerate benchmark tasks (e.g., CIFAR-10/100) and evaluation pipeline.
+  \item Define ASHA schedule: rung epochs, promotion rules, max epochs.
+  \item Define the search space precisely and reference the formal definition in the formulation section.
+\end{itemize}
+
+
+\paragraph{Fairness plan (must be explicit)}
+\begin{itemize}
+  \item Same encoding and constraints handling (or explicitly different with justification).
+  \item Same budget accounting, including failures and resampling overhead.
+  \item The same ASHA schedule and parallelism policy where applicable.
+\end{itemize}
+
+\subsection*{Notes for IX.D Experimental Design (Budgets, Seeds, Repeats, Stopping)}
+\paragraph{Write next}
+\begin{itemize}
+  \item Budgets $B$ (list values) and what they count.
+  \item Runs $R$ (e.g., 10) and seed list; paired design where possible.
+  \item Initialization $n_0$ and how it is generated (valid random architectures).
+  \item Stopping rules, failure handling, and how incomplete trials are counted.
+\end{itemize}
+
+\subsection*{Notes for IX.E Evaluation Metrics and Comparison Targets}
+\paragraph{Write next}
+\begin{itemize}
+  \item Primary metric(s):
+  \begin{itemize}
+    \item Single-objective: best-sofar regret vs evaluations; fixed-budget regret.
+    \item Multiobjective: HV or HV gap vs evaluations; fixed-budget HV gap.
+  \end{itemize}
+  \item Secondary metrics: $\epsilon$-indicator, coverage, time-to-target (with censoring rules), failure rate.
+  \item Define the HV reference point and how it is chosen.
+\end{itemize}
+
+\subsection*{Notes for IX.F Statistical Analysis Plan (Pre-specified)}
+\paragraph{Write next}
+\begin{itemize}
+  \item Paired Wilcoxon signed-rank tests for summary metrics per-run.
+  \item Holm--Bonferroni correction across multiple comparisons.
+  \item Effect sizes (e.g., Cliff’s delta) and uncertainty reporting (IQR/CI).
+  \item Time-to-target: censoring/survival-style handling if used.
+  \item Failure handling: define how OOM/divergence is included in metrics/tests.
+\end{itemize}
+
+\subsection*{Notes for IX.G Error Analysis / Diagnostic Plots}
+\paragraph{Write next}
+\begin{itemize}
+  \item Diversity/entropy of sampled tokens over time; duplicate rate; archive turnover.
+  \item Invalid sample rate (pre/post repair) and resampling attempts distribution.
+  \item ASHA rung distribution per method: how many reach the top rung (supports the elite learning rule).
+  \item Failure taxonomy: OOM, divergence, invalid genotype, training instability.
+\end{itemize}
+
+\subsection*{Notes for IX.H Reproducibility Statement + Artifact Plan}
+\paragraph{Write next}
+\begin{itemize}
+  \item Exact reproducibility: pinned environment + seeds $\rightarrow$ regenerate all figures/tables.
+  \item Broad reproducibility: qualitative trends under different hardware (state expected variance).
+  \item Artifact Contents
+  \begin{itemize}
+    \item code for encoding/decoding/repair + P3Net,
+    \item baseline wrappers and configurations,
+    \item raw per-evaluation logs (architecture hash, rung, objectives, seed, failure codes),
+    \item scripts to regenerate each figure/table,
+    \item statistics scripts (tests + corrections + effect sizes),
+    \item container/lockfile with pinned versions.
+  \end{itemize}
+\end{itemize}

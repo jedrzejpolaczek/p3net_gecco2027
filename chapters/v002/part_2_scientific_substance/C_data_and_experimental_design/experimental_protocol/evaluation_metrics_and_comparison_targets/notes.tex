@@ -1,0 +1,81 @@
+% =========================
+% Explanation: Evaluation Metrics and Comparison Targets (informal, readable)
+% =========================
+\subsection*{Explanation of Evaluation Metrics and Comparison Targets (informal)}
+This section explains how we score and compare optimizers.
+In optimization benchmarking, it is best practice to report both:
+\textbf{fixed-budget} metrics (quality achieved after a given budget) and
+\textbf{fixed-target} metrics (evaluations needed to reach a specified target).
+For multiobjective problems, we additionally use Pareto-based metrics that quantify the quality of the recovered trade-off set.
+
+\begin{itemize}
+    \item \textbf{Performance traces (best-so-far curves).}
+    During an optimizer run we observe objective values for evaluated configurations \(\lambda_1,\lambda_2,\ldots\).
+    In the single-objective case, progress is summarized by the incumbent best-so-far value
+    \[
+        f_{\min}^{(r)}(t) = \min_{1 \le i \le t} y_i^{(r)},
+    \]
+    where \(y_i^{(r)}\) is the objective observed at evaluation \(i\) in run \(r\).
+    This trace underlies convergence plots and is used to compute both fixed-budget and fixed-target metrics.
+
+    \item \textbf{Runtime definition.}
+    Throughout, ``runtime'' means the number of completed objective evaluations
+    (equivalently, the number of trained models / benchmark lookups), not wall-clock time.
+    This makes comparisons robust to hardware and implementation differences and aligns with standard black-box optimization benchmarking.
+
+    \item \textbf{Oracle targets (reference optima/fronts).}
+    In most realistic HPO/NAS problems, the true global optimum (or true Pareto front) is unknown.
+    We therefore define an \emph{empirical oracle reference} from the union of results observed across all methods and runs
+    at the largest tested budget \(B_{\max}\):
+    \begin{itemize}
+        \item \emph{Single objective:} \(f^\star\) is the smallest value observed across all runs and methods at budget \(B_{\max}\).
+        \item \emph{Multiobjective:} \(\mathcal{N}^\star\) is the nondominated set of all observed objective vectors at budget \(B_{\max}\).
+    \end{itemize}
+    This oracle is a benchmarking reference (best-known value/front), not a claim of global optimality.
+
+    \item \textbf{Single-objective fixed-budget metric (regret).}
+    Fixed-budget evaluation asks: \emph{How close is the best solution after \(B\) evaluations?}
+    We use regret:
+    \[
+        \mathrm{Regret}^{(r)}(B) = f_{\min}^{(r)}(B) - f^\star,
+    \]
+    where smaller is better. This measures the performance gap to the best-known value under the same protocol.
+
+    \item \textbf{Single-objective fixed-target metrics (time-to-threshold).}
+    Fixed-target evaluation asks: \emph{How many evaluations are needed to achieve a target quality?}
+    We define:
+    \begin{itemize}
+        \item \emph{ftb (fixed-target best):} evaluations needed to reach the oracle-best \(f^\star\) (often difficult under noise).
+        \item \emph{ftc (fixed-target close):} evaluations needed to reach a near-oracle threshold \(f^\dagger = f^\star + \delta\),
+        where \(\delta\) is a pre-specified tolerance (e.g., \(1\%\) relative gap).
+    \end{itemize}
+    These metrics directly quantify sample efficiency in evaluations-to-solution.
+
+    \item \textbf{Multiobjective fixed-budget metrics (Pareto quality).}
+    With vector-valued objectives, there is no single ``best'' point; we compare sets via Pareto-quality metrics:
+    \begin{itemize}
+        \item \emph{Hypervolume (HV):} the volume dominated by the nondominated set relative to a reference point.
+        Higher HV indicates a better and more diverse Pareto approximation (after normalization).
+        \item \emph{Additive \(\epsilon\)-indicator:} the smallest \(\epsilon\) such that the recovered set \(\epsilon\)-dominates the oracle front.
+        Lower \(\epsilon\) indicates a closer approximation to the oracle front.
+    \end{itemize}
+    Because these metrics depend on scaling, we specify a fixed normalization rule (e.g., map objectives to \([0,1]\) using predefined bounds)
+    and apply it identically across methods.
+
+    \item \textbf{Multiobjective fixed-target metrics (Pareto recovery times).}
+    Fixed-target metrics for multiobjective optimization ask: \emph{How quickly do we discover Pareto-optimal trade-offs?}
+    We use:
+    \begin{itemize}
+        \item \emph{fto (fixed-target one):} evaluations needed to recover at least one point on (or near) the oracle nondominated set.
+        \item \emph{fta (fixed-target all / coverage):} evaluations needed to recover the entire oracle set, or (more realistically)
+        a specified fraction \(q\) of it under a tolerance \(\tau\).
+    \end{itemize}
+    ``Recovery'' is defined with an explicit tolerance in normalized objective space to account for noise.
+
+    \item \textbf{Aggregation across runs and primary metric selection.}
+    Each metric is computed per run \(r\) and then aggregated across the \(R\) independent runs
+    (median and IQR as primary summaries; mean$\pm$std as secondary).
+    We pre-specify a \emph{primary metric} for the main claim:
+    fixed-budget regret for single objective, or hypervolume gap (or HV) for multiobjective.
+    Fixed-target metrics are reported as complementary evidence about time-to-solution.
+\end{itemize}

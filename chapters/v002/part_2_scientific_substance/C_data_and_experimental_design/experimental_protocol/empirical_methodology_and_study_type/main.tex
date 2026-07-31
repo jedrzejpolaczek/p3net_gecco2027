@@ -1,0 +1,52 @@
+% =========================
+% A) Empirical Methodology and Study Type
+% =========================
+\subsection{Empirical Methodology and Study Type}
+\label{subsec:methodology}
+
+\paragraph{Study type.}
+This work is a \textbf{benchmarking / quantitative simulation} study of black-box hyperparameter optimization (HPO) / neural architecture search (NAS)
+for \textbf{\TaskDomain{}} on \textbf{\DatasetsSplits{}} using the \textbf{\ModelClass{}} family.
+The goal is to quantify optimization performance under controlled and \emph{identical} experimental conditions:
+a shared search space, a shared evaluation pipeline, identical budgets, and explicit randomness control.
+
+\paragraph{Evaluation questions (pre-specified).}
+We evaluate:
+\begin{enumerate}
+    \item \textbf{Optimization efficiency:}\footnote{Fixed-budget comparisons answer the most standard benchmarking question in HPO/NAS:
+    given the same evaluation cost (number of trained models), which optimizer yields better objective values or Pareto quality?}
+    Does \ProposedMethodName{} achieve superior performance (or Pareto quality) \emph{as a function of evaluation count}
+    compared to strong baselines under equal budgets?
+
+    \item \textbf{Sample efficiency / time-to-target:}\footnote{Fixed-target metrics complement fixed-budget metrics by measuring
+    evaluations-to-``good-enough'': how quickly an optimizer reaches a pre-defined performance threshold, which is often the practical requirement.}
+    Does \ProposedMethodName{} reach near-oracle targets in fewer evaluations (fixed-target) than baselines?
+
+    \item \textbf{Robustness:}\footnote{HPO/NAS outcomes vary due to optimizer randomness and evaluation noise (e.g., initialization, data order,
+    nondeterministic GPU kernels); repeated runs across seeds and instances are therefore required to assess reliability rather than isolated wins.}
+    Are gains consistent across benchmark instances and random seeds?
+\end{enumerate}
+
+\paragraph{Hypotheses (pre-registered).}\footnote{We pre-register hypotheses to reduce ``researcher degrees of freedom'' in benchmarking
+(e.g., selecting metrics, budgets, or baselines after seeing results). The primary hypothesis targets fixed-budget efficiency under equal evaluation cost, the secondary hypothesis targets evaluations-to-threshold (time-to-target), and the mechanistic hypothesis supports attribution via ablations.}
+We pre-register the following hypotheses:
+\begin{itemize}
+    \item \textbf{H1 (primary):} Under identical budgets and evaluation pipelines, \ProposedMethodName{} yields lower fixed-budget regret
+    (single objective) and/or improved Pareto quality (multiobjective) than strong baselines, including vanilla \BackboneName{}
+    and (when applicable) standard evolutionary Pareto baselines.
+    \item \textbf{H2 (secondary):} \ProposedMethodName{} reaches fixed-target thresholds in fewer evaluations than baselines.
+    \item \textbf{H3 (mechanistic):} Any performance gains of \ProposedMethodName{} are caused by the specific ``Net'' adaptation choices
+(e.g., elite definition, diversity control, constraint handling, batching, update schedule) and the novel components listed in \NoveltyDetails{}.
+We test this by ablations that remove or disable each component and measure the resulting drop in performance (\S\ref{subsec:stats}).
+\end{itemize}
+
+\paragraph{Scope of claims.}\footnote{In a benchmarking study, conclusions are warranted only for the controlled regime that is actually tested:
+the search space \(\Lambda\), datasets/splits, preprocessing, training recipe, evaluation definition, and budget tiers. Changing any of these can
+change the objective landscape and relative method performance, so we mark such extrapolations (new model families/recipes/search spaces/budgets)
+as out-of-scope. We also avoid claims of global optimality because the true optimum/front is typically unknown; instead we compare to an empirical
+oracle constructed from observed results at the largest tested budget.}
+\textbf{In-scope:} performance on the specified tasks/datasets, search space \(\Lambda\), evaluation definition (what constitutes one evaluation),
+and the reported budget tiers.
+\textbf{Out-of-scope (not claimed):} generalization to different model families, training recipes, altered search spaces, or substantially different
+compute regimes; wall-clock speedups unless measured under tightly matched systems; and claims of global optimality beyond the constructed oracle
+reference (\S\ref{subsec:metrics}).

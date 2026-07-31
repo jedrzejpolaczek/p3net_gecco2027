@@ -1,0 +1,80 @@
+% --- Paper metadata ---
+\renewcommand{\PaperTitle}{P3Net: Probabilistic Programmatic Priors for Budgeted Multiobjective Neural Architecture Search}
+
+% --- Problem setting ---
+\renewcommand{\TaskDomain}{Multiobjective NAS for image classification}
+\renewcommand{\ClaimedDomain}{evaluation-limited multiobjective NAS under fixed search spaces and training recipes}
+\renewcommand{\DatasetsSplits}{CIFAR-10 and CIFAR-100. For each dataset, we use the official training set with a fixed, stratified 45k/5k train/validation split (split manifest released) and report final test performance on the official test set \emph{only} for final selected architectures.}
+\renewcommand{\PreprocessingDetails}{Per-channel normalization using dataset statistics. Data augmentation: random crop (padding 4) and random horizontal flip (p=0.5). No additional augmentation unless explicitly stated; if used, it is fixed for all methods.}
+\renewcommand{\ModelClass}{Cell-based CNN architectures (DAG cell search space) assembled into a macro-network for CIFAR-style classification}
+
+% --- Objectives ---
+\renewcommand{\PrimaryObjective}{validation classification error (\%) at the end of training (error \(=100-\mathrm{acc}(\%)\))}
+\renewcommand{\SecondaryObjectives}{(i) number of parameters (M) and (ii) FLOPs (MAdds) per forward pass; both minimized}
+\renewcommand{\ObjectiveDirectionNote}{All objectives are minimized; accuracy is converted via error \(=100-\mathrm{acc}(\%)\).}
+\renewcommand{\ObjectiveNormalizationPolicy}{For HV and $\epsilon$, each objective is normalized to $[0,1]$ per dataset using robust bounds from a pilot Random Search of 50 full-fidelity evaluations: lower bound = 5th percentile, upper bound = 95th percentile, with clipping outside bounds. Hypervolume uses reference point $\mathbf{r}=\mathbf{1}$ in normalized space.}
+\renewcommand{\NoiseControlPolicy}{Common random numbers: each architecture is trained with an evaluation seed deterministically derived from (dataset id, serialized genotype). Finalist re-evaluation: retrain the final nondominated set with $K=3$ independent seeds for reporting only (not counted toward the HPO budget).}
+
+% --- Search space ---
+\renewcommand{\SearchSpaceList}{Cell-based NAS: each cell is a DAG with $N\in\{4,5,6\}$ intermediate nodes. Each node selects two predecessors from earlier nodes; each edge selects one operator from \{3$\times$3 sep-conv, 5$\times$5 sep-conv, 3$\times$3 dil-conv, 5$\times$5 dil-conv, 3$\times$3 max-pool, 3$\times$3 avg-pool, skip-connect, zero\}. Macro-network: initial channels $C\in\{16,24,32\}$; number of cells $L\in\{8,14,20\}$; reduction cell positions fixed at 1/3 and 2/3 depth.}
+\renewcommand{\SearchSpaceConditionals}{Acyclicity is enforced by construction. ``zero'' is allowed but limited to at most one zero incoming edge per node; violations are repaired by resampling the offending edge operator.}
+\renewcommand{\SearchSpaceEncoding}{Canonical serialized genotype: ordered list of (node, edge\_1 predecessor, edge\_1 op, edge\_2 predecessor, edge\_2 op) tuples; fixed operator index ordering shared across all methods.}
+
+% --- Compute budget model ---
+\renewcommand{\EvaluationUnit}{One evaluation is training a sampled architecture under a fixed recipe (SGD with momentum 0.9, cosine LR schedule, fixed batch size) to a specified epoch fidelity and reporting validation error and compute proxies.}
+\renewcommand{\BudgetTiersText}{25/50/100}
+\renewcommand{\BudgetSet}{\{25,50,100\}}
+\renewcommand{\BmaxSymbol}{B_{\max}}
+
+\renewcommand{\MultiFidelityPolicy}{YES. Fidelity is training epochs \{50, 100, 200\}. All methods use the same ASHA scheduler (same rungs, grace period, and promotion rule); only proposal generation differs. ``Runtime'' is counted in completed configuration evaluations; we additionally report total epochs consumed.}
+\renewcommand{\ParallelismPolicy}{Asynchronous evaluation with a shared dispatcher implementing ASHA; promotions/early-stops are determined solely by the shared scheduler.}
+\renewcommand{\NumWorkers}{8}
+
+% --- Proposed method naming ---
+\renewcommand{\ProposedMethodName}{P3Net}
+\renewcommand{\BackboneName}{P3}
+\renewcommand{\NetAdaptationMeaning}{``Net'' denotes an HPO/NAS adaptation of P3: a canonical genotype encoding, an elite/archive rule, a diversity mechanism to avoid sampling collapse, constraint-aware sampling/repair, batching for parallelism, and a fixed update schedule consistent with the shared ASHA policy.}
+
+% --- Proposed method: P3Net details ---
+\renewcommand{\PThreeCoreDetails}{P3 maintains a probabilistic generator \(q_{\theta}(\lambda)\) over serialized genotypes. At each update, P3 fits \(\theta\) to an elite subset of evaluated genotypes and samples new genotypes from \(q_{\theta}\) for evaluation.}
+\renewcommand{\PThreeNetDetails}{P3Net augments vanilla P3 with (i) a Pareto-consistent elite/archive definition for multiobjective NAS, (ii) explicit diversity control to prevent mode collapse, (iii) constraint-aware sampling/repair for validity, and (iv) batched sampling aligned with the shared ASHA scheduler.}
+\renewcommand{\PThreeProposalModel}{Tree-structured factorization over genotype positions: for each node/edge position we model predecessor choice and operator choice as categorical variables with symmetric Dirichlet smoothing; we learn a maximum-spanning-tree dependency structure over positions using mutual information estimated on elites, then sample by ancestral sampling.}
+\renewcommand{\PThreeSelectionRule}{Elites are defined from completed (full-fidelity) trials as the nondominated set in objective space, followed by crowding-distance truncation to a fixed archive size \(A=200\). Under ASHA, only trials promoted to the highest rung contribute to the elite archive to avoid fidelity bias.}
+\renewcommand{\PThreeDiversityRule}{Diversity is enforced by a fixed proposal mixture: with probability \(\rho=0.2\) sample uniformly from \(\Lambda\) (random genotype), otherwise sample from \(q_{\theta}\). Additionally, archive truncation uses crowding distance to preserve spread across trade-offs.}
+\renewcommand{\PThreeConstraintHandling}{Constraint-aware repair: if a sampled genotype violates the zero-edge cap or yields an invalid predecessor index, we resample only the offending edge variables up to 10 attempts; if still invalid, we fall back to uniform sampling for that edge. All repairs preserve the budget accounting (each evaluated genotype counts as one evaluation).}
+\renewcommand{\PThreeBatchingParallelism}{At each optimizer step, propose a batch of \(W=8\) genotypes by i.i.d.\ sampling from the mixture proposal; duplicates are avoided by rejection against the run-local evaluated set (up to a fixed attempt limit), otherwise allowed and still count if evaluated.}
+\renewcommand{\PThreeUpdateSchedule}{Update \(\theta\) after each completed ASHA rung for the current run (synchronizing on rung completion); recompute the elite archive and refit \(q_{\theta}\) using the current archive with fixed smoothing hyperparameters.}
+\renewcommand{\KnownParts}{P3-style probabilistic modeling and ancestral sampling; standard Pareto concepts (nondomination, crowding) used only for elite selection/truncation.}
+\renewcommand{\NoveltyDetails}{(i) A ``Net'' adaptation of P3 for genotype NAS with explicit diversity and constraint repair; (ii) fidelity-consistent elite definition under ASHA (highest rung only) to avoid biased model fitting; (iii) batched proposal semantics aligned with parallel evaluation.}
+\renewcommand{\HPOHyperparameters}{Archive size \(A=200\); smoothing strength Dirichlet \(\alpha_0=1.0\); random-mixture rate \(\rho\in\{0.1,0.2,0.3\}\) (fixed to 0.2); dependency structure = MST; max repair attempts = 10; sensitivity to \(\rho\) and \(A\) on a held-out dev instance only, then frozen.}
+
+% --- Baselines and feasibility ---
+\renewcommand{\BaselinesRun}{\begin{itemize}
+    \item \textbf{Random Search (RS)} under the shared ASHA scheduler.
+    \item \textbf{BOHB} (TPE + Hyperband/ASHA) under identical rung structure.
+    \item \textbf{Optuna-TPE} (proposal-only) under the shared ASHA scheduler.
+    \item \textbf{SMAC3} (proposal-only) under the shared ASHA scheduler (where the encoding is supported).
+    \item \textbf{NSGA-Net} as an evolutionary Pareto baseline using the identical genotype encoding and evaluator (selection by nondomination + crowding).
+    \item \textbf{Vanilla P3} (factorized independent categorical model over genotype positions; no diversity mixture; simple elite = top-\(k\) scalarized).
+\end{itemize}}
+\renewcommand{\BaselinesNotRunWhy}{We omit weight-sharing NAS methods (e.g., DARTS/ENAS) because they change the evaluation model (shared weights and proxy objectives) and are not directly comparable under our ``one evaluation = train architecture'' budget model. We omit qEHVI / exact GP-BO over graph kernels due to prohibitive surrogate cost and lack of a maintained implementation compatible with this encoding under strong parallelism.}
+\renewcommand{\BaselineConfigPolicy}{Baselines use recommended defaults from their reference implementations; any tuner meta-parameters are calibrated on a separate development instance and then frozen for the full suite.}
+
+% --- Implementation and infrastructure ---
+\renewcommand{\Framework}{PyTorch (training) + a unified NAS/HPO harness in Python; Optuna (TPE/BOHB) and SMAC3 wrapped to use the identical evaluator and shared ASHA scheduler; pymoo for NSGA-Net baseline.}
+\renewcommand{\Hardware}{8$\times$ NVIDIA A100 40GB GPUs; each trial uses 1 GPU; up to \(W=8\) trials concurrently. CPU: 32 cores; RAM: 256GB.}
+\renewcommand{\DeterminismConstraints}{We fix Python/NumPy/PyTorch seeds, dataloader order, and enable deterministic algorithms where supported. Some GPU nondeterminism may remain; we quantify variance via repeated-seed finalist re-evaluation.}
+\renewcommand{\SoftwareVersions}{Docker image pinned: Python 3.10, PyTorch 2.x, CUDA 12.x, cuDNN 9.x; exact image digest and git commits recorded in the run manifest.}
+
+% --- Reporting requirements / artifacts ---
+\renewcommand{\VenueChecklistItems}{NeurIPS/ACM-style reproducibility: report encoding, hyperparameter ranges, compute budget and hardware, number of runs/seeds with variance, exact stopping rules and failure handling, ablations/sensitivity, and artifact availability (code/configs/logs/scripts).}
+\renewcommand{\ArtifactReleaseScope}{Release experiment harness, method implementations, baseline wrappers, split manifests, and raw per-trial logs; finalist checkpoints released where licensing permits.}
+
+% --- Design defaults ---
+\renewcommand{\NumRepeats}{10}
+\renewcommand{\SeedSetText}{\{0,\dots,9\}}
+\renewcommand{\FinalistReevalK}{3}
+\renewcommand{\InitDesignSize}{\min(10,\lfloor 0.2B \rfloor)}
+\renewcommand{\NearOracleEta}{0.01}
+\renewcommand{\RecoveryTolerance}{10^{-3}}
+\renewcommand{\CoverageFraction}{0.8}

@@ -1,0 +1,415 @@
+% Based on  ACM SIGSOFT Empirical Standards for Software Engineering  https://www2.sigsoft.org/EmpiricalStandards/ and NeurIPS https://neurips.cc/public/guides/PaperChecklist
+
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\setlist[itemize]{leftmargin=*,itemsep=0.35em}
+
+\begin{document}
+
+\title{Combined ACM SIGSOFT + NeurIPS Comprehensive Paper Checklist (Structure Only)}
+\author{}
+\date{}
+\maketitle
+
+\tableofcontents
+\newpage
+
+% ==========================================================
+% UPPER GROUP I
+% ==========================================================
+\part{Core Paper Narrative (What/Why)}
+
+% =========================
+% Part A
+% =========================
+\section*{A. Front Matter and Framing}
+\addcontentsline{toc}{section}{A. Front Matter and Framing}
+
+\subsection{Claims & scope (tldr)}
+\noindent\textbf{What this section should be:}
+A compact, reader-friendly overview of the paper: the problem, why it matters, what you propose, and what you empirically/theoretically show. Make sure your claims match your evidence, and state key assumptions and limitations up front.
+\begin{itemize}
+  \item \textit{[ACM]} ``states a purpose, problem, objective, or research question''
+  \item \textit{[ACM]} ``explains why the purpose, problem, etc. is important (motivation)''
+  \item \textit{[ACM]} ``defines jargon, acronyms and key concepts''
+  \item \textit{[NeurIPS]} ``Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?''
+  \item \textit{[NeurIPS]} ``Claims in the paper should match theoretical and experimental results in terms of how much the results can be expected to generalize.''
+  \item \textit{[NeurIPS]} ``The paper's contributions should be clearly stated in the abstract and introduction, along with any important assumptions and limitations.''
+  \item \textit{[NeurIPS]} ``It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper.''
+  \item \textit{[ACM]} ``contributes in some way to the collective body of knowledge''
+\end{itemize}
+
+\subsection{Problem definition & motivation (what/why)}
+\noindent\textbf{What this section should be:}
+A crisp definition of the optimization task (HPO), including what makes it hard and why naive/manual/brute-force approaches are not viable. Bound the scope and state realistic constraints so the problem remains meaningful and non-trivial.
+\begin{itemize}
+  \item \textit{[ACM]} ``EITHER: describes prior state of the art in this area OR: carefully motivates and defines the problem tackled and the solution proposed''
+  \item \textit{[ACM]} ``explains why the problem cannot be optimized manually or by brute force within a reasonable timeframe''
+  \item \textit{[ACM]} ``uses realistic and limited simplifications and constraints for the optimization problem; simplifications and constraints do not reduce the search to one where all solutions could be enumerated through brute force''
+  \item \textit{[NeurIPS]} ``The paper should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs.''
+  \item \textit{[NeurIPS]} ``In general, empirical results often depend on implicit assumptions, which should be articulated.''
+\end{itemize}
+
+\subsection{Positioning in literature (Source?)}
+\noindent\textbf{What this section should be:}
+A synthesis of the most relevant prior work (not an exhaustive list), explaining how your approach differs, what gap it fills, and what trade-offs it makes. Clarify whether direct comparisons are possible, and if not, justify why.
+\begin{itemize}
+  \item \textit{[ACM]} ``summarizes and synthesizes a reasonable selection of related work (not every single relevant study)''
+  \item \textit{[ACM]} ``clearly describes relationship between contribution(s) and related work''
+  \item \textit{[ACM]} ``EITHER: discusses state-of-art alternatives (and their strengths, weaknesses and limitations) OR: explains why no state-of-art alternatives exist OR: provides compelling argument that direct comparisons are impractical''
+  \item \textit{[ACM]} ``motivates the novelty and soundness of the proposed approach''
+  \item \textit{[ACM]} ``explains whether the study explores a new problem type (or a new area within an existing problem space), or how it reproduces, replicates, or improves upon prior work''
+  \item \textit{[NeurIPS]} ``You are encouraged to discuss the relationship between your results and related results in the literature.''
+\end{itemize}
+
+\subsection{Contribution snapshot (How but tldr?)}
+\noindent\textbf{What this section should be:}
+A clear description of your contribution(s): the new optimization method, any compression technique, and any accompanying artifact (code, benchmark, datasets, model checkpoints). Include an intuitive overview, key ideas, and why the artifact is useful.
+\begin{itemize}
+  \item \textit{[ACM]} ``describes the proposed artifact in adequate detail''
+  \item \textit{[ACM]} ``justifies the need for, usefulness of, or relevance of the proposed artifact''
+  \item \textit{[ACM]} ``conceptually evaluates the proposed artifact; discusses its strengths, weaknesses and limitations''
+  \item \textit{[ACM]} ``discusses the theoretical basis of the artifact''
+  \item \textit{[NeurIPS]} ``Depending on the contribution, reproducibility can be accomplished in various ways.''
+  \item \textit{[NeurIPS]} ``If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm.''
+\end{itemize}
+
+% ==========================================================
+% UPPER GROUP II
+% ==========================================================
+\part{Scientific Substance (How + Evidence)}
+
+% =========================
+% Part B
+% =========================
+\section*{B. Methods and Formalization}
+\addcontentsline{toc}{section}{B. Methods and Formalization}
+
+\subsection{Research Method (Methodology: What/Where/When/How)}
+\noindent\textbf{What this section should be:}
+Explain your research approach (e.g., benchmarking study, quantitative simulation) and justify why it fits your question. Describe data collection and analysis procedures precisely enough that a reader can follow the full pipeline.
+\begin{itemize}
+  \item \textit{[ACM]} ``names the methodology or methodologies used''
+  \item \textit{[ACM]} ``methodology is appropriate (not necessarily optimal) for stated purpose, problem, etc.''
+  \item \textit{[ACM]} ``describes in detail what, where, when and how data were collected (see the Sampling Supplement)''
+  \item \textit{[ACM]} ``describes in detail how the data were analyzed''
+  \item \textit{[ACM]} ``describes reasonable attempts to investigate or mitigate limitations''
+  \item \textit{[ACM]} ``states epistemological stance''
+  \item \textit{[NeurIPS]} ``While NeurIPS does not require releasing code, we do require all submissions to provide some reasonable avenue for reproducibility...''
+  \item \textit{[NeurIPS]} ``The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them.''
+\end{itemize}
+
+\subsection{Optimization Problem Formulation (Search Space, Solution, Objectives)}
+\noindent\textbf{What this section should be:}
+Formally define the HPO problem: search space, constraints, solution representation, operators, and objective(s). Specify exactly what is optimized, how fitness is computed, and what baselines/variants are included.
+\begin{itemize}
+  \item \textit{[ACM]} ``describes the search space (e.g., constraints, independent variables choices)''
+  \item \textit{[ACM]} ``selects a realistic option space for formulating a solution; any values set for attributes should reflect one that might be chosen in a ``real-world'' solution, and not generated from an arbitrary distribution''
+  \item \textit{[ACM]} ``explictly defines the solution formulation, including a description of what a solution represents, how it is represented, and how it is manipulated''
+  \item \textit{[ACM]} ``explicitly defines all fitness functions, including the type of goals that are optimized and the equations for calculating fitness values''
+  \item \textit{[ACM]} ``explicitly defines evaluated approaches, including the techniques, specific heuristics, and the parameters and their values''
+  \item \textit{[ACM]} ``justifies the choice of algorithmunderlying the approach''
+  \item \textit{[NeurIPS]} ``did you specify all the training details (e.g., data splits, hyperparameters, how they were chosen)?''
+  \item \textit{[NeurIPS]} ``information about how hyperparameters were selected should appear either in the paper or supplementary materials.''
+\end{itemize}
+
+\subsection{Theoretical foundations (Theory, Assumptions, and Correctness)}
+\noindent\textbf{What this section should be:}
+Present theoretical results (if any) such as convergence properties, complexity bounds, or guarantees from the compression scheme. State all assumptions explicitly and provide complete proofs (or put them in the supplement with a proof sketch in the main text).
+\begin{itemize}
+  \item \textit{[ACM]} ``provides correctness arguments for the key analytical and theoretical contributions (e.g. theorems, complexity analyses, mathematical proofs)''
+  \item \textit{[ACM]} ``assumptions (if any) are explicit, plausible and do not contradict each other or the contribution's goals''
+  \item \textit{[NeurIPS]} ``If you are including theoretical results, did you state the full set of assumptions of all theoretical results, and did you include complete proofs of all theoretical results?''
+  \item \textit{[NeurIPS]} ``All assumptions should be clearly stated or referenced in the statement of any theorems.''
+  \item \textit{[NeurIPS]} ``The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, authors are encouraged to provide a short proof sketch to provide intuition.''
+  \item \textit{[NeurIPS]} ``Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material.''
+  \item \textit{[NeurIPS]} ``Theorems and Lemmas that the proof relies upon should be properly referenced.''
+\end{itemize}
+
+% =========================
+% Part C
+% =========================
+\section*{C. Data and Experimental Design}
+\addcontentsline{toc}{section}{C. Data and Experimental Design}
+
+\subsection{Data, Subjects, and Sampling (Datasets for HPO)}
+\noindent\textbf{What this section should be:}
+Describe the datasets/tasks/benchmarks used for HPO, how they were selected, and what makes instances easy vs hard. Document cleaning/transforms, justify any synthetic data, and address selection bias and generalization.
+\begin{itemize}
+  \item \textit{[ACM]} ``EITHER: clearly describes (and follows) a sound process to collect and prepare the datasets used to run and to evaluate the optimization approach OR: if the subjects are taken from previous work, fully reference the original source and explain whether any transformation or cleaning was applied to the datasets''
+  \item \textit{[ACM]} ``explains in detail how subjects or datasets were collected/chosen to mitigate selection bias and improve the generalization of findings''
+  \item \textit{[ACM]} ``describes the main features of the subjects used to run and evaluate the optimization approach(es) and discuss what characterizes the different instances in terms of ``hardness''''
+  \item \textit{[ACM]} ``justifies the use of synthetic data (if any); explain why real-world data cannot be used; discusses the extent to which the proposed approach and the findings can apply to the real world (if data cannot be shared)''
+  \item \textit{[ACM]} ``provides a sample dataset that can be shared to illustrate the approach''
+  \item \textit{[NeurIPS]} ``The authors should reflect on the factors that influence the performance of the approach.''
+\end{itemize}
+
+\subsection{Evaluation protocol (Empirical Evaluation Design: Study Type + Baseline + Comparisons)}
+\noindent\textbf{What this section should be:}
+Specify the empirical method and experimental protocol. Define baselines and comparison targets, and explain what comparisons are feasible. If you cannot compare directly, give a convincing rationale and adjust claims accordingly.
+\begin{itemize}
+  \item \textit{[ACM]} ``empirically evaluates the proposed artifact using: action research, in which the researchers intervene in a real organization using the artifact, a case study in which the researchers observe a real organization using the artifact, a controlled experiment in which human participants use the artifact, a quantitative simulation in which the artifact is assessed (usually against a competing artifact) in an artificial environment, a benchmarking study, in which the artifact is assessed using one or more benchmarks, or another method for which a clear and convincing rationale is provided''
+  \item \textit{[ACM]} ``clearly indicates which of the above empirical methodology is used''
+  \item \textit{[ACM]} ``compares approaches to a justified and appropriate baseline''
+  \item \textit{[ACM]} ``EITHER: empirically compares the artifact to one or more state-of-the-art alternatives OR: empirically compares the artifact to one or more state-of-the-art benchmarks OR: provides a clear and convincing rationale for why comparative evaluation is impractical''
+  \item \textit{[NeurIPS]} ``Main experimental results include your new method and baselines.''
+  \item \textit{[NeurIPS]} ``If a subset of experiments are reproducible, you should state which ones are.''
+\end{itemize}
+
+\subsection{Benchmark definition (Benchmarks and Workloads: Definition/Choice + Construct Validity)}
+\noindent\textbf{What this section should be:}
+Define or justify benchmarks and workloads: what quality is measured, which metrics and measurement methods are used, and what workload the system experiences. Ensure fairness across configurations and argue that the benchmark measures what you claim.
+\begin{itemize}
+  \item \textit{[ACM]} ``EITHER: justifies the selection of an existing, publicly available or standard benchmark (in terms of relevance, timeliness, etc.) OR: defines a new benchmark, including: (i) the quality to be benchmarked (e.g., performance, availability, scalability, security), (ii) the metric(s) to quantify the quality, (iii) the measurement method(s) for the metric (if not obvious), (iv) the workload, usage profile and/or task sample the system under test is subject to (i.e. what the system is doing when the measures are taken)''
+  \item \textit{[ACM]} ``justifies the design of the benchmark (in terms of relevance, timeliness, etc.)''
+  \item \textit{[ACM]} ``reuses existing benchmark design components from established benchmarks or justifies new components''
+  \item \textit{[ACM]} ``describes the experimental setup for the benchmark in sufficient detail to support independent replication (or refers to such a description in supplementary materials)''
+  \item \textit{[ACM]} ``specifies the workload or usage profile in sufficient detail to support independent replication (or refers to such a description in supplementary materials)''
+  \item \textit{[ACM]} ``allows different configurations of a system under test to compete on their merits without artificial limitations''
+  \item \textit{[ACM]} ``assesses stability or reliability using sufficient experiment repetitions and execution duration''
+  \item \textit{[ACM]} ``discusses the construct validity of the benchmark; that is, does the benchmark measure what it is supposed to measure?''
+  \item \textit{[NeurIPS]} ``Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?''
+\end{itemize}
+
+\subsection{Execution details (Experimental Setting Details: Splits + Hyperparameters + Compute + Environment)}
+\noindent\textbf{What this section should be:}
+Give enough implementation/training detail for a reader to replicate: splits, hyperparameters (and how chosen), random seeds/stochasticity, number of runs, compute type and time, and any details not obvious from the method description.
+\begin{itemize}
+  \item \textit{[NeurIPS]} ``did you specify all the training details (e.g., data splits, hyperparameters, how they were chosen)?''
+  \item \textit{[NeurIPS]} ``The full details can be provided with the code, in appendix or as a supplement, but the important details should be in the main paper.''
+  \item \textit{[NeurIPS]} ``For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?''
+  \item \textit{[NeurIPS]} ``The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage.''
+  \item \textit{[NeurIPS]} ``The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute.''
+  \item \textit{[NeurIPS]} ``The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn’t make it into the paper)''
+  \item \textit{[ACM]} ``provides random data splits (e.g., those used in data-driven approaches) or ensures splits are reproducibile.''
+  \item \textit{[ACM]} ``samples from data multiple times in a controlled manner (where appropriate and possible)''
+  \item \textit{[ACM]} ``performs multiple trials either as a cross-validation (multiple independent executions) or temporally (multiple applications as part of a timed sequence), depending on the problem at hand''
+  \item \textit{[ACM]} ``justifies the parameter values used when executing the evaluated approaches (and note that experiments trying a wide range of different parameter values would be extraordinary, see below)''
+  \item \textit{[ACM]} ``identifies and explains all possible sources of stochasticity''
+  \item \textit{[ACM]} ``EITHER: executes stochastic approaches or elements multiple times OR: explains why this is not possible''
+\end{itemize}
+
+% =========================
+% Part D
+% =========================
+\section*{D. Analysis and Results}
+\addcontentsline{toc}{section}{D. Analysis and Results}
+
+\subsection{Statistical methodology (Statistical Analysis and Meta-Evaluation: Power + Assumptions + Distributions)}
+\noindent\textbf{What this section should be:}
+Explain how you summarize and compare results: what variability is measured, how error bars are computed, which statistical tests are used, and what assumptions they require. Prefer distributional comparisons when appropriate and justify meta-evaluation criteria.
+\begin{itemize}
+  \item \textit{[ACM]} ``enumerates and validates assumptions of statistical tests used (if any)''
+  \item \textit{[ACM]} ``demonstrates appropriate statistical power (for quantitative work) or saturation (for qualitative work)''
+  \item \textit{[ACM]} ``compares distributions (rather than means) of results using appropriate statistics''
+  \item \textit{[ACM]} ``compares solutions using an appropriate meta-evaluation criteria; justifies the chosen criteria''
+  \item \textit{[NeurIPS]} ``The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions).''
+  \item \textit{[NeurIPS]} ``The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.)''
+  \item \textit{[NeurIPS]} ``The assumptions made should be given (e.g., Normally distributed errors).''
+  \item \textit{[NeurIPS]} ``It should be clear whether the error bar is the standard deviation or the standard error of the mean.''
+  \item \textit{[NeurIPS]} ``For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates).''
+\end{itemize}
+
+\subsection{Results (Answer RQs + Evidence vs Interpretation)}
+\noindent\textbf{What this section should be:}
+Present the primary findings clearly and directly tied to your research questions. Separate reported measurements from interpretation, and make sure the magnitude and scope of results match the claims stated earlier.
+\begin{itemize}
+  \item \textit{[ACM]} ``presents results''
+  \item \textit{[ACM]} ``results directly address research questions''
+  \item \textit{[ACM]} ``states clear conclusions which are linked to research question (or purpose, etc.) and supported by explicit evidence (data/observations) or arguments''
+  \item \textit{[ACM]} ``discusses implications of the results''
+  \item \textit{[ACM]} ``clearly distinguishes evidence-based results from interpretations and speculation''
+  \item \textit{[NeurIPS]} ``Claims in the paper should match theoretical and experimental results in terms of how much the results can be expected to generalize.''
+\end{itemize}
+
+\subsection{Robustness and boundaries (Limitations, Realism, Sensitivity, and Robustness)}
+\noindent\textbf{What this section should be:}
+An explicit limitations section: list strong assumptions, discuss failure modes, sensitivity to realism choices, and how conclusions change if assumptions are violated. Be candid about what you did not test and what factors influence performance.
+\begin{itemize}
+  \item \textit{[NeurIPS]} ``The authors are encouraged to create a separate ``Limitations'' section in their paper.''
+  \item \textit{[NeurIPS]} ``The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally).''
+  \item \textit{[NeurIPS]} ``The authors should reflect on how these assumptions might be violated in practice and what the implications would be.''
+  \item \textit{[NeurIPS]} ``The authors should reflect on the factors that influence the performance of the approach.''
+  \item \textit{[NeurIPS]} ``Reviewers will be specifically instructed to not penalize honesty concerning limitations.''
+  \item \textit{[ACM]} ``discloses all major limitations''
+  \item \textit{[ACM]} ``discusses study’s realism, assumptions and sensitivity of the results to its realism/assumptions''
+  \item \textit{[ACM]} ``describes reasonable attempts to investigate or mitigate limitations''
+\end{itemize}
+
+% ==========================================================
+% UPPER GROUP III
+% ==========================================================
+\part{Transparency, Responsibility, and Extras}
+
+% =========================
+% Part E
+% =========================
+\section*{E. Reproducibility, Artifacts, and Compliance}
+\addcontentsline{toc}{section}{E. Reproducibility, Artifacts, and Compliance}
+
+\subsection{Reproducibility route (Reproducibility, Artifacts, and Replication Package: Code/Data/Instructions)}
+\noindent\textbf{What this section should be:}
+Provide a clear reproducibility pathway: what artifacts are available (code/data/models), where to find them, how to run them, and which results are reproduced. If something cannot be shared, explain why and provide the best alternative route to verification.
+\begin{itemize}
+  \item \textit{[NeurIPS]} ``did you include the code, data, and instructions needed to reproduce the main experimental results (either in the supplemental material or as a URL)?''
+  \item \textit{[NeurIPS]} ``The instructions should contain the exact command and environment needed to run to reproduce the results.''
+  \item \textit{[NeurIPS]} ``While NeurIPS does not require releasing code, we do require all submissions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution.''
+  \item \textit{[ACM]} ``EITHER: makes data publicly available OR: explains why this is not possible''
+  \item \textit{[ACM]} ``provides supplementary materials including source code (if the artifact is software) or a comprehensive description of the artifact (if not software), and any input datasets (if applicable)''
+  \item \textit{[ACM]} ``provides supplementary materials including datasets, analysis scripts and (for novel benchmarks) extended documentation''
+  \item \textit{[ACM]} ``justifies any items missing from replication package based on practical or ethical grounds''
+  \item \textit{[ACM]} ``provides a replication package that conforms to SIGSOFT standards for artifacts.''
+  \item \textit{[ACM]} ``provides benchmark(s) in a usable form that facillitates independent replication''
+  \item \textit{[ACM]} ``transparently reports on problems with executing benchmark runs, if any''
+  \item \textit{[ACM]} ``reports on independent replication of the benchmark results''
+  \item \textit{[ACM]} ``reports on a large community that uses the benchmark''
+  \item \textit{[ACM]} ``reports on an independent organization that maintains the benchmark''
+  \item \textit{[ACM]} ``uses or creates open source benchmarks''
+\end{itemize}
+
+\subsection{Legal/attribution compliance (Licensing, Attribution, and Asset Documentation)}
+\noindent\textbf{What this section should be:}
+List all external assets (datasets, libraries, models, code) with versions, citations, and licenses. If you release new assets, include documentation, license/terms, and any consent or privacy considerations.
+\begin{itemize}
+  \item \textit{[NeurIPS]} ``If you are using existing assets (e.g., code, data, models), did you cite the creators and respect the license and terms of use?''
+  \item \textit{[NeurIPS]} ``Remember to state which version of the asset you're using.''
+  \item \textit{[NeurIPS]} ``State the name of the license (e.g., CC-BY 4.0) for each asset.''
+  \item \textit{[NeurIPS]} ``If you scraped data from a particular source (e.g., website), you should state the copyright and terms of service of that source.''
+  \item \textit{[NeurIPS]} ``If you are releasing assets, you should include a license, copyright information, and terms of use in the package.''
+  \item \textit{[NeurIPS]} ``If you are releasing new assets, did you document them and provide these details alongside the assets?''
+  \item \textit{[NeurIPS]} ``Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc.''
+  \item \textit{[ACM]} ``justifies any items missing from replication package based on practical or ethical grounds''
+\end{itemize}
+
+\subsection{Model/tool disclosure (LLM Usage Declaration: Only If It Affects Core Methods)}
+\noindent\textbf{What this section should be:}
+If LLMs are part of the core method (e.g., propose candidates, guide search, generate features), document how they are used and how they affect rigor and originality. If LLMs are only used for writing, no declaration is needed.
+\begin{itemize}
+  \item \textit{[NeurIPS]} ``Declaration of LLM usage: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research?''
+  \item \textit{[NeurIPS]} ``Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required.''
+  \item \textit{[NeurIPS]} ``The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.''
+\end{itemize}
+
+% =========================
+% Part F
+% =========================
+\section*{F. Ethics and Human-Related Requirements}
+\addcontentsline{toc}{section}{F. Ethics and Human-Related Requirements}
+
+\subsection{Ethics & impact (Ethics, Risks, Broader Impacts, and Safeguards)}
+\noindent\textbf{What this section should be:}
+Explain potential harms, unintended consequences, and misuse risks, and what mitigations or safeguards you apply. If your paper is foundational with no plausible harm pathways, state that and justify briefly.
+\begin{itemize}
+  \item \textit{[ACM]} ``acknowledges and mitigates potential risks, harms, burdens or unintended consequences of the research (see the ethics supplements for Engineering Research, Human Participants, or Secondary Data)''
+  \item \textit{[NeurIPS]} ``Have you read the NeurIPS Code of Ethics and ensured that your research conforms to it?''
+  \item \textit{[NeurIPS]} ``If appropriate for the scope and focus of your paper, did you discuss potential negative societal impacts of your work?''
+  \item \textit{[NeurIPS]} ``Consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology.''
+  \item \textit{[NeurIPS]} ``If there are negative societal impacts, you could also discuss any mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).''
+  \item \textit{[NeurIPS]} ``Do you have safeguards in place for responsible release of models with a high risk for misuse (e.g., pretrained language models)?''
+  \item \textit{[NeurIPS]} ``Datasets that have been scraped from the Internet could pose safety risks.''
+\end{itemize}
+
+\subsection{Author transparency (Human Subjects, Crowdsourcing, Approvals, Researcher Roles, Reflexivity, and Lessons Learned}
+\noindent\textbf{What this section should be:}
+If humans are involved (user studies, crowdsourcing), document protocols, instructions, compensation, risks, and approvals. Include enough detail (main text or supplement) so the study can be evaluated and replicated ethically.
+\begin{itemize}
+  \item \textit{[ACM]} ``empirically evaluates the proposed artifact using: ... a controlled experiment in which human participants use the artifact ...''
+  \item \textit{[NeurIPS]} ``If you used crowdsourcing or conducted research with human subjects, did you include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)?''
+  \item \textit{[NeurIPS]} ``According to the NeurIPS Code of Ethics, you must pay workers involved in data collection, curation, or other labor at least the minimum wage in your country.''
+  \item \textit{[NeurIPS]} ``Did you describe any potential participant risks and obtain Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your institution), if applicable?''
+  \item \textit{[NeurIPS]} ``If you obtained IRB approval, you should clearly state this in the paper.''
+\end{itemize}
+
+% =========================
+% Part G
+% =========================
+\section*{G. Presentation Quality and Transparency}
+\addcontentsline{toc}{section}{G. Presentation Quality and Transparency}
+
+\subsection{Writing, Notation, and Visualization Quality (Readability + Non-misleading)}
+\noindent\textbf{What this section should be:}
+Ensure presentation quality: consistent notation, clear writing, and figures/tables that support the argument without misleading choices (scales, truncated axes, inappropriate error bars). Make the paper easy to skim and hard to misinterpret.
+\begin{itemize}
+  \item \textit{[ACM]} ``concise, precise, well-organized and easy-to-read presentation''
+  \item \textit{[ACM]} ``language is not misleading; any grammatical problems do not substantially hinder understanding''
+  \item \textit{[ACM]} ``uses notation consistently (if any notation is used)''
+  \item \textit{[ACM]} ``visualizations/graphs are not misleading (see the Information Visualization Supplement)''
+  \item \textit{[ACM]} ``visualizations (e.g. graphs, diagrams, tables) advance the paper’s arguments or contribution''
+  \item \textit{[NeurIPS]} ``The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them.''
+\end{itemize}
+
+\subsection{Researcher Roles, Reflexivity, and Lessons Learned}
+\noindent\textbf{What this section should be:}
+State who did what, and include brief reflection: what worked, what surprised you, and what you would change. This helps readers interpret decisions (e.g., benchmark choices, parameter selection) and understand the research process.
+\begin{itemize}
+  \item \textit{[ACM]} ``clarifies the roles and responsibilities of the researchers (i.e. who did what?)''
+  \item \textit{[ACM]} ``provides an auto-reflection or assessment of the authors’ own work (e.g. lessons learned)''
+  \item \textit{[NeurIPS]} ``In general, we advise authors to use their best judgement and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community.''
+\end{itemize}
+
+% =========================
+% Part H
+% =========================
+\section*{H. Optional ``Bonus Rigor'' Extensions}
+\addcontentsline{toc}{section}{H. Optional ``Bonus Rigor'' Extensions}
+
+\subsection{Pre-registration rigor (Registered Reports / Two-phase Publishing)}
+\noindent\textbf{What this section should be:}
+If using a registered report format, separate what you committed to in advance (plan) from what happened (results). This improves credibility and reduces hindsight bias in HPO experimentation.
+\begin{itemize}
+  \item \textit{[ACM]} ``publishes the study in two phases: a plan and the results of executing the plan (see the Registered Reports Supplement)''
+  \item \textit{[NeurIPS]} ``The answer NA means that the paper does not include experiments.''
+\end{itemize}
+
+\subsection{Subjective assessment rigor (Multiple Raters and Subjective Judgments)}
+\noindent\textbf{What this section should be:}
+If you include subjective assessments (e.g., labeling, qualitative ratings, human judgments), explain rater procedures and agreement. Use multiple raters when appropriate, and document instructions and adjudication.
+\begin{itemize}
+  \item \textit{[ACM]} ``uses multiple raters, where philosophically appropriate, for making subjective judgments (see the IRR/IRA Supplement)''
+  \item \textit{[NeurIPS]} ``Answers are visible to reviewers.''
+\end{itemize}
+
+\subsection{Real-world grounding (Industry Relevance and Running Examples)}
+\noindent\textbf{What this section should be:}
+Add an intuitive running example to make your method concrete, and evaluate on settings that resemble real-world use (industry datasets, widely used OSS, professional workflows). Report compute details for these larger-scale scenarios.
+\begin{itemize}
+  \item \textit{[ACM]} ``includes one or more running examples to elucidate the artifact''
+  \item \textit{[ACM]} ``evaluates the artifact in an industry-relevant context (e.g. widely used open-source projects, professional programmers)''
+  \item \textit{[NeurIPS]} ``The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage.''
+\end{itemize}
+
+\subsection{Benchmark impact evidence (Benchmark Community Evidence)}
+\noindent\textbf{What this section should be:}
+If you introduce or heavily rely on a benchmark, justify relevance and usability with evidence (e.g., reviews, adoption, case studies). If code/data are central, treat release quality as part of the contribution.
+\begin{itemize}
+  \item \textit{[ACM]} ``provides empirical evidence for the relevance of a benchmark, e.g., using a Systematic Review''
+  \item \textit{[ACM]} ``provides empirical evidence for the usability of a benchmark, e.g., using Action Research or Case Studies''
+  \item \textit{[NeurIPS]} ``Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark).''
+\end{itemize}
+
+\subsection{Methodological triangulation (Methodology ``Extraordinary'' Extensions: If You Aim Beyond Baseline Rigor)}
+\noindent\textbf{What this section should be:}
+Optional advanced rigor: triangulate results using multiple methodologies or epistemological perspectives, or introduce a methodological innovation that strengthens empirical validity beyond typical HPO papers.
+\begin{itemize}
+  \item \textit{[ACM]} ``applies two or more data collection or analysis strategies to the same research question (see the Multimethodology Standard)''
+  \item \textit{[ACM]} ``approaches the same research question(s) from multiple epistemological perspectives''
+  \item \textit{[ACM]} ``innovates on research methodology while completing an empirical study''
+  \item \textit{[ACM]} ``contributes to our collective understanding of design practices or principles''
+  \item \textit{[ACM]} ``presents ground-breaking innovations with obvious real-world benefits''
+\end{itemize}
+
+\subsection{Deeper optimization diagnostics (HPO/Optimization Deep-dive Analyses: Extra, But Aligned With Your Topic)}
+\noindent\textbf{What this section should be:}
+Go beyond ``method wins'': analyze sensitivity to algorithm parameters, how you selected final settings, and (if possible) properties of the objective/fitness landscape that explain observed behaviors.
+\begin{itemize}
+  \item \textit{[ACM]} ``analyzes different parameter choices to the algorithm, indicating how the final parameters were selected''
+  \item \textit{[ACM]} ``analyzes the fitness landscape for one or more of the chosen fitness functions''
+\end{itemize}
+
+\end{document}

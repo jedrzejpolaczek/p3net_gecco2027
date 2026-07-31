@@ -1,0 +1,39 @@
+\subsection*{Notes for V. RESEARCH METHOD}
+\paragraph{Objective}
+Frame the paper as a controlled benchmarking study of stochastic optimizers in NAS/HPO, and state the experimental philosophy (fairness controls + pre-specified statistics).
+
+\textbf{TODO:}
+\begin{itemize}
+    \item \paragraph{Keep}
+\end{itemize}
+\begin{itemize}
+  \begin{itemize}
+      \item The “controlled benchmarking” framework, pre-specified metrics, and fairness controls.
+  \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+    \item \paragraph{Rewrite / move}
+\end{itemize}
+\begin{itemize}
+  \begin{itemize}
+      \item Keep the study-design narrative here; move the operational details (hardware, exact configurations) into the Experimental Protocol/Execution Details.
+  \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+    \item \paragraph{Add first}
+\end{itemize}
+\begin{itemize}
+  \begin{itemize}
+      \item Study type: quantitative benchmarking with repeated independent runs, fixed budgets, and paired comparisons where possible.
+      \item Fairness: same evaluator, same encoding, same budgets and multi-fidelity schedule, same parallelism policy, same initialization size $n_0$ (or explicit rationale if different).
+      \item Hypotheses: state 2--4 testable hypotheses and what outcomes would disconfirm them.
+      \item Outcome measures: define the primary metric(s) and how significance is assessed (refer to the Stats Methodology).
+  \end{itemize}
+\end{itemize}
+
+\paragraph{Peer-review must-haves}
+\begin{itemize}
+  \item A clear explanation of how to avoid the “unfair advantage”" baseline (tuning budget, compute accounting).
+\end{itemize}

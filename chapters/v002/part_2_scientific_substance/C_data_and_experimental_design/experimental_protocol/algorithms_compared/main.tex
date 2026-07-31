@@ -1,0 +1,65 @@
+% =========================
+% C) Algorithms Compared (Proposed + Baselines)
+% =========================
+\subsection{Algorithms Compared (Proposed + Baselines)}
+\label{subsec:algorithms}
+
+\paragraph{Proposed method: \ProposedMethodName{}.}
+We evaluate \ProposedMethodName{} as a \BackboneName{}-based optimizer adapted to the shared HPO/NAS setting.
+\NetAdaptationMeaning{}
+
+\paragraph{\BackboneName{} core (backbone).}
+\PThreeCoreDetails{}
+At a high level, \BackboneName{} maintains a probabilistic generator \(q_{\theta}(\lambda)\) over configurations \(\lambda \in \Lambda\).
+The model parameters \(\theta\) are fit to an \emph{elite set} of previously evaluated configurations.
+New candidates are proposed by sampling \(\lambda \sim q_{\theta}\), evaluating them under the shared objective(s), and updating \(\theta\)
+according to a fixed schedule.
+
+\paragraph{\ProposedMethodName{} adaptation.}
+\PThreeNetDetails{}
+To make the backbone applicable and comparable in our benchmarking setting, \ProposedMethodName{} instantiates the following
+\emph{pre-specified} components (fixed \emph{a priori} for the full benchmark suite):
+\begin{enumerate}
+    \item \textbf{Proposal model and factorization:} \PThreeProposalModel{}.
+    \item \textbf{Elite / training set definition:} \PThreeSelectionRule{}.
+    \item \textbf{Diversity control:} \PThreeDiversityRule{} (prevents collapse and sustains exploration).
+    \item \textbf{Constraint handling:} \PThreeConstraintHandling{} (ensures samples are valid in \(\Lambda\) and satisfy conditionals).
+    \item \textbf{Parallel proposals:} \PThreeBatchingParallelism{} (each update emits up to \(W=\NumWorkers\) configurations under the shared parallelism policy).
+    \item \textbf{Update schedule:} \PThreeUpdateSchedule{} (when \(\theta\) is updated; how fidelity is incorporated if multi-fidelity is enabled).
+\end{enumerate}
+
+\paragraph{Multiobjective handling (if \(m>1\)).}
+When optimizing \(\mathbf{F}(\lambda)\), \ProposedMethodName{} defines elites using a Pareto-consistent rule.
+Elites are drawn from the nondominated set and then truncated for diversity (e.g., crowding-distance truncation),
+or selected via an ensemble of scalarizations (e.g., random weights) to provide a stable learning signal for \(q_{\theta}\).
+The elite rule is fixed across benchmarks and budgets to avoid post-hoc adaptation.
+
+\paragraph{Novelty.}
+We explicitly separate known and new components:
+\begin{itemize}
+    \item \textbf{Known:} \KnownParts{}.
+    \item \textbf{New:} \NoveltyDetails{}.
+\end{itemize}
+
+\paragraph{Baselines (run) and justification.}
+We compare against baselines chosen to cover:
+(i) uninformed sampling, (ii) model-based HPO, (iii) evolutionary Pareto optimization where relevant, and (iv) component attribution.
+\BaselinesRun{}
+All baselines use the identical search space \(\Lambda\), evaluator, budget, and parallelism policy (see fairness constraints below).
+
+\paragraph{Baselines (not run) and feasibility constraints.}
+We do not compare against:
+\BaselinesNotRunWhy{}
+For each omitted baseline we provide a concrete reason (e.g., incompatible evaluation model, prohibitive compute,
+missing maintained implementation, or mismatched fidelity assumptions) and restrict claims accordingly.
+
+\paragraph{Fairness rules (hard constraints).}
+All methods are run under the following enforced constraints:
+\begin{enumerate}
+    \item \textbf{Identical search space \(\Lambda\) and encoding.} No method receives extra priors or auxiliary data unavailable to others.
+    \item \textbf{Identical evaluation pipeline.} Same splits, preprocessing, training recipe, and metric computation.
+    \item \textbf{Identical budgets and stopping rules.} Each method stops after exactly \(B\) evaluations
+    (counting invalid/failing trials consistently; see \S\ref{subsec:stats}).
+    \item \textbf{Identical parallelism policy.} \ParallelismPolicy{} with \(W=\NumWorkers\).
+    \item \textbf{Identical randomization control.} Seed policy and evaluation-seed hashing are shared (see \S\ref{subsec:design}).
+\end{enumerate}

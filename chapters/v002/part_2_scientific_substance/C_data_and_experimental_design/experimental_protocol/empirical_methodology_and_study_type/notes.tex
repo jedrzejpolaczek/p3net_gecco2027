@@ -1,0 +1,50 @@
+% =========================
+% Explanation: Empirical Methodology and Study Type (informal, readable)
+% =========================
+\subsection*{Explanation of Empirical Methodology and Study Type (informal)}
+This section explains what kind of empirical study we conduct, what it is designed to answer, and what claims it can (and cannot) support.
+
+\begin{itemize}
+    \item \textbf{Study type.}
+    We treat the evaluation as a \emph{benchmarking / quantitative simulation} study of stochastic black-box optimization.
+    Concretely, we compare multiple HPO/NAS algorithms by running each method on the same set of benchmark problem instances
+    (datasets, splits, training recipes, and search spaces) under identical budgets and evaluation pipelines.
+    Because objective evaluations are typically expensive and noisy (e.g., training a model), the study focuses on \emph{sample efficiency}
+    measured as a function of the number of evaluations.
+
+    \item \textbf{Core evaluation question.}
+    The central question is whether the proposed method produces better outcomes \emph{under the same evaluation budget}
+    (fixed-budget comparisons) and/or reaches a target performance level in fewer evaluations (fixed-target comparisons)
+    than strong baselines.
+    In the multiobjective case, ``better outcomes'' means recovering a higher-quality approximation to the Pareto front
+    (e.g., higher hypervolume or lower \(\epsilon\)-indicator) under the same budget.
+
+    \item \textbf{Hypotheses (pre-specified).}
+    To avoid post-hoc selection of favorable outcomes, we pre-specify hypotheses:
+    \begin{itemize}
+        \item \textbf{Primary (efficiency):} Under identical budgets and evaluation pipelines, the proposed method achieves
+        lower fixed-budget regret (single objective) and/or improved Pareto quality (multiobjective) compared to baselines.
+        \item \textbf{Secondary (time-to-target):} The proposed method reaches near-oracle targets in fewer evaluations than baselines.
+        \item \textbf{Mechanistic (attribution):} Any gains are attributable to the novel components of the method,
+        verified via ablations (e.g., removing each new component and measuring the impact).
+    \end{itemize}
+
+    \item \textbf{Scope of claims.}
+    We bound claims to what is actually tested:
+    the specified search space \(\Lambda\), evaluation definition (what constitutes one evaluation),
+    datasets/splits, training recipe, and the examined budget tiers.
+    We do \emph{not} claim generalization to substantially different model families, datasets, training procedures,
+    or evaluation models (e.g., multi-fidelity vs.\ full-fidelity) unless those settings are included in the benchmark suite.
+
+    \item \textbf{Out-of-scope factors and interpretation.}
+    Because this is a benchmarking study focused on evaluation counts, we define ``runtime'' primarily as the number of completed evaluations
+    (trained models), not wall-clock time; wall-clock comparisons are only meaningful under tightly matched systems and parallelism.
+    Likewise, we do not claim that the best observed configuration is a global optimum; instead, we evaluate relative to an empirical oracle reference
+    constructed from the union of observed results at the largest tested budget.
+
+    \item \textbf{Reproducibility framing.}
+    We distinguish \emph{exact reproducibility} (possible for deterministic/tabular benchmarks or fully deterministic training stacks)
+    from \emph{broad reproducibility} (typical for GPU training where nondeterminism remains).
+    In both regimes, we specify the artifacts required to reproduce the reported figures and statistical conclusions:
+    code, configurations, seeds, environment versions, and raw trial logs.
+\end{itemize}

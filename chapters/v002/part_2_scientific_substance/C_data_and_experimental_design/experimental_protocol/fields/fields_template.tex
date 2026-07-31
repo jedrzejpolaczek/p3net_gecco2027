@@ -1,0 +1,82 @@
+% Use \providecommand so the template compiles even if you override later via \renewcommand.
+
+% --- Paper metadata ---
+\providecommand{\PaperTitle}{[TITLE]}
+
+% --- Problem setting ---
+\providecommand{\TaskDomain}{[TASK/DOMAIN]}
+\providecommand{\ClaimedDomain}{[CLAIMED APPLICATION DOMAIN]}
+\providecommand{\DatasetsSplits}{[DATASETS + SPLIT POLICY]}
+\providecommand{\PreprocessingDetails}{[PREPROCESSING DETAILS]}
+\providecommand{\ModelClass}{[MODEL CLASS]}
+
+% --- Objectives ---
+\providecommand{\PrimaryObjective}{[PRIMARY OBJECTIVE]}
+\providecommand{\SecondaryObjectives}{[SECONDARY OBJECTIVES (or None)]}
+\providecommand{\ObjectiveDirectionNote}{All objectives are minimized; maximization metrics are converted (e.g., \(f(\lambda)=-\mathrm{metric}(\lambda)\) or \(1-\mathrm{metric}(\lambda)\)).}
+\providecommand{\ObjectiveNormalizationPolicy}{[OBJECTIVE NORMALIZATION POLICY (optional)]}
+\providecommand{\NoiseControlPolicy}{[NOISE CONTROL POLICY (optional)]}
+
+% --- Search space ---
+\providecommand{\SearchSpaceList}{[HYPERPARAMETERS AND RANGES/TYPES LIST]}
+\providecommand{\SearchSpaceConditionals}{[CONDITIONAL PARAMETERS / CONSTRAINTS LIST]}
+\providecommand{\SearchSpaceEncoding}{[ENCODING (optional)]}
+
+% --- Compute budget model ---
+\providecommand{\EvaluationUnit}{[WHAT IS ``1 EVALUATION''?]}
+\providecommand{\BudgetTiersText}{25/50/100}
+\providecommand{\BudgetSet}{\{25,50,100\}}
+\providecommand{\BmaxSymbol}{B_{\max}}
+\providecommand{\MultiFidelityPolicy}{[MULTI-FIDELITY STRATEGY ALLOWED? YES/NO; details]}
+\providecommand{\ParallelismPolicy}{[PARALLELISM POLICY: sync/async; dispatcher]}
+\providecommand{\NumWorkers}{[W]}
+
+% --- Proposed method naming ---
+\providecommand{\ProposedMethodName}{P3Net}
+\providecommand{\BackboneName}{P3}
+\providecommand{\NetAdaptationMeaning}{``Net'' denotes the adaptation layer that applies the backbone optimizer to the shared HPO/NAS encoding, evaluation accounting, and constraint handling.}
+
+% --- Proposed method: P3Net details ---
+\providecommand{\PThreeCoreDetails}{[P3 CORE: define algorithmically]}
+\providecommand{\PThreeNetDetails}{[P3Net DETAILS: end-to-end adaptation for HPO/NAS]}
+\providecommand{\PThreeProposalModel}{[P3 PROPOSAL MODEL: factorization/dependencies/smoothing/learning]}
+\providecommand{\PThreeSelectionRule}{[ELITE SELECTION RULE: how elites are chosen]}
+\providecommand{\PThreeDiversityRule}{[DIVERSITY RULE: how collapse is prevented]}
+\providecommand{\PThreeConstraintHandling}{[CONSTRAINT HANDLING / REPAIR RULES]}
+\providecommand{\PThreeBatchingParallelism}{[BATCH PROPOSAL RULE: propose W configs per iteration]}
+\providecommand{\PThreeUpdateSchedule}{[UPDATE SCHEDULE: when model updates happen]}
+\providecommand{\NoveltyDetails}{[WHAT IS NOVEL VS KNOWN]}
+\providecommand{\KnownParts}{[KNOWN PARTS]}
+\providecommand{\HPOHyperparameters}{[P3Net HPO-HYPERPARAMETERS (optional)]}
+
+% --- Baselines and feasibility ---
+\providecommand{\BaselinesRun}{\begin{itemize}
+    \item Random Search (RS).
+    \item TPE / SMAC (and BO variants where feasible).
+    \item CMA-ES (when applicable).
+    \item Hyperband/ASHA and BOHB (if multi-fidelity is enabled).
+    \item NSGA-Net (if multiobjective and encoding supports evolutionary baselines).
+    \item Vanilla P3 (without ``Net'' adaptations).
+    \item Domain-specific SOTA (if feasible).
+\end{itemize}}
+\providecommand{\BaselinesNotRunWhy}{[BASELINES NOT RUN + REASONS]}
+\providecommand{\BaselineConfigPolicy}{[BASELINE CONFIG POLICY (optional)]}
+
+% --- Implementation and infrastructure ---
+\providecommand{\Framework}{[CODEBASE/FRAMEWORK]}
+\providecommand{\Hardware}{[HARDWARE]}
+\providecommand{\DeterminismConstraints}{[DETERMINISM CONSTRAINTS]}
+\providecommand{\SoftwareVersions}{[SOFTWARE VERSIONS (optional)]}
+
+% --- Reporting requirements / artifacts ---
+\providecommand{\VenueChecklistItems}{[VENUE CHECKLIST ITEMS]}
+\providecommand{\ArtifactReleaseScope}{[ARTIFACT RELEASE SCOPE (optional)]}
+
+% --- Design defaults (edit if needed) ---
+\providecommand{\NumRepeats}{10}
+\providecommand{\SeedSetText}{\{0,\dots,9\}}
+\providecommand{\FinalistReevalK}{3}
+\providecommand{\InitDesignSize}{\min(10,\lfloor 0.2B \rfloor)}
+\providecommand{\NearOracleEta}{0.01}
+\providecommand{\RecoveryTolerance}{10^{-3}}
+\providecommand{\CoverageFraction}{0.8}

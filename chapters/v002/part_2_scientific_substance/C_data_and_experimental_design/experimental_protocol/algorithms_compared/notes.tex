@@ -1,0 +1,86 @@
+% =========================
+% Explanation: Algorithms Compared (informal, readable)
+% =========================
+\subsection*{Explanation of Algorithms Compared (informal)}
+This section clarifies \emph{which optimizers we compare}, \emph{why each baseline is included}, and \emph{how we guarantee a fair comparison}.
+Clarity is essential in optimization benchmarking: reviewers must be able to tell exactly what information and resources each method uses.
+
+\begin{itemize}
+    \item \textbf{Proposed method as an input--output mapping.}
+    We treat each optimizer as a procedure that maps past observations to new configurations.
+    At step \(t\), the optimizer has access to a history
+    \[
+        \mathcal{H}_t = \{(\lambda_i, y_i)\}_{i=1}^{t}
+        \quad \text{(or vector outcomes \(\mathbf{y}_i\) in multiobjective settings),}
+    \]
+    and outputs one or more new candidates \(\lambda_{t+1}\) (or a batch) to evaluate next.
+    A reproducible protocol must specify:
+    \begin{enumerate}
+        \item what the optimizer conditions on (full history vs.\ an elite subset),
+        \item how candidates are generated (sampling / mutation / crossover / acquisition),
+        \item how solutions are selected or archived (incumbent best, nondominated archive, etc.),
+        \item how invalid configurations are handled (repair, rejection, or penalty).
+    \end{enumerate}
+
+    \item \textbf{What ``P3Net'' means in this paper.}
+    In our terminology, \textbf{P3Net} means:
+    \begin{itemize}
+        \item \textbf{P3 is the backbone:} the optimizer fits a probabilistic generator \(q_{\theta}(\lambda)\) to an elite subset of evaluated configurations
+        and proposes new candidates by sampling from \(q_{\theta}\).
+        \item \textbf{``Net'' is the adaptation layer:} additional mechanisms required to apply P3 fairly and effectively to the benchmarked HPO/NAS setting:
+        \begin{itemize}
+            \item a canonical encoding of \(\lambda\) (vector or genotype) used by all methods;
+            \item an \emph{elite selection} rule specifying which evaluated configurations are used to fit \(q_{\theta}\);
+            \item a \emph{diversity / anti-collapse} mechanism to avoid degenerating to a single mode;
+            \item \emph{constraint-aware sampling} (masking/repair/rejection) so samples are valid under conditionals or NAS constraints;
+            \item a \emph{batched proposal} policy compatible with parallel evaluation (propose up to \(W\) configurations at a time);
+            \item an \emph{update schedule} specifying when \(q_{\theta}\) is refit and how multi-fidelity information (if any) is incorporated.
+        \end{itemize}
+    \end{itemize}
+    All of these components must be fixed \emph{a priori} for the benchmark suite to avoid post-hoc tuning.
+
+    \item \textbf{Baselines and why they are appropriate.}
+    We include baselines spanning the major families of HPO/NAS methods:
+    \begin{itemize}
+        \item \textbf{Random Search (RS):} a required reference point for sample efficiency; often strong in high dimensions.
+        \item \textbf{Model-based HPO (BO/TPE/SMAC):} standard, strong baselines for expensive black-box objectives.
+        TPE and SMAC are especially appropriate for mixed and conditional search spaces common in HPO/NAS.
+        \item \textbf{CMA-ES / evolutionary strategies (when applicable):} competitive derivative-free optimization for continuous spaces,
+        serving as a strong non-model-based baseline.
+        \item \textbf{Multi-fidelity schedulers (Hyperband/ASHA, BOHB) when allowed:} if evaluations admit fidelities
+        (e.g., epochs/tokens/resolution), these baselines allocate resources adaptively and are highly competitive.
+        \item \textbf{Evolutionary Pareto baselines (e.g., NSGA-Net / NSGA-II) when multiobjective:} appropriate comparators for Pareto-front approximation
+        under the same encoding and evaluation model.
+        \item \textbf{Component attribution baselines:} \emph{vanilla P3} (without ``Net'' adaptations) isolates the contribution of P3Net mechanisms
+        (elite rule, diversity, constraint handling, batching, update schedule).
+    \end{itemize}
+
+    \item \textbf{Baselines we cannot run and feasibility constraints.}
+    Not all published methods are directly comparable under a fixed evaluation model.
+    For each omitted baseline, we give a concrete reason, e.g.:
+    \begin{itemize}
+        \item incompatible evaluation model (e.g., weight-sharing NAS changes what ``one evaluation'' means),
+        \item missing or unsupported encoding requirements (e.g., specialized graph kernels),
+        \item prohibitive compute or memory costs under our parallelism/budget constraints,
+        \item or implementation / licensing unavailability.
+    \end{itemize}
+    We narrow claims accordingly: we only claim improvements over methods that can be evaluated fairly under the same protocol.
+
+    \item \textbf{Fair comparison rules (hard constraints).}
+    To guarantee fairness, we enforce:
+    \begin{enumerate}
+        \item \textbf{Identical search space \(\Lambda\) and encoding} for all methods.
+        \item \textbf{Identical evaluation pipeline} (data splits, preprocessing, training recipe, metric computation).
+        \item \textbf{Identical budgets and stopping rules:} each method receives the same evaluation budget \(B\);
+        invalid/failed trials are handled consistently and count toward the budget.
+        \item \textbf{Identical parallelism policy:} same worker count \(W\) and identical synchronous/asynchronous dispatcher semantics.
+        \item \textbf{Identical randomization control:} same seed policy and, when used, common random numbers for evaluation stochasticity.
+    \end{enumerate}
+    These constraints ensure differences reflect the optimization strategy, not extra information or resources.
+
+    \item \textbf{What comparisons are feasible.}
+    Comparisons are feasible when methods (i) operate on the same \(\Lambda\), (ii) use the same evaluation unit and objective definition,
+    and (iii) follow the same budget accounting.
+    If any of these conditions are violated (e.g., a method changes the evaluation model), we treat it as \emph{not directly comparable}
+    and exclude it or evaluate it separately under a clearly labeled protocol.
+\end{itemize}
