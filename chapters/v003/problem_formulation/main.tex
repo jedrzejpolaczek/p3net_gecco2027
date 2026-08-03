@@ -27,7 +27,7 @@ The validity constraint is expressed as
 \[
     g(x) \leq 0,
 \]
-where $g \colon \Lambda \to \mathbb{R}$ is a structural function -- boolean in the cases used in this work (e.g.\ $g(x) \in \{-1, +1\}$ encoding whether an input--output path exists), but stated in real-valued form to accommodate a graded infeasibility measure should a benchmark define one; $x$ is \emph{valid} if and only if $g(x) \leq 0$.
+where $g \colon \Lambda \to \mathbb{R}$ is a structural function, boolean in the cases used in this work (e.g.\ $g(x) \in \{-1, +1\}$ encoding whether an input--output path exists), stated in real-valued form to accommodate a graded infeasibility measure should a benchmark define one; $x$ is \emph{valid} if and only if $g(x) \leq 0$.
 The set of valid genotypes is denoted $\Lambda^* = \{x \in \Lambda : g(x) \leq 0\}$.
 
 \paragraph{Objective functions.}
@@ -57,7 +57,7 @@ resolution), each level $r_k$ additionally fixes a corresponding setting on thos
 full resource configuration rather than an epoch count alone. On benchmarks with a single resource axis,
 this reduces to $r_k$ denoting the number of training epochs only.
 The objective at level $r_k$ is $f_1^{(k)}(x)$; the value at the highest level $f_1^{(K)}(x)$ is the target quality measure.
-For model learning and selection, methods that exploit the fidelity ladder use $f_1^{(k)}(x)$ at the lowest level that correlates sufficiently with $f_1^{(K)}(x)$, preventing bias introduced by mixing fidelity levels; P3Net itself does not exploit this ladder, operating exclusively at $r_K$ (Proposed Optimizer). None of the methods compared in Results (Baselines) exploits it either; it is defined here as general, substrate-level machinery -- useful should a future multi-fidelity baseline (e.g.\ a Hyperband-based method) be added to the comparison -- rather than as an active component of the present experiment.
+For model learning and selection, methods that exploit the fidelity ladder use $f_1^{(k)}(x)$ at the lowest level that correlates sufficiently with $f_1^{(K)}(x)$, preventing bias introduced by mixing fidelity levels; P3Net itself does not exploit this ladder, operating exclusively at $r_K$ (Proposed Optimizer). None of the methods compared in Results (Baselines) exploits it either; it is defined here as general, substrate-level machinery, useful should a future multi-fidelity baseline (e.g.\ a Hyperband-based method) be added to the comparison, rather than as an active component of the present experiment.
 
 \paragraph{Evaluation noise.}
 Where the substrate answering $f_1$ carries genuine stochasticity, for instance live training or a
@@ -65,8 +65,9 @@ benchmark's own recorded repeats, $f_1^{(k)}(x)$ is treated as a random variable
 evaluated with $s$ distinct seeds, or with samples drawn from the substrate's recorded repeats, and the
 median across them is used for selection and reporting. Deterministic substrates, such as a point estimate
 surrogate, require no such averaging. Both of P3Net's primary benchmarks (Results) answer queries
-deterministically -- a point-estimate surrogate for JAHS-Bench-201, a fixed lookup table for
-NAS-HPO-Bench-II -- so $s=1$ throughout this work and this averaging step is not exercised; it is retained
+deterministically: a point-estimate surrogate for JAHS-Bench-201, a fixed lookup table for
+NAS-HPO-Bench-II within its exhaustively tabulated range (caveat on which fidelity level this refers to
+discussed in Related Work). So $s=1$ throughout this work and this averaging step is not exercised; it is retained
 as general substrate-level machinery for future work on stochastic substrates such as live training. $s$
 should not be confused with $R$, the number of independent search runs per method (Results): $R$ remains
 meaningful regardless of substrate determinism, since randomness across runs comes from initialization and

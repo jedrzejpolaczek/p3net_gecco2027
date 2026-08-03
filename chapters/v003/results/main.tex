@@ -15,19 +15,23 @@ component rather than conflated.
 \paragraph{Benchmark and search space.} P3Net targets the joint architecture and hyperparameter search
 setting rather than an architecture only space. Rather than resolving the Category~1 vs.\ Category~2
 question by picking a single benchmark, both are reported side by side, deliberately. The primary
-benchmark is JAHS-Bench-201~\citep{bansal2022jahsbench}, a surrogate benchmark over a joint space of
-fourteen dimensions combining categorical architecture choices with continuous training hyperparameters
-(e.g.\ learning rate, weight decay) across three datasets; it queries a learned surrogate over continuous
-inputs without live training, so no enumerable oracle front exists (see Metrics, below).
+benchmark is JAHS-Bench-201~\citep{bansal2022jahsbench}, a surrogate benchmark over a joint search space of
+ten dimensions (six categorical architecture edges plus four hyperparameters, including continuous learning
+rate and weight decay), fourteen when JAHS-Bench-201's four additional fidelity dimensions are counted
+alongside it, per the source's own ``14-dimensional search and fidelity space'' figure, across three
+datasets; it queries a learned surrogate over its full mixed
+categorical/continuous search space without live training, so no enumerable oracle front exists (see
+Metrics, below).
 NAS-HPO-Bench-II~\citep{hirose2021nashpobenchii}, a fixed grid lookup table over combinations of
-architecture and hyperparameters, is reported alongside it as the Category~1 counterpart: an
+architecture and hyperparameters, is reported alongside it as the Category~1 counterpart: within its exhaustively tabulated range (up to 12 training epochs; Related Work confirms $r_K$ is fixed at this level, not the benchmark's separate 200-epoch surrogate extrapolation), an
 exact oracle front is enumerable, enabling the Inverted Generational Distance plus (IGD+) on this benchmark specifically. Any result that holds on
 both benchmarks is reported as the primary finding; a result that holds on only one is reported as
 specific to that benchmark and not over generalised.
 
 \paragraph{Baselines.} NSGANetV2 (NSGA-II with an absolute regressor surrogate) as the primary baseline;
-NSGANetV2 in its native, real-valued encoding of $\Theta$ as an additional control baseline isolating the
-effect of discretisation itself, rather than of the search engine or surrogate (Fairness controls);
+NSGANetV2 extended to the joint setting with an unconstrained, real-valued encoding of $\Theta$ as an
+additional control baseline isolating the effect of discretisation itself, rather than of the search engine
+or surrogate (Fairness controls);
 NSGA-Net (NSGA-II with no surrogate, every candidate fully evaluated) as the engine-only ablation on the
 NSGA-II side, symmetric to the P3-only ablation below; P3 alone, without any surrogate, as the engine-only
 ablation on the P3 side; P3 with an absolute regressor surrogate (in the style of NSGANetV2) as an ablation
@@ -64,10 +68,11 @@ full evaluation budget, seed policy, stopping rule, and deduplication cache (Pro
 compared methods, so that no method's apparent efficiency benefits from infrastructure the others lack. In
 particular, the discretisation of continuous hyperparameter coordinates (Proposed Optimizer) is applied
 identically to every baseline: NSGA-II/NSGANetV2 search the same discretised $\Theta$ as P3Net rather than
-their usual real-valued encoding, so that any gain is attributable to the search engine and surrogate rather
-than to a difference in genotype resolution. This equalises resolution but is not necessarily neutral:
-discretisation removes NSGA-II/NSGANetV2's native real-valued crossover on $\Theta$ while costing P3
-nothing, since P3 operates on a categorical genotype regardless. This asymmetry is bounded empirically
+the unconstrained real-valued encoding a joint-setting extension of NSGA-II/NSGANetV2 would otherwise use,
+so that any gain is attributable to the search engine and surrogate rather than to a difference in genotype
+resolution. This equalises resolution but is not necessarily neutral: discretisation removes the real-valued
+crossover on $\Theta$ that such an extension would otherwise use, while costing P3 nothing, since P3 operates
+on a categorical genotype regardless. This asymmetry is bounded empirically
 rather than merely acknowledged: NSGANetV2 in its native continuous encoding is included as an additional
 control baseline (Baselines, above), so any P3Net advantage can be checked specifically against the
 discretised-NSGANetV2 comparison, rather than resting on the discretised comparison alone.
@@ -80,7 +85,7 @@ a minimum of 10 seeds~\citep{bansal2022jahsbench}; the top tier stays at or belo
 NSGANetV2 itself uses to reach its reported results~\citep{lu2020nsganetv2}, so no tier exceeds the regime
 in which the primary baseline was originally shown to work well. This also keeps every tier below
 NAS-HPO-Bench-II's own convention of 500 trials for benchmarking search
-algorithms~\citep{hirose2021nashpobenchii} -- a deliberate choice, not an oversight: the central question
+algorithms~\citep{hirose2021nashpobenchii}, a deliberate choice, not an oversight: the central question
 concerns a \emph{limited} budget (Introduction), so all three tiers stress-test a regime tighter than either
 benchmark's own default, on both benchmarks alike. $R = 10$ independent runs per method with a fixed, published
 seed list, matching JAHS-Bench-201's recommended minimum~\citep{bansal2022jahsbench}; identical
@@ -89,12 +94,12 @@ search space is small enough to converge prematurely, an exploration collapse cr
 one Bartnik~\cite{bartnik2026evolutionary} needed to add for spaces at the scale of NAS-Bench-201.
 
 \paragraph{Metrics.} Fixed budget hypervolume and, only if the search space admits an enumerable oracle
-front, IGD+; otherwise hypervolume relative to the best known front is used in its place. Surrogate quality
+front, IGD+; otherwise hypervolume relative to the best known front is used in its place \emph{(TODO: define this front precisely, e.g.\ as the union of all points evaluated by any compared method across all runs)}. Surrogate quality
 is reported separately as rank correlation (or pairwise comparison accuracy, if the surrogate is relational)
 between predicted and true values as a function of $|\mathcal{H}_t|$.
 
 \paragraph{Statistical plan.} The comparison set is P3Net against each of the other seven arms (Baselines,
-above), per benchmark and per budget tier -- not every pairwise combination among all arms. Paired Wilcoxon
+above), per benchmark and per budget tier, not every pairwise combination among all arms. Paired Wilcoxon
 signed rank tests are run per comparison in this set, with Holm--Bonferroni correction applied across it,
 and an effect size (e.g.\ Cliff's delta) reported alongside every corrected $p$ value. This is stricter than the uncorrected comparisons in the closest prior
 work~\cite{bartnik2026evolutionary}, which report no effect size, and the difference is treated as a
@@ -107,7 +112,7 @@ so that any difference in duplication rate reflects the search operator rather t
 encoding. The deduplication cache (Proposed Optimizer) is applied identically to every compared method as
 part of the shared evaluation harness (Fairness controls), so the measured duplication rate reflects what
 each search operator proposes, not an artifact of asymmetric caching. This rate is counted at proposal
-time -- every candidate a search operator generates, whether or not it is later intercepted by the cache --
+time, for every candidate a search operator generates, whether or not it is later intercepted by the cache,
 not at evaluation time, so it remains informative even though the cache itself suppresses re-evaluation of
 anything it counts. Convergence curves; Pareto front
 progression; stability across seeds.
