@@ -190,7 +190,52 @@ Proponowany Optymalizator.
 \]
 co sprowadza się do $\hat{f}_1(x') = f_1(x) - \hat{\delta}_F(x, x')$ w przypadku pojedynczego kroku $m=1$. Głębokość łańcucha $m$ jest ograniczona przez $\kappa$, wprowadzone poniżej, właśnie po to, by ograniczyć, jak daleko może się propagować skumulowany błąd predyktora zastępczego, zanim zresetuje go pełna ewaluacja.
 
-**Pętla przeszukiwania.** *(Wersja LaTeX, `chapters/v003/proposed_optimizer/main.tex`, zawiera diagram tej pętli: węzły pełne oznaczają osobniki z rzeczywistą, w pełni ocenioną wartością $f_1$ — elementy $\mathcal{H}_t$; węzły przerywane — osobniki tymczasowe, zaakceptowane wyłącznie przez predyktor zastępczy $\hat\delta_F$, jeszcze niepotwierdzone pełną ewaluacją.)* Pętla przebiega następująco:
+**Pętla przeszukiwania.** Rysunek poniżej przedstawia jedną iterację schematycznie: dopisek „(z $\mathcal{H}_t$)” oznacza osobnika z rzeczywistą, w pełni ocenioną wartością $f_1$; dopisek „(tymczasowy)” — osobnika zaakceptowanego wyłącznie przez predyktor zastępczy $\hat\delta_F$, jeszcze niepotwierdzonego pełną ewaluacją (w wersji LaTeX, `chapters/v003/proposed_optimizer/main.tex`, to samo rozróżnienie pokazane jest liniami ciągłymi/przerywanymi).
+
+```
+  ┌─────────────────────────────────┐
+  │ rodzic x  (z H_t)               │
+  └───────────────┬─────────────────┘
+                  │
+                  ▼
+  ┌─────────────────────────────────┐
+  │ donor → propozycja x' na F      │ (tymczasowy)
+  └───────────────┬─────────────────┘
+                  │
+                  ▼
+  ┌─────────────────────────────────┐
+  │ ocena: δ̂_F(x, x')               │
+  └───────────────┬─────────────────┘
+                  │
+                  ▼
+  ┌─────────────────────────────────┐
+  │ δ̂_F ≥ 0? → tymczasowa akceptacja│ (tymczasowy)
+  └───────────────┬─────────────────┘
+                  │
+                  ├── kolejny podzbiór F (pętla, do κ razy) ─────┐
+                  │                                              │
+                  ▼                                              │
+  ┌────────────────────────────────┐                             │
+  │ sweep zakończony lub κ         │◀────────────────────────────┘
+  │ osiągnięte: wybór C*           │ (niezdominowani w (f̂_1, f_2))
+  └───────────────┬────────────────┘
+                  │
+                  ▼
+  ┌────────────────────────────────┐
+  │ pełna ewaluacja f_1(x)         │ (z H_t)
+  └───────────────┬────────────────┘
+                  │
+                  ▼
+  ┌────────────────────────────────┐
+  │ aktualizacja H_t,              │
+  │ retrening δ̂_F,                 │
+  │ przebudowa drzewa powiązań     │
+  └───────────────┬────────────────┘
+                  │
+                  └── kolejna iteracja ──▶ (powrót do „rodzic x”)
+```
+
+Pętla przebiega następująco:
 
 1. P3 generuje zbiór kandydatów $C \subset \Lambda^*$ poprzez krzyżowanie kierowane drzewem powiązań; dla każdego
    rodzica wybranego do wariacji, każdy podzbiór powiązań w bieżącym modelu zależności jest odwiedzany w losowej
