@@ -36,7 +36,11 @@ NSGA-Net (NSGA-II with no surrogate, every candidate fully evaluated) as the eng
 NSGA-II side, symmetric to the P3-only ablation below; P3 alone, without any surrogate, as the engine-only
 ablation on the P3 side; P3 with an absolute regressor surrogate (in the style of NSGANetV2) as an ablation
 isolating only the surrogate, separating the contribution of the linkage aware design from the contribution
-of the P3 engine itself; random search and the Tree-structured Parzen Estimator (TPE) as sanity baselines.
+of the P3 engine itself; SH-EMOA (a multi objective evolutionary algorithm built on SMS-EMOA) and
+Multi-Objective Bayesian Optimization Hyperband (MO-BOHB), the baselines established for this exact joint
+setting on these same two benchmarks \citep{guerreroviu2021bagofbaselines}, included because, unlike
+NSGANetV2, they were never imported from an architecture only setting and require no such extension; random
+search and the Tree-structured Parzen Estimator (TPE) as sanity baselines.
 This grid separates the engine and surrogate contributions as far as the design permits, not as a full
 orthogonal factorial: the relative, linkage aware surrogate $\hat{\delta}_F$ is defined only given a linkage
 tree, so an NSGA-II-plus-relative-surrogate cell is not constructible, and any gap attributed to ``the
@@ -98,7 +102,7 @@ front, IGD+; otherwise hypervolume relative to the best known front is used in i
 is reported separately as rank correlation (or pairwise comparison accuracy, if the surrogate is relational)
 between predicted and true values as a function of $|\mathcal{H}_t|$.
 
-\paragraph{Statistical plan.} The comparison set is P3Net against each of the other seven arms (Baselines,
+\paragraph{Statistical plan.} The comparison set is P3Net against each of the other nine arms (Baselines,
 above), per benchmark and per budget tier, not every pairwise combination among all arms. Paired Wilcoxon
 signed rank tests are run per comparison in this set, with Holm--Bonferroni correction applied across it,
 and an effect size (e.g.\ Cliff's delta) reported alongside every corrected $p$ value. This is stricter than the uncorrected comparisons in the closest prior
