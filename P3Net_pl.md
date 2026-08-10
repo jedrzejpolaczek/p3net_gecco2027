@@ -41,7 +41,28 @@ Ten schemat kontynuuje wzorzec, który White i in. \citep{white2023insights} wsk
 
 Dalszy rozwój skierował się ku predyktorom opartym na rankingowaniu zamiast regresji, takim jak RankNet w MoSegNAS \citep{lu2022mosegnas}, który rozszerza podejście NSGANetV2 na segmentację semantyczną. Osobny nurt poddaje krytycznej ocenie proxy zerokosztowe, których udokumentowaną słabością jest niewiarygodne rozróżnianie architektur na szczycie rankingu.
 
-Równolegle rozwinęła się odrębna rodzina algorytmów ewolucyjnych, jawnie modelująca strukturalne zależności między zmiennymi genotypu: GOMEA \citep{thierens2011optimal} oraz Bezparametrowa Piramida Populacji (P3) \citep{goldman2014parameterless}. Algorytmy te budują drzewo powiązań na podstawie zależności statystycznych obserwowanych w populacji i wykorzystują je do kierowania krzyżowaniem, chroniąc wykryte grupy zależnych zmiennych przed zaburzeniem. P3 dodatkowo przeciwdziała przedwczesnej zbieżności typowej dla modeli generacyjnych: w odróżnieniu od NSGA-II nie odrzuca wcześniej znalezionych dobrych rozwiązań. Strukturalnie zastępuje pojedynczą populację o stałym rozmiarze uporządkowaną piramidą populacji o rosnącym rozmiarze, dodając nowy poziom dopiero gdy istniejące poziomy przestają dawać lepsze rozwiązania. Ta właściwość odpowiada za nazwę „bezparametrowa”: rozmiar populacji nie jest wybierany z góry \citep{goldman2014parameterless}. Awans pojedynczego nowego rozwiązania w górę piramidy w standardowym ujęciu wymaga rzeczywistej ewaluacji dopasowania przy każdej zaakceptowanej lokalnej poprawie, nie tylko na końcu procesu; ten szczegół ma bezpośrednie znaczenie dla rozliczania budżetu przy niewielkich budżetach P3Net (Wyniki wraca do tego przy ablacji P3 bez predyktora zastępczego).
+Równolegle rozwinęła się odrębna rodzina algorytmów ewolucyjnych, jawnie modelująca strukturalne zależności między zmiennymi genotypu: GOMEA \citep{thierens2011optimal} oraz Bezparametrowa Piramida Populacji (P3) \citep{goldman2014parameterless}. Algorytmy te budują drzewo powiązań na podstawie zależności statystycznych obserwowanych w populacji i wykorzystują je do kierowania krzyżowaniem, chroniąc wykryte grupy zależnych zmiennych przed zaburzeniem. P3 dodatkowo przeciwdziała przedwczesnej zbieżności typowej dla modeli generacyjnych: w odróżnieniu od NSGA-II nie odrzuca wcześniej znalezionych dobrych rozwiązań. Strukturalnie zastępuje pojedynczą populację o stałym rozmiarze uporządkowaną piramidą populacji o rosnącym rozmiarze (rysunek poniżej), dodając nowy poziom dopiero gdy istniejące poziomy przestają dawać lepsze rozwiązania. Ta właściwość odpowiada za nazwę „bezparametrowa”: rozmiar populacji nie jest wybierany z góry. Awans pojedynczego nowego rozwiązania w górę piramidy w standardowym ujęciu wymaga rzeczywistej ewaluacji dopasowania przy każdej zaakceptowanej lokalnej poprawie, nie tylko na końcu procesu; ten szczegół ma bezpośrednie znaczenie dla rozliczania budżetu przy niewielkich budżetach P3Net (Wyniki wraca do tego przy ablacji P3 bez predyktora zastępczego).
+
+```
+      ┌─────────┐
+      │ poziom 1 │
+      └─────────┘
+     ┌───────────┐
+     │  poziom 2  │
+     └───────────┘
+    ┌─────────────┐
+    │   poziom 3   │
+    └─────────────┘
+   ┌───────────────┐
+   │    poziom 4    │
+   └───────────────┘
+          │
+          ▼
+   nowy poziom dodawany dopiero, gdy
+   istniejące poziomy przestają dawać
+   lepsze rozwiązania
+```
+(w wersji LaTeX, `chapters/v003/related_work/main.tex`, ten sam schemat pokazany jest jako diagram TikZ)
 
 Opisane powyżej powiązania, uczone statystycznie na poziomie populacji, nie powinny być mylone z optymalizacją gray-box w węższym sensie, ustanowionym przez Whitleya, Chicano i Goldmana \citep{whitley2016graybox}. To pojęcie jest stosowane w nurcie prac nad GOMEA, w tym w jego rozszerzeniu rzeczywistoliczbowym RV-GOMEA \citep{andreadis2024maxclique} oraz we wspólnej bibliotece GOMEA \citep{bouter2023library}: tam optymalizator otrzymuje jawny dostęp do podfunkcji funkcji celu i wykorzystuje ten dostęp do taniej, częściowej ponownej ewaluacji po zlokalizowanej zmianie zmiennej. Niniejsza praca działa w reżimie black-box: dokładności walidacyjnej NAS nie da się rozłożyć na lokalnie przeliczalne podfunkcje, więc P3 pełni tu wyłącznie rolę silnika przeszukiwania świadomego struktury zależności genotypu. Redukcję kosztu osiąga zamiast tego omawiany dalej wyuczony predyktor zastępczy.
 
@@ -194,7 +215,25 @@ Proponowany Optymalizator.
 
 ## Proponowany Optymalizator
 
-**Reprezentacja i drzewo powiązań.** Drzewo powiązań budowane jest na podstawie bieżącej populacji i odzwierciedla zależności statystyczne między zmiennymi genotypu: wyborami operacji na poszczególnych krawędziach z sekcji Sformułowanie Problemu, rozszerzonymi poniżej o zdyskretyzowane współrzędne $\Theta$, gdy w grę wchodzi ustawienie wspólne. Zgodnie ze standardową procedurą P3, drzewo konstruowane jest za pomocą aglomeracyjnego grupowania hierarchicznego w stylu UPGMA nad znormalizowaną miarą zależności opartą na informacji wzajemnej między zmiennymi genotypu, dając zagnieżdżoną rodzinę podzbiorów zmiennych wykorzystywaną przez operator optymalnego mieszania; konstrukcja ta jest stosowana do genotypu NAS bez zmian względem jego pierwotnej postaci optymalizacji kombinatorycznej. P3Net przyjmuje opcję (i) z sekcji Sformułowanie Problemu: każda ciągła współrzędna $\Theta$ jest dyskretyzowana do skończonego zbioru przedziałów (binów), ustalonego jednorazowo przed rozpoczęciem przeszukiwania (np.\ siatka logarytmiczna dla współczynnika uczenia), tak że wspólny genotyp $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$ jest w całości kategoryczny, a drzewo powiązań, jego oparta na informacji wzajemnej miara zależności oraz opisane poniżej przemiatanie optymalnego mieszania stosują się do niego dokładnie tak samo, jak do kodowania obejmującego wyłącznie architekturę, bez odrębnego mechanizmu mieszania rzeczywistoliczbowego. Takie podejście wymienia rozdzielczość ciągłego przeszukiwania hiperparametrów na utrzymanie centralnego porównania z NSGA-II/NSGANetV2 przypisywalnego wyłącznie silnikowi przeszukiwania i predyktorowi zastępczemu, zamiast mieszać je z dodatkowym, odrębnie nowatorskim rozszerzeniem P3 o mieszanie rzeczywistoliczbowe; rozszerzenie do opcji (ii) (mieszanie rzeczywistoliczbowe w duchu RV-GOMEA \citep{andreadis2024maxclique}) pozostawiono jako przyszłą pracę.
+**Reprezentacja i drzewo powiązań.** Drzewo powiązań budowane jest na podstawie bieżącej populacji i odzwierciedla zależności statystyczne między zmiennymi genotypu: wyborami operacji na poszczególnych krawędziach z sekcji Sformułowanie Problemu, rozszerzonymi poniżej o zdyskretyzowane współrzędne $\Theta$, gdy w grę wchodzi ustawienie wspólne. Zgodnie ze standardową procedurą P3, drzewo konstruowane jest za pomocą aglomeracyjnego grupowania hierarchicznego w stylu UPGMA nad znormalizowaną miarą zależności opartą na informacji wzajemnej między zmiennymi genotypu, dając zagnieżdżoną rodzinę podzbiorów zmiennych wykorzystywaną przez operator optymalnego mieszania (przykład poniżej); konstrukcja ta jest stosowana do genotypu NAS bez zmian względem jego pierwotnej postaci optymalizacji kombinatorycznej.
+
+Przykładowe drzewo powiązań nad pięcioma zmiennymi genotypu (liście to poszczególne współrzędne wspólnego
+genotypu $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$; każdy węzeł wewnętrzny to kandydujący
+podzbiór powiązań $F$, jaki może zostać odwiedzony w przemiataniu optymalnego mieszania, krok 1 pętli
+przeszukiwania poniżej):
+
+```
+korzeń
+├── {x1,x2,x3}   ← przykładowy podzbiór F = {1,2,3}
+│   ├── {x1,x2}
+│   │   ├── x1
+│   │   └── x2
+│   └── x3
+└── {x4,x5}
+    ├── x4
+    └── x5
+```
+(w wersji LaTeX, `chapters/v003/proposed_optimizer/main.tex`, ten sam przykład pokazany jest jako diagram TikZ) P3Net przyjmuje opcję (i) z sekcji Sformułowanie Problemu: każda ciągła współrzędna $\Theta$ jest dyskretyzowana do skończonego zbioru przedziałów (binów), ustalonego jednorazowo przed rozpoczęciem przeszukiwania (np.\ siatka logarytmiczna dla współczynnika uczenia), tak że wspólny genotyp $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$ jest w całości kategoryczny, a drzewo powiązań, jego oparta na informacji wzajemnej miara zależności oraz opisane poniżej przemiatanie optymalnego mieszania stosują się do niego dokładnie tak samo, jak do kodowania obejmującego wyłącznie architekturę, bez odrębnego mechanizmu mieszania rzeczywistoliczbowego. Takie podejście wymienia rozdzielczość ciągłego przeszukiwania hiperparametrów na utrzymanie centralnego porównania z NSGA-II/NSGANetV2 przypisywalnego wyłącznie silnikowi przeszukiwania i predyktorowi zastępczemu, zamiast mieszać je z dodatkowym, odrębnie nowatorskim rozszerzeniem P3 o mieszanie rzeczywistoliczbowe; rozszerzenie do opcji (ii) (mieszanie rzeczywistoliczbowe w duchu RV-GOMEA \citep{andreadis2024maxclique}) pozostawiono jako przyszłą pracę.
 
 **Krzyżowanie.** Krzyżowanie działa na poziomie grup zmiennych zidentyfikowanych przez to drzewo, a nie na poziomie pojedynczych bitów, chroniąc wykryte grupy powiązanych decyzji projektowych przed zaburzeniem.
 
@@ -345,6 +384,17 @@ eksperymentu, a nie jako pełny ortogonalny plan czynnikowy: relatywny predyktor
 struktury powiązań jest zdefiniowany wyłącznie przy danym drzewie powiązań, więc nie da się skonstruować komórki
 NSGA-II-plus-relatywny-predyktor-zastępczy, a wszelką różnicę przypisywaną „predyktorowi zastępczemu” poprzez
 porównanie samego P3 z P3Net należy odczytywać z uwzględnieniem tej asymetrii.
+
+Tabela poniżej porządkuje dziewięć metod odniesienia/ablacji według silnika przeszukiwania i typu
+predyktora zastępczego; komórka NSGA-II + predyktor relatywny nie istnieje, bo $\hat{\delta}_F$ jest
+zdefiniowany wyłącznie przy danym drzewie powiązań. Pięć pozostałych metod — NSGANetV2 z ciągłym $\Theta$,
+SH-EMOA, MO-BOHB, przeszukiwanie losowe i TPE — znajduje się poza tą siatką; nie są to ablacje silnika ani
+predyktora.
+
+| | Brak predyktora | Regresor bezwzględny | Relatywny $\hat{\delta}_F$ |
+|---|---|---|---|
+| **NSGA-II** | NSGA-Net | NSGANetV2 | — |
+| **P3** | P3 samodzielnie | P3 + regresor bezwzględny | P3Net (nasza metoda) |
 
 Bez predyktora zastępczego, sam P3 stosuje kanoniczną regułę akceptacji optymalnego mieszania: każda proponowana
 modyfikacja w obrębie przemiatania jest bramkowana rzeczywistą ewaluacją $f_1$, dokładnie tak, jak wyglądałby krok 3
@@ -625,7 +675,8 @@ przeprowadzone.)*
 | Rodowód dawcy (donor) w kroku 1 pętli przeszukiwania | Otwarte | Rodzice i przodek $x_0$ mają jawne ograniczenie do $\mathcal{H}_t$, dawca — nie; oznaczone TODO w tekście, wymaga decyzji autorskiej | Proponowany Optymalizator |
 | „Najlepszy znany front” (substytut IGD+ na benchmarkach bez oracle) niezdefiniowany | Otwarte | Oznaczone TODO z proponowaną definicją (unia punktów ze wszystkich metod/przebiegów) do potwierdzenia | Wyniki |
 | „Drzewo rozpinające (MST)” w Podsumowaniu niezgodne z UPGMA opisanym w Proponowanym Optymalizatorze | Naprawione | Poprawiona terminologia: drzewo powiązań oparte na informacji wzajemnej, nie MST | Podsumowanie |
-| Diagram pętli przeszukiwania P3Net | Dodane (tylko LaTeX) | Diagram TikZ w `chapters/v003/proposed_optimizer/main.tex`; wersja Markdown odsyła do niego cross-referencją zamiast duplikować w ASCII | Proponowany Optymalizator |
+| Diagram pętli przeszukiwania P3Net | Dodane (LaTeX + Markdown) | Diagram TikZ w `chapters/v003/proposed_optimizer/main.tex`; wersja Markdown ma odpowiadający mu diagram ASCII w tym samym miejscu, nie tylko odesłanie | Proponowany Optymalizator |
 | Błąd aproksymacji surogatu JAHS-Bench-201 nigdy nieprzyznany jako ograniczenie | Naprawione | Dodano: skoro wszystkie porównywane metody odpytują ten sam surogat, obciążenie systematyczne wpływa na nie równo, ale nie wyklucza korelacji błędu akurat ze strukturą wykorzystywaną przez P3Net; wynik utrzymujący się też na NAS-HPO-Bench-II (dane zmierzone) traktowany jako główne odkrycie, wynik tylko z JAHS-Bench-201 jako wymagający potwierdzenia | Podsumowanie |
 | Nigdy niewyjaśnione, dlaczego w ogóle używa się benchmarków zamiast żywego treningu | Naprawione | Dodano to samo uzasadnienie co dla NAS-Bench-101 \citep{ying2019nasbench101}: jednorazowe wyliczenie/przybliżenie funkcji celu pozwala porównać wiele przebiegów na identycznym, odtwarzalnym gruncie zamiast powtarzać żywy trening dla każdego kandydata i każdej metody | Prace pokrewne |
 | Polskie sformułowanie „eLyMPuS, wariant LyMPuS” czytelne odwrotnie (nieodmienny obcy akronim zostawiał kierunek zależności dwuznacznym) | Naprawione | Przeformułowane na „eLyMPuS jest wariantem LyMPuS” (narzędnik), co jednoznacznie ustala kierunek; angielskie „a variant of LyMPuS” było już jednoznaczne dzięki „of” i nie wymagało zmiany | Wprowadzenie |
+| Praca miała tylko jeden diagram (pętla przeszukiwania P3Net); pytanie recenzenckie, czy więcej diagramów pomogłoby czytelności | Naprawione | Dodano trzy kolejne diagramy: siatkę ablacyjną silnik×predyktor (tabela), diagram piramidy populacji P3 oraz poglądowy diagram drzewa powiązań/podzbioru $F$; każdy diagram LaTeX ma odpowiadający mu wariant w Markdown (ASCII/tabela), nie tylko odesłanie | Wyniki; Prace pokrewne; Proponowany Optymalizator |

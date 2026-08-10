@@ -8,7 +8,26 @@ This scheme continues a pattern White et al.\ \citep{white2023insights} identify
 
 Further development in this direction has moved toward predictors based on ranking rather than regression, such as RankNet in MoSegNAS \citep{lu2022mosegnas}, which extends the NSGANetV2 approach to semantic segmentation. A separate strand critically reassesses zero cost proxies, whose documented weakness is unreliable discrimination among top ranked architectures.
 
-In parallel, a separate family of evolutionary algorithms has developed that explicitly models structural dependencies between genotype variables, namely GOMEA \citep{thierens2011optimal} and the Parameter-less Population Pyramid (P3) \citep{goldman2014parameterless}. These algorithms build a linkage tree from statistical dependencies observed in the population and use it to guide crossover, protecting detected groups of dependent variables from being disrupted. P3 additionally counteracts the premature convergence typical of generational models: unlike NSGA-II, it does not discard previously found good solutions while introducing new diversity. Structurally, P3 replaces a single fixed-size population with an ordered pyramid of populations of growing size, adding a new level only once existing levels stop yielding improved solutions. This property gives the algorithm its name, parameter-less: population size is not chosen in advance \citep{goldman2014parameterless}. Building and promoting a single new solution up the pyramid canonically requires a real fitness evaluation at every accepted local improvement, not only at the end of the process; this detail matters directly for budget accounting under P3Net's small evaluation budgets (Results returns to it when discussing the surrogate-free P3 ablation).
+In parallel, a separate family of evolutionary algorithms has developed that explicitly models structural dependencies between genotype variables, namely GOMEA \citep{thierens2011optimal} and the Parameter-less Population Pyramid (P3) \citep{goldman2014parameterless}. These algorithms build a linkage tree from statistical dependencies observed in the population and use it to guide crossover, protecting detected groups of dependent variables from being disrupted. P3 additionally counteracts the premature convergence typical of generational models: unlike NSGA-II, it does not discard previously found good solutions while introducing new diversity. Structurally, P3 replaces a single fixed-size population with an ordered pyramid of populations of growing size (Figure~\ref{fig:p3-pyramid}), adding a new level only once existing levels stop yielding improved solutions. This property gives the algorithm its name, parameter-less: population size is not chosen in advance. Building and promoting a single new solution up the pyramid canonically requires a real fitness evaluation at every accepted local improvement, not only at the end of the process; this detail matters directly for budget accounting under P3Net's small evaluation budgets (Results returns to it when discussing the surrogate-free P3 ablation).
+
+\begin{figure}[t]
+    \centering
+    \begin{tikzpicture}[
+        lvl/.style={draw, rounded corners, minimum height=6mm, font=\scriptsize, align=center},
+    ]
+        \node[lvl, minimum width=14mm] (l1) at (0,0)     {level 1};
+        \node[lvl, minimum width=22mm] (l2) at (0,-9mm)  {level 2};
+        \node[lvl, minimum width=30mm] (l3) at (0,-18mm) {level 3};
+        \node[lvl, minimum width=38mm] (l4) at (0,-27mm) {level 4};
+        \draw[{Stealth[length=2mm]}-, dashed] (l4.south) -- ++(0,-6mm)
+            node[below, font=\tiny, align=center, text width=32mm]
+            {new level added only once existing levels stop yielding improved solutions};
+    \end{tikzpicture}
+    \caption{P3's population pyramid: each level holds a population of growing size; a new level is added
+    only when the levels below it stop producing improved solutions, so the pyramid's height is not fixed
+    in advance.}
+    \label{fig:p3-pyramid}
+\end{figure}
 
 It is worth noting that the population level, statistically learned linkage described above should not be confused with gray box optimization in the narrower sense established by Whitley, Chicano, and Goldman \citep{whitley2016graybox}. That notion is used within the GOMEA line of work, including its real-valued extension RV-GOMEA \citep{andreadis2024maxclique} and the joint GOMEA library \citep{bouter2023library}: there, the optimizer is given explicit access to the subfunctions composing the objective and exploits this access to perform cheap, partial fitness reevaluations after a localized variable change. The present work instead operates in the black box regime: NAS validation accuracy cannot be decomposed into locally recomputable subfunctions, so P3 here serves purely as a search engine aware of the genotype's dependency structure. Cost reduction instead comes from the learned surrogate discussed next.
 

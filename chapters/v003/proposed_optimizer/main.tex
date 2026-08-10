@@ -40,7 +40,40 @@
     \label{fig:p3net-loop}
 \end{figure*}
 
-\paragraph{Representation and linkage tree.} A linkage tree is built from the current population, reflecting statistical dependencies between genotype variables: the per-edge operation choices of Problem Formulation, extended below to include the discretised $\Theta$ coordinates once the joint setting is in scope. Following the standard P3 procedure, the tree is constructed by agglomerative, UPGMA style hierarchical clustering over a normalised mutual information based dependency measure between genotype variables, yielding the nested family of variable subsets used by the optimal mixing operator; this construction is applied to the NAS genotype unchanged from its original combinatorial optimisation form. P3Net adopts option~(i) from Problem Formulation: each continuous coordinate of $\Theta$ is discretised into a finite set of bins, fixed once before search (e.g.\ a log-spaced grid for learning rate), so that the joint genotype $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$ is entirely categorical and the linkage tree, its mutual-information-based dependency measure, and the optimal mixing sweep described below apply to it exactly as to the architecture-only encoding, with no separate real-valued mixing mechanism. This trades the resolution of the continuous hyperparameter search for keeping the central comparison against NSGA-II/NSGANetV2 attributable to the search engine and surrogate alone, rather than conflating it with an additional, separately novel continuous-mixing extension to P3; extending to option~(ii) (real valued mixing in the spirit of RV-GOMEA \citep{andreadis2024maxclique}) is left as future work.
+\paragraph{Representation and linkage tree.} A linkage tree is built from the current population, reflecting statistical dependencies between genotype variables: the per-edge operation choices of Problem Formulation, extended below to include the discretised $\Theta$ coordinates once the joint setting is in scope. Following the standard P3 procedure, the tree is constructed by agglomerative, UPGMA style hierarchical clustering over a normalised mutual information based dependency measure between genotype variables, yielding the nested family of variable subsets used by the optimal mixing operator (Figure~\ref{fig:linkage-tree}); this construction is applied to the NAS genotype unchanged from its original combinatorial optimisation form. P3Net adopts option~(i) from Problem Formulation: each continuous coordinate of $\Theta$ is discretised into a finite set of bins, fixed once before search (e.g.\ a log-spaced grid for learning rate), so that the joint genotype $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$ is entirely categorical and the linkage tree, its mutual-information-based dependency measure, and the optimal mixing sweep described below apply to it exactly as to the architecture-only encoding, with no separate real-valued mixing mechanism. This trades the resolution of the continuous hyperparameter search for keeping the central comparison against NSGA-II/NSGANetV2 attributable to the search engine and surrogate alone, rather than conflating it with an additional, separately novel continuous-mixing extension to P3; extending to option~(ii) (real valued mixing in the spirit of RV-GOMEA \citep{andreadis2024maxclique}) is left as future work.
+
+\begin{figure}[t]
+    \centering
+    \begin{tikzpicture}[scale=0.85, every node/.style={font=\scriptsize}]
+        \node (l1) at (0, 0)  {$x_1$};
+        \node (l2) at (8mm, 0)  {$x_2$};
+        \node (l3) at (16mm, 0) {$x_3$};
+        \node (l4) at (24mm, 0) {$x_4$};
+        \node (l5) at (32mm, 0) {$x_5$};
+
+        \coordinate (m12)  at (4mm, 6mm);
+        \coordinate (m45)  at (28mm, 6mm);
+        \coordinate (m123) at (10mm, 12mm);
+        \coordinate (root) at (16mm, 18mm);
+
+        \draw (l1) |- (m12);
+        \draw (l2) |- (m12);
+        \draw (m12) |- (m123);
+        \draw (l3) |- (m123);
+        \draw (l4) |- (m45);
+        \draw (l5) |- (m45);
+        \draw (m123) |- (root);
+        \draw (m45) |- (root);
+
+        \draw[thick] (m123) circle(1mm);
+        \node[align=left, text width=16mm] at (10mm, 16mm) {\tiny $F=\{1,2,3\}$};
+    \end{tikzpicture}
+    \caption{Illustrative linkage tree over five genotype variables. Leaves are individual coordinates of
+    the joint genotype $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$; each internal node is a
+    candidate linkage subset $F$ that may be visited during the optimal mixing sweep (step~1, Search loop,
+    below). A concrete subset, $F=\{1,2,3\}$, is highlighted.}
+    \label{fig:linkage-tree}
+\end{figure}
 
 \paragraph{Crossover.} Crossover operates on the level of variable groups identified by this tree, rather than individual bits, protecting detected groups of related design decisions from being disrupted.
 

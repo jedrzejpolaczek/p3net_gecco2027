@@ -46,6 +46,23 @@ orthogonal factorial: the relative, linkage aware surrogate $\hat{\delta}_F$ is 
 tree, so an NSGA-II-plus-relative-surrogate cell is not constructible, and any gap attributed to ``the
 surrogate'' via the P3-only vs.\ P3Net comparison should be read against this asymmetry.
 
+\begin{table}[t]
+    \centering
+    \caption{The nine baselines/ablations (Baselines, above), organised by search engine and surrogate
+    type. The NSGA-II/relative cell is not constructible, since $\hat{\delta}_F$ is defined only given a
+    linkage tree. Five further baselines, namely NSGANetV2 with continuous $\Theta$, SH-EMOA, MO-BOHB,
+    random search, and TPE, sit outside this grid entirely and are not engine/surrogate ablations.}
+    \label{tab:ablation-grid}
+    \begin{tabular}{@{}lccc@{}}
+        \toprule
+         & \textbf{No surrogate} & \textbf{Absolute regressor} & \textbf{Relative} $\hat{\delta}_F$ \\
+        \midrule
+        \textbf{NSGA-II} & NSGA-Net & NSGANetV2 & --- \\
+        \textbf{P3}      & P3 alone & P3 + absolute & P3Net (ours) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 Without a surrogate, P3 alone follows the canonical optimal-mixing acceptance rule: every proposed
 modification within a sweep is gated by a \emph{real} evaluation of $f_1$, exactly as step~3 of the P3Net
 loop (Proposed Optimizer) would be if $\hat{\delta}_F$ were replaced by $f_1$ itself, and as in the original
