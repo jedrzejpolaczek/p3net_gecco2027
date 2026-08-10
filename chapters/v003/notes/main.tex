@@ -191,6 +191,9 @@ JAHS-Bench-201 search space reported as 14-dimensional, conflating the search sp
 No explicit statement that P3Net has no mutation operator & Fixed & Added: all variation is optimal mixing, inherited from the P3/GOMEA lineage & Proposed Optimizer \\
 Donor provenance in step~1: restricted to $\mathcal{H}_t$ like the parent and $x_0$, or may be transient? & Open & Not yet resolved; flagged as TODO in text, requires an authorial decision & Proposed Optimizer \\
 Best-known-front definition for the hypervolume fallback on non-enumerable benchmarks & Open & Not yet resolved; flagged as TODO in text, candidate definition is the union of all points evaluated by any compared method across all runs & Results, Metrics \\
+JAHS-Bench-201 surrogate approximation error never acknowledged as a limitation & Fixed & Added: since every compared method queries the same surrogate, systematic bias affects them equally, but this does not rule out the error correlating specifically with the structure P3Net exploits; a result that also holds on NAS-HPO-Bench-II (measured data) is therefore treated as the primary finding, a JAHS-Bench-201-only result as requiring confirmation & Conclusions \\
+Why benchmarks (rather than live training) are used at all, left unstated & Fixed & Added: same rationale as NAS-Bench-101 \citep{ying2019nasbench101} --- precomputing or approximating the objective once lets many search runs be compared on identical, reproducible ground truth instead of repeating live training for every candidate and every compared method & Related Work \\
+Polish ``eLyMPuS, wariant LyMPuS'' phrasing readable as backwards (undeclined foreign acronym leaves the genitive-like relation ambiguous) & Fixed & Reworded to ``eLyMPuS jest wariantem LyMPuS'' (instrumental case), which fixes the direction unambiguously; the English ``a variant of LyMPuS'' was already unambiguous via ``of'' and needed no change & Introduction \\
 \bottomrule
 \end{longtable}
 
