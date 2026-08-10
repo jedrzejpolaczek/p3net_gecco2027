@@ -38,7 +38,7 @@ ablation on the P3 side; P3 with an absolute regressor surrogate (in the style o
 isolating only the surrogate, separating the contribution of the linkage aware design from the contribution
 of the P3 engine itself; SH-EMOA (a multi objective evolutionary algorithm built on SMS-EMOA) and
 Multi-Objective Bayesian Optimization Hyperband (MO-BOHB), the baselines established for this exact joint
-setting on these same two benchmarks \citep{guerreroviu2021bagofbaselines}, included because, unlike
+setting on these same two benchmarks~\citep{guerreroviu2021bagofbaselines}, included because, unlike
 NSGANetV2, they were never imported from an architecture only setting and require no such extension; random
 search and the Tree-structured Parzen Estimator (TPE) as sanity baselines.
 This grid separates the engine and surrogate contributions as far as the design permits, not as a full
@@ -112,7 +112,7 @@ benchmark's own default, on both benchmarks alike. $R = 10$ independent runs per
 seed list, matching JAHS-Bench-201's recommended minimum~\citep{bansal2022jahsbench}; identical
 initialization scheme across methods; a stopping rule covering both the evaluation budget and, if the
 search space is small enough to converge prematurely, an exploration collapse criterion analogous to the
-one Bartnik~\cite{bartnik2026evolutionary} needed to add for spaces at the scale of NAS-Bench-201.
+one Bartnik~\citep{bartnik2026evolutionary} needed to add for spaces at the scale of NAS-Bench-201.
 
 \paragraph{Metrics.} Fixed budget hypervolume and, only if the search space admits an enumerable oracle
 front, IGD+; otherwise hypervolume relative to the best known front is used in its place \emph{(TODO: define this front precisely, e.g.\ as the union of all points evaluated by any compared method across all runs)}. Surrogate quality
@@ -123,11 +123,11 @@ between predicted and true values as a function of $|\mathcal{H}_t|$.
 above), per benchmark and per budget tier, not every pairwise combination among all arms. Paired Wilcoxon
 signed rank tests are run per comparison in this set, with Holm--Bonferroni correction applied across it,
 and an effect size (e.g.\ Cliff's delta) reported alongside every corrected $p$ value. This is stricter than the uncorrected comparisons in the closest prior
-work~\cite{bartnik2026evolutionary}, which report no effect size, and the difference is treated as a
+work~\citep{bartnik2026evolutionary}, which report no effect size, and the difference is treated as a
 deliberate methodological improvement, not an oversight to reconcile.
 
 \paragraph{Diagnostics.} Genotype duplication rate and archive turnover over the course of the search,
-motivated directly by the genotype-to-phenotype redundancy documented in NSGA-Net (Introduction)~\cite{lu2019nsganet},
+motivated directly by the genotype-to-phenotype redundancy documented in NSGA-Net (Introduction)~\citep{lu2019nsganet},
 measured under the identical joint genotype encoding fixed for every compared method (Fairness controls),
 so that any difference in duplication rate reflects the search operator rather than a difference in
 encoding. The deduplication cache (Proposed Optimizer) is applied identically to every compared method as
@@ -141,7 +141,7 @@ progression; stability across seeds.
 \paragraph{Reproducibility.} Every cached evaluation is keyed by genotype, experiment type, and a protocol
 version string covering every setting that affects the recorded value, so that a change in any of them
 invalidates stale cache entries automatically, following the pattern used
-by~\cite{bartnik2026evolutionary}.
+by~\citep{bartnik2026evolutionary}.
 
 \subsection*{Findings}
 
