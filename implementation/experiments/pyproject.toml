@@ -1,0 +1,30 @@
+# TODO: define the Python package manifest for the experiments package.
+#
+# Must specify:
+#   - a LOCAL, EDITABLE dependency on the p3net library at ../ (e.g.
+#     `p3net = { path = "..", develop = true }` in Poetry, or
+#     `p3net @ file://../` / a `[tool.uv.sources]` path entry in
+#     uv/pip) -- experiments/ must consume p3net exactly the way an
+#     external downstream user would, never via relative imports into
+#     ../src/p3net. This is deliberate: it is the forcing function that
+#     keeps the library's public API honest.
+#   - benchmark dependencies: JAHS-Bench-201's and NAS-HPO-Bench-II's own
+#     Python packages
+#   - baseline-wrapper dependencies for methods/external/* (SH-EMOA,
+#     MO-BOHB, TPE implementations -- e.g. whatever
+#     guerreroviu2021bagofbaselines / HpBandSter / Optuna-based packages
+#     are wrapped there)
+#   - dev dependencies: pytest, a stats package for stats/significance.py
+#     (paired Wilcoxon, Holm-Bonferroni, Cliff's delta), a plotting
+#     library for reporting/plots.py, a YAML loader for configs/
+#   - these dependencies are DELIBERATELY kept out of the library's own
+#     pyproject.toml (../pyproject.toml) -- they are heavy, benchmark- and
+#     baseline-specific, and irrelevant to anyone using p3net outside this
+#     paper's reproduction
+#   - packaging tool choice should match whatever ../pyproject.toml settles
+#     on (open decision, see ../TASKS.md notes), since experiments/ depends
+#     on it directly
+#
+# Reference: chapters/v003/ (whole paper -- dependencies follow from
+# substrates/, search_engines/nsga2/, methods/external/, stats/,
+# reporting/ above).

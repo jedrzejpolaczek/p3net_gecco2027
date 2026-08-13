@@ -1,0 +1,16 @@
+# TODO: define the JAHS-Bench-201 search-space config.
+#
+# Must specify:
+#   - the six categorical architecture-edge dimensions (Lambda_1..Lambda_6)
+#   - the four hyperparameter dimensions (learning rate, weight decay,
+#     activation function, data augmentation) and their discretisation bins
+#     (option (i) from Problem Formulation -- e.g. a log-spaced grid for
+#     learning rate), fixed once before search
+#   - the four additional fidelity dimensions (epochs, resolution, ...),
+#     tracked separately from the searched genotype
+#   - which of the three JAHS-Bench-201 datasets this config targets
+#   - the r_K resolution setting that f2 is held fixed at
+#
+# Reference: chapters/v003/results/main.tex ("Benchmark and search space");
+# chapters/v003/proposed_optimizer/main.tex ("Representation and linkage
+# tree").

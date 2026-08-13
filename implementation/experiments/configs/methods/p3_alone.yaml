@@ -1,0 +1,12 @@
+# TODO: define the P3-alone method config (engine-only ablation, P3 side).
+#
+# Must specify:
+#   - search engine: P3, no surrogate
+#   - acceptance rule: canonical optimal mixing, gated by a REAL f1
+#     evaluation at every accepted step (not delta_hat_F)
+#   - explicitly flag this arm as budget-starvation-expected under the
+#     {50,100,200} tiers, and enable the "sweeps completed within budget"
+#     diagnostic
+#
+# Reference: chapters/v003/results/main.tex ("Baselines" -- P3-alone
+# paragraph).

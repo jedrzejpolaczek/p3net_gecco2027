@@ -1,0 +1,24 @@
+# TODO: define the Python package manifest for the p3net LIBRARY.
+#
+# Must specify:
+#   - build backend (e.g. hatchling/setuptools) and package metadata (name,
+#     version, python requires) -- this is a real, potentially
+#     independently distributable package, so treat versioning/metadata
+#     with the care that implies (semver discipline once an initial 0.x is
+#     published)
+#   - src-layout pointing at src/p3net/
+#   - core dependencies ONLY: whatever the generic engine and surrogates
+#     need (e.g. numpy, scipy, scikit-learn or a small torch model for
+#     delta_hat_F/absolute regressor). Nothing benchmark- or
+#     baseline-specific belongs here -- JAHS-Bench-201, NAS-HPO-Bench-II,
+#     SH-EMOA/MO-BOHB/TPE wrappers, and any other paper-reproduction-only
+#     dependency belong in experiments/pyproject.toml instead
+#   - dev dependencies: pytest (tests/)
+#   - decide packaging tool: uv / poetry / plain pip+venv (open decision,
+#     see TASKS.md notes) -- experiments/pyproject.toml will depend on this
+#     package locally, so whatever is chosen must support a clean local/
+#     editable dependency from a sibling directory
+#
+# Reference: chapters/v003/proposed_optimizer/main.tex,
+# problem_formulation/main.tex (the library's scope: generic search space,
+# P3 engine, surrogates, P3Net method, harness, generic MOO metrics).
