@@ -1,9 +1,15 @@
-# TODO: define the SH-EMOA baseline config.
+# SH-EMOA baseline (multi-objective EA built on SMS-EMOA).
 #
-# Must specify:
-#   - wraps methods/external/sh_emoa.py
-#   - parameters matching guerreroviu2021bagofbaselines's original SH-EMOA
-#     setup for this joint setting on these same two benchmarks
+# UNVERIFIED AGAINST LIVE DATA: wraps methods/external/sh_emoa.py's
+# ask/tell scaffolding with the Stage-B stand-in sampler
+# (methods.external._ask_tell_shared.default_valid_sampler) -- the real
+# pymoo-based SH-EMOA proposals are not wired up yet (Stage C,
+# ../../TASKS.md). Parameters matching guerreroviu2021bagofbaselines's
+# original SH-EMOA setup for this joint setting are deferred until the
+# real backend replaces the stub sampler.
 #
 # Reference: chapters/v003/related_work/main.tex ("A systematic comparison
 # of solvers on this setting...").
+
+method: sh_emoa
+params: {}

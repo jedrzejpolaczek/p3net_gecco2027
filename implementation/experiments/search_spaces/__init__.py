@@ -1,11 +1,39 @@
-"""
-experiments.search_spaces -- concrete SearchSpace/Decoder/Validity
+"""experiments.search_spaces -- concrete SearchSpace/Decoder/Validity
 instances for this paper's NAS domain, implementing p3net.problem's
-generic interfaces.
+generic interfaces."""
 
-TODO:
-- Re-export the NAS genotype/decoder/validity entry points once
-  nas_genotype.py is implemented.
+from search_spaces.nas_genotype import (
+    ACTIVATIONS,
+    CELL_EDGES,
+    CELL_OPERATIONS,
+    HYPERPARAMETER_NAMES,
+    LEARNING_RATE_GRID,
+    N_EDGES,
+    N_NODES,
+    NONE_OPERATION,
+    TRIVIAL_AUGMENT,
+    WEIGHT_DECAY_GRID,
+    ContinuousThetaBounds,
+    NASConfiguration,
+    decode_nas_genotype,
+    nas_search_space,
+    nas_validity,
+)
 
-Reference: chapters/v003/problem_formulation/main.tex.
-"""
+__all__ = [
+    "ACTIVATIONS",
+    "CELL_EDGES",
+    "CELL_OPERATIONS",
+    "HYPERPARAMETER_NAMES",
+    "LEARNING_RATE_GRID",
+    "N_EDGES",
+    "N_NODES",
+    "NONE_OPERATION",
+    "TRIVIAL_AUGMENT",
+    "WEIGHT_DECAY_GRID",
+    "ContinuousThetaBounds",
+    "NASConfiguration",
+    "decode_nas_genotype",
+    "nas_search_space",
+    "nas_validity",
+]

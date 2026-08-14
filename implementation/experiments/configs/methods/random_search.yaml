@@ -1,11 +1,11 @@
-# TODO: define the random-search sanity-baseline config.
-#
-# Must specify:
-#   - configures experiments/methods/random_search.py (own implementation,
-#     not a wrapper -- see methods/external/__init__.py for why this one
-#     baseline is not in methods/external/)
-#   - uniform sampling over Lambda* under the shared discretised Theta
-#     encoding
+# Random-search sanity baseline (methods/random_search.py -- own
+# implementation, not a wrapper; see methods/external/__init__.py for why
+# this one baseline isn't under methods/external/). Uniform sampling over
+# Lambda* under the shared discretised Theta encoding -- no extra
+# parameters beyond what search_spaces/nas_genotype.py already fixes.
 #
 # Reference: chapters/v003/results/main.tex ("Baselines" -- sanity
 # baselines).
+
+method: random_search
+params: {}

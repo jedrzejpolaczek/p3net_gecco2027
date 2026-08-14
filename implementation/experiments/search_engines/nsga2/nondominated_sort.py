@@ -1,18 +1,52 @@
-"""
-NSGA-II nondominated sorting.
+"""NSGA-II nondominated sorting."""
 
-TODO:
-- Implement standard fast nondominated sorting over the (f1, f2) objective
-  space, producing ranked fronts. May reuse p3net.problem's generic Pareto
-  dominance primitive as a building block, but the ranking/front-assignment
-  algorithm itself is NSGA-II-specific and does not belong in the library.
-- This is the selection mechanic NSGA-Net/NSGANetV2 contribute to their
-  respective baseline arms (experiments/methods/nsga_net.py,
-  nsganetv2.py) -- keep it a faithful, unmodified NSGA-II implementation so
-  any gain over it is attributable to P3's dependency-aware variation
-  operator, not to a weakened baseline.
+from __future__ import annotations
 
-Reference: chapters/v003/results/main.tex ("The protocol must not allow
-P3Net to be read as 'P3 plus Pareto filtering.'..."); chapters/v003/
-related_work/main.tex.
-"""
+from collections.abc import Callable, Sequence
+from typing import TypeVar
+
+from p3net.problem.objectives import Objectives, dominates
+
+T = TypeVar("T")
+
+
+def fast_nondominated_sort(
+    items: Sequence[T], objectives: Callable[[T], Objectives]
+) -> list[list[T]]:
+    """Standard NSGA-II fast nondominated sort: partitions items into
+    ranked fronts (front 0 = nondominated, front 1 = dominated only by
+    members of front 0, etc.). Kept faithful to the textbook algorithm,
+    unmodified, so any gain P3Net shows over an NSGA-II-based baseline is
+    attributable to the search engine, not a weakened baseline (Results:
+    "must not allow P3Net to be read as 'P3 plus Pareto filtering'").
+    """
+    n = len(items)
+    scored = [objectives(item) for item in items]
+    domination_counts = [0] * n
+    dominated_indices: list[list[int]] = [[] for _ in range(n)]
+    fronts: list[list[int]] = [[]]
+
+    for p in range(n):
+        for q in range(n):
+            if p == q:
+                continue
+            if dominates(scored[p], scored[q]):
+                dominated_indices[p].append(q)
+            elif dominates(scored[q], scored[p]):
+                domination_counts[p] += 1
+        if domination_counts[p] == 0:
+            fronts[0].append(p)
+
+    i = 0
+    while fronts[i]:
+        next_front: list[int] = []
+        for p in fronts[i]:
+            for q in dominated_indices[p]:
+                domination_counts[q] -= 1
+                if domination_counts[q] == 0:
+                    next_front.append(q)
+        i += 1
+        fronts.append(next_front)
+    fronts.pop()  # the loop always appends one trailing empty front
+
+    return [[items[idx] for idx in front] for front in fronts]

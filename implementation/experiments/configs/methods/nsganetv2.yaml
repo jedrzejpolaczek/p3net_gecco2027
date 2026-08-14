@@ -1,11 +1,16 @@
-# TODO: define the NSGANetV2 method config (primary baseline).
+# NSGANetV2 (primary baseline): NSGA-II + absolute regressor surrogate,
+# using the SAME discretised Theta encoding as P3Net (Fairness controls)
+# -- NOT NSGANetV2's native continuous encoding (see
+# nsganetv2_continuous.yaml for that separate control baseline).
 #
-# Must specify:
-#   - search engine: NSGA-II (search_engines/nsga2/)
-#   - surrogate: absolute regressor (surrogates/absolute_regressor.py)
-#   - Theta encoding: discretised, IDENTICAL to P3Net's discretisation
-#     (Fairness controls) -- not NSGANetV2's native continuous encoding
-#     (see nsganetv2_continuous.yaml for that control)
+# model_factory (sklearn-style regressor) is supplied by
+# scripts/run_experiment.py at construction time, not from this file.
 #
 # Reference: chapters/v003/results/main.tex ("Baselines", "Fairness
 # controls").
+
+method: nsganetv2
+params:
+  population_size: 20
+  offspring_pool_multiplier: 3
+  objective_index: 0

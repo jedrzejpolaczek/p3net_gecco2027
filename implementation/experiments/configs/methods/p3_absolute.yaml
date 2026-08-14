@@ -1,12 +1,20 @@
-# TODO: define the P3 + absolute-regressor method config (surrogate-only
-# ablation).
+# P3 + absolute-regressor surrogate (surrogate-only ablation): P3's
+# optimal-mixing sweep (p3net.search_engines.p3) scored by an absolute
+# regressor (surrogates/absolute_regressor.py, NSGANetV2 style) instead of
+# the relative, linkage-aware delta_hat_F -- isolates the contribution of
+# the linkage-aware surrogate design from the contribution of the P3
+# engine itself. Acceptance rule adapted for an absolute (not relative)
+# prediction (methods/p3_absolute.py docstring).
 #
-# Must specify:
-#   - search engine: P3 (search_engines/p3/)
-#   - surrogate: absolute regressor (surrogates/absolute_regressor.py),
-#     NSGANetV2 style -- NOT delta_hat_F
-#   - acceptance rule adapted for an absolute (not relative) surrogate
-#     prediction
+# model_factory (sklearn-style regressor) is supplied by
+# scripts/run_experiment.py at construction time, not from this file --
+# it's a Python callable, not YAML-serialisable data.
 #
 # Reference: chapters/v003/results/main.tex ("Baselines" -- "P3 with an
 # absolute regressor surrogate...").
+
+method: p3_absolute
+params:
+  population_size: 20
+  kappa: null
+  objective_index: 0

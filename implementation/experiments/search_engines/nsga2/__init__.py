@@ -1,9 +1,7 @@
-"""
-NSGA-II search engine components (baseline side: NSGA-Net / NSGANetV2
-comparisons).
+"""NSGA-II search engine components (baseline side: NSGA-Net / NSGANetV2
+comparisons)."""
 
-TODO:
-- Re-export nondominated_sort and crowding_distance once implemented.
+from search_engines.nsga2.crowding_distance import crowding_distance
+from search_engines.nsga2.nondominated_sort import fast_nondominated_sort
 
-Reference: chapters/v003/related_work/main.tex (NSGA-Net paragraph).
-"""
+__all__ = ["crowding_distance", "fast_nondominated_sort"]

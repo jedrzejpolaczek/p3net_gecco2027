@@ -1,8 +1,12 @@
-# TODO: define the TPE sanity-baseline config.
+# Tree-structured Parzen Estimator (TPE) sanity baseline.
 #
-# Must specify:
-#   - wraps methods/external/tpe.py
-#   - same discretised joint genotype encoding as every other arm
+# UNVERIFIED AGAINST LIVE DATA: wraps methods/external/tpe.py's ask/tell
+# scaffolding with the Stage-B stand-in sampler -- the real Optuna-based
+# backend is not wired up yet (Stage C, ../../TASKS.md). Same discretised
+# joint genotype encoding as every other arm.
 #
 # Reference: chapters/v003/results/main.tex ("Baselines" -- sanity
 # baselines).
+
+method: tpe
+params: {}

@@ -1,14 +1,23 @@
-# TODO: define the P3Net method config.
+# P3Net: P3 engine + relative, linkage-aware surrogate delta_hat_F
+# (library's p3net.methods.p3net.P3Net, configured directly here rather
+# than via an experiments/methods/*.py wrapper).
 #
-# Must specify:
-#   - search engine: P3 (search_engines/p3/)
+#   - search engine: P3 (p3net.search_engines.p3)
 #   - surrogate: relative, linkage-aware delta_hat_F
-#     (surrogates/relative_linkage_aware.py)
-#   - chain depth kappa, default = eLyMPuS's 2*ceil(log2(n)) bound, n =
-#     full extended discretised genotype dimensionality (architecture +
-#     Theta)
-#   - step-3 acceptance threshold, default = 0 (delta_hat_F >= 0)
-#   - fidelity scope: r_K only
+#     (p3net.surrogates.relative_linkage_aware)
+#   - kappa: null below defers to P3Net's own default,
+#     2*ceil(log2(n)) (eLyMPuS's bound), n = full extended discretised
+#     genotype dimensionality (architecture + Theta)
+#   - acceptance_threshold: 0 (delta_hat_F >= 0, "no worsening")
+#   - fidelity scope: r_K only -- Runner is always driven against
+#     substrate.objectives(), which queries the highest fidelity level
 #
 # Reference: chapters/v003/proposed_optimizer/main.tex (entire section);
 # chapters/v003/results/main.tex ("Baselines", Table tab:ablation-grid).
+
+method: p3net
+params:
+  population_size: 20
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0

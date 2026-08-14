@@ -1,21 +1,227 @@
 """
 Entry point: run a single (method x benchmark x budget x seed) search.
 
-TODO:
-- Parse a method config (experiments/configs/methods/*.yaml -- for
-  "p3net.yaml" this configures p3net.methods.p3net directly; for every other
-  file it configures the corresponding experiments/methods/*.py arm), a
-  search-space config (experiments/configs/search_spaces/*.yaml), and a
-  budget tier (experiments/configs/experiment/budgets.yaml).
-- Instantiate the corresponding method (library's p3net.methods.p3net, or
-  an experiments/methods/* arm) against the corresponding
-  experiments/substrates/* adapter via p3net.harness.runner (the library's
-  generic Runner), configured with experiments/stopping_rules.py's concrete
-  StoppingRule, for one seed.
-- Persist the resulting H_t (raw per-run observation log) under
-  experiments/results/raw/, keyed consistently with
-  p3net.harness.evaluation_cache's protocol-version scheme.
+Parses a method config (configs/methods/*.yaml -- for "p3net.yaml" this
+configures p3net.methods.p3net directly; for every other file it
+configures the corresponding methods/*.py arm) and a search-space config
+(configs/search_spaces/*.yaml), instantiates the corresponding method
+against the corresponding substrates/* adapter via p3net.harness.runner's
+generic Runner (configured with stopping_rules.py's concrete StoppingRule)
+for one seed, and persists the resulting H_t (raw per-run observation log)
+under results/raw/.
 
 Reference: chapters/v003/results/main.tex ("Experimental Setup" as a
 whole).
 """
+
+from __future__ import annotations
+
+import argparse
+import json
+import random
+from pathlib import Path
+from typing import Any
+
+import yaml
+from p3net.harness.evaluation_cache import EvaluationCache
+from p3net.harness.runner import Observation, Runner, RunState
+from p3net.methods.p3net import P3Net
+from sklearn.linear_model import LinearRegression
+
+from methods import (
+    NSGANet,
+    NSGANetV2,
+    P3Absolute,
+    P3Alone,
+    RandomSearch,
+    mo_bohb_method,
+    sh_emoa_method,
+    tpe_method,
+)
+from methods.external._ask_tell_shared import default_valid_sampler
+from search_spaces.nas_genotype import nas_search_space, nas_validity
+from stopping_rules import BudgetOrExplorationCollapse
+from substrates.jahs_bench_201 import JAHSBench201Substrate
+from substrates.nas_hpo_bench_ii import NASHPOBenchIISubstrate
+
+EXPERIMENTS_ROOT = Path(__file__).resolve().parent.parent
+CONFIGS_DIR = EXPERIMENTS_ROOT / "configs"
+RESULTS_DIR = EXPERIMENTS_ROOT / "results" / "raw"
+
+# search_space name (configs/search_spaces/*.yaml "search_space" field) ->
+# () -> (SearchSpace, Validity). Only one concrete search space exists so
+# far (search_spaces/nas_genotype.py); registry kept open for
+# nsganetv2_continuous's separate representation once that lands.
+_SEARCH_SPACE_BUILDERS = {
+    "nas_genotype": lambda: (nas_search_space(), nas_validity),
+}
+
+# substrate name (configs/search_spaces/*.yaml "substrate" field) ->
+# (search_space_config) -> Substrate.
+_SUBSTRATE_BUILDERS = {
+    "jahs_bench_201": lambda cfg: JAHSBench201Substrate(dataset=cfg.get("dataset", "cifar10")),
+    "nas_hpo_bench_ii": lambda cfg: NASHPOBenchIISubstrate(),
+}
+
+_ASK_TELL_FACTORIES = {
+    "sh_emoa": sh_emoa_method,
+    "mo_bohb": mo_bohb_method,
+    "tpe": tpe_method,
+}
+
+
+def load_yaml(path: Path) -> dict[str, Any]:
+    with path.open(encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def load_method_config(name: str) -> dict[str, Any]:
+    return load_yaml(CONFIGS_DIR / "methods" / f"{name}.yaml")
+
+
+def load_search_space_config(name: str) -> dict[str, Any]:
+    return load_yaml(CONFIGS_DIR / "search_spaces" / f"{name}.yaml")
+
+
+def load_budgets_config() -> dict[str, Any]:
+    return load_yaml(CONFIGS_DIR / "experiment" / "budgets.yaml")
+
+
+def build_search_space(search_space_config: dict[str, Any]):
+    name = search_space_config["search_space"]
+    try:
+        builder = _SEARCH_SPACE_BUILDERS[name]
+    except KeyError:
+        raise ValueError(f"unknown search space {name!r}") from None
+    return builder()
+
+
+def build_substrate(search_space_config: dict[str, Any]):
+    name = search_space_config["substrate"]
+    try:
+        builder = _SUBSTRATE_BUILDERS[name]
+    except KeyError:
+        raise ValueError(f"unknown substrate {name!r}") from None
+    return builder(search_space_config)
+
+
+def build_method(method_config: dict[str, Any], *, search_space, validity, rng, cache):
+    """Method configs deliberately hold only YAML-serialisable data
+    (population sizes, kappa, ...) -- model_factory is a Python callable
+    supplied here, not sourced from the config file."""
+    kind = method_config["method"]
+    params = method_config.get("params", {})
+
+    if kind == "p3net":
+        return P3Net(
+            search_space=search_space,
+            validity=validity,
+            model_factory=LinearRegression,
+            rng=rng,
+            cache=cache,
+            **params,
+        )
+    if kind == "p3_alone":
+        return P3Alone(search_space=search_space, validity=validity, rng=rng, cache=cache, **params)
+    if kind == "p3_absolute":
+        return P3Absolute(
+            search_space=search_space,
+            validity=validity,
+            model_factory=LinearRegression,
+            rng=rng,
+            cache=cache,
+            **params,
+        )
+    if kind == "nsga_net":
+        return NSGANet(search_space=search_space, validity=validity, rng=rng, cache=cache, **params)
+    if kind == "nsganetv2":
+        return NSGANetV2(
+            search_space=search_space,
+            validity=validity,
+            model_factory=LinearRegression,
+            rng=rng,
+            cache=cache,
+            **params,
+        )
+    if kind == "random_search":
+        return RandomSearch(
+            search_space=search_space, validity=validity, rng=rng, cache=cache, **params
+        )
+    if kind in _ASK_TELL_FACTORIES:
+        sampler = default_valid_sampler(search_space, validity, rng)
+        return _ASK_TELL_FACTORIES[kind](sampler, cache=cache, **params)
+    raise NotImplementedError(
+        f"method {kind!r} is not runnable yet (configs/methods/{kind}.yaml is a "
+        f"documented placeholder -- see its 'not_yet_implemented' note and ../TASKS.md)"
+    )
+
+
+def run_single(
+    method_config: dict[str, Any],
+    search_space_config: dict[str, Any],
+    budget: int,
+    seed: int,
+) -> RunState:
+    search_space, validity = build_search_space(search_space_config)
+    substrate = build_substrate(search_space_config)
+    rng = random.Random(seed)
+    cache = EvaluationCache()
+    method = build_method(
+        method_config, search_space=search_space, validity=validity, rng=rng, cache=cache
+    )
+    runner = Runner(
+        objective=substrate.objectives, budget=budget, stopping_rule=BudgetOrExplorationCollapse()
+    )
+    return runner.run(method)
+
+
+def result_path(*, method_name: str, search_space_name: str, budget: int, seed: int) -> Path:
+    return RESULTS_DIR / f"{method_name}__{search_space_name}__budget{budget}__seed{seed}.json"
+
+
+def _observation_to_dict(obs: Observation) -> dict[str, Any]:
+    return {"genotype": list(obs.genotype.values), "objectives": list(obs.objectives)}
+
+
+def persist_run(
+    state: RunState, *, method_name: str, search_space_name: str, budget: int, seed: int
+) -> Path:
+    out_path = result_path(
+        method_name=method_name, search_space_name=search_space_name, budget=budget, seed=seed
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "method": method_name,
+        "search_space": search_space_name,
+        "budget": budget,
+        "seed": seed,
+        "evaluations_used": state.evaluations_used,
+        "history": [_observation_to_dict(obs) for obs in state.history],
+    }
+    out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return out_path
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--method", required=True, help="configs/methods/<name>.yaml")
+    parser.add_argument("--search-space", required=True, help="configs/search_spaces/<name>.yaml")
+    parser.add_argument("--budget", type=int, required=True)
+    parser.add_argument("--seed", type=int, required=True)
+    args = parser.parse_args(argv)
+
+    method_config = load_method_config(args.method)
+    search_space_config = load_search_space_config(args.search_space)
+    state = run_single(method_config, search_space_config, args.budget, args.seed)
+    out_path = persist_run(
+        state,
+        method_name=args.method,
+        search_space_name=args.search_space,
+        budget=args.budget,
+        seed=args.seed,
+    )
+    print(f"wrote {out_path} ({state.evaluations_used} evaluations)")
+
+
+if __name__ == "__main__":
+    main()

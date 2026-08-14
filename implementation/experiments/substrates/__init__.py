@@ -1,9 +1,15 @@
-"""
-experiments.substrates -- adapters answering f1 for a given benchmark.
+"""experiments.substrates -- adapters answering f1 for a given
+benchmark."""
 
-TODO:
-- Re-export the common Benchmark interface (base.py) and the two concrete
-  adapters once implemented.
+from substrates.base import FidelityLevel, Substrate
+from substrates.jahs_bench_201 import JAHS_DATASETS, JAHSBench201Substrate
+from substrates.nas_hpo_bench_ii import MAX_TABULATED_EPOCHS, NASHPOBenchIISubstrate
 
-Reference: chapters/v003/results/main.tex ("Benchmark and search space").
-"""
+__all__ = [
+    "FidelityLevel",
+    "Substrate",
+    "JAHS_DATASETS",
+    "JAHSBench201Substrate",
+    "MAX_TABULATED_EPOCHS",
+    "NASHPOBenchIISubstrate",
+]

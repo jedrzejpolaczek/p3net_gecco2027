@@ -1,15 +1,33 @@
-"""
-SH-EMOA baseline (multi-objective EA built on SMS-EMOA).
+"""SH-EMOA baseline (multi-objective EA built on SMS-EMOA).
 
-TODO:
-- Wrap an established SH-EMOA implementation (the one used by
-  guerreroviu2021bagofbaselines for this exact joint setting on these same
-  two benchmarks) rather than reimplementing SMS-EMOA from scratch.
-- Adapt its interface to the shared harness (p3net.harness.runner): same
-  genotype encoding (experiments/search_spaces/nas_genotype.py), dedup
-  cache, budget/seed/stopping-rule handling as every other arm.
-
-Reference: chapters/v003/results/main.tex ("Baselines");
-chapters/v003/related_work/main.tex ("A systematic comparison of solvers on
-this setting...").
+Unverified-against-live-data note: wraps the ask/tell scaffolding in
+_ask_tell_shared.py. The real pymoo-based sampler/report -- translating
+pymoo's SH-EMOA proposals to/from our Genotype/Objectives types -- is not
+wired up yet (Stage C, ../../TASKS.md); construct with a `sampler`/`report`
+pair matching AskTellMethod's protocol until then (e.g.
+default_valid_sampler as a placeholder, as the tests do).
 """
+
+from __future__ import annotations
+
+from collections.abc import Callable
+
+from p3net.harness.evaluation_cache import EvaluationCache
+from p3net.problem.genotype import Genotype
+from p3net.problem.objectives import Objectives
+
+from methods.external._ask_tell_shared import AskTellMethod
+
+
+def sh_emoa_method(
+    sampler: Callable[[], Genotype],
+    *,
+    report: Callable[[Genotype, Objectives], None] | None = None,
+    cache: EvaluationCache | None = None,
+) -> AskTellMethod:
+    return AskTellMethod(
+        sampler=sampler,
+        report=report,
+        experiment_type="sh_emoa",
+        cache=cache if cache is not None else EvaluationCache(),
+    )

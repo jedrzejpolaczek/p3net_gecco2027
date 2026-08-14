@@ -1,27 +1,57 @@
-"""
-Common substrate interface: the thing that answers full evaluations of f1
-for this paper's two benchmarks.
+"""Common substrate interface: the thing that answers full evaluations of
+f1 for this paper's two benchmarks."""
 
-TODO:
-- Define an abstract query interface: query(genotype, fidelity_level) -> f1
-  value, covering both live-training-style and lookup/surrogate-style
-  substrates. Genotypes come from experiments/search_spaces/nas_genotype.py;
-  fidelity levels use p3net.problem's generic FidelityLadder abstraction.
-- Expose the fidelity ladder r_1 < ... < r_K for the concrete benchmark,
-  including any extra resource axes (e.g. input resolution) each level
-  fixes.
-- Expose whether the substrate answers deterministically or stochastically,
-  so callers know whether p3net.problem's generic s-seed/median averaging
-  path applies.
-- Expose the analytic f2 (cost proxy) computation, independent of fidelity
-  level -- this concrete f2 wiring is what problem/objectives.py in the
-  library deliberately leaves to substrates/ (the library has no opinion on
-  "parameter count" or "FLOPs" as a concept).
-- Define what counts as "the full evaluation budget" cost unit for
-  p3net.harness.runner: calls to f1 only, never calls to a surrogate.
+from __future__ import annotations
 
-Reference: chapters/v003/problem_formulation/main.tex ("Surrogate model"
-preamble, "Multi fidelity evaluation"); chapters/v003/results/main.tex
-("Benchmark and search space"). Generic interfaces this plugs into:
-../lib/src/p3net/problem/objectives.py, harness/runner.py.
-"""
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+from p3net.problem.genotype import Genotype
+from p3net.problem.objectives import Objectives
+
+
+@dataclass(frozen=True)
+class FidelityLevel:
+    """One resource configuration a substrate can be queried at (epochs,
+    resolution, ...). Mirrors p3net.problem.objectives.FidelityLevel's
+    shape but lives here since it's substrate-specific configuration, not
+    generic library machinery."""
+
+    rank: int
+    config: dict
+
+
+class Substrate(ABC):
+    """The thing that answers full evaluations of f1 (and, where
+    applicable, an analytic f2) for a concrete benchmark. Concrete
+    subclasses (jahs_bench_201.py, nas_hpo_bench_ii.py) implement
+    query_f1/analytic_f2/fidelity_ladder; `objectives()` -- the
+    harness.Runner-compatible callable -- is shared here so it can't drift
+    between the two benchmarks."""
+
+    deterministic: bool = True
+    """Both of this paper's benchmarks are deterministic (s=1 throughout,
+    Problem Formulation "Evaluation noise")."""
+
+    @abstractmethod
+    def fidelity_ladder(self) -> tuple[FidelityLevel, ...]:
+        """r_1 < ... < r_K for this benchmark."""
+
+    @abstractmethod
+    def query_f1(self, genotype: Genotype, fidelity: FidelityLevel) -> float:
+        """A full evaluation of f1 at the given fidelity level. This is
+        the cost unit p3net.harness.Runner's budget counts -- never call
+        this from a surrogate."""
+
+    @abstractmethod
+    def analytic_f2(self, genotype: Genotype) -> float:
+        """The computational cost proxy, computed without querying the
+        benchmark's f1 machinery, held fixed at the highest fidelity
+        level's resolution setting regardless of which fidelity f1 is
+        queried at (Problem Formulation)."""
+
+    def objectives(self, genotype: Genotype) -> Objectives:
+        """(f1 at r_K, f2), as a harness.Runner-compatible objective
+        callable: Runner(objective=substrate.objectives, ...)."""
+        r_k = self.fidelity_ladder()[-1]
+        return (self.query_f1(genotype, r_k), self.analytic_f2(genotype))

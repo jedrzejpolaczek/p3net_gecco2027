@@ -1,15 +1,18 @@
-"""
-Thin wrappers around established external baseline implementations -- not
-reimplementations. Only for algorithms complex enough that reimplementing
-them from scratch would risk an unfair comparison (a subtly wrong
-reimplementation making a baseline look weaker or stronger than it really
-is). Random search does not meet that bar and lives directly in
-experiments/methods/random_search.py instead, as a small own
-implementation.
+"""Thin wrappers around established external baseline implementations --
+not reimplementations. Only for algorithms complex enough that
+reimplementing them from scratch would risk an unfair comparison. Random
+search does not meet that bar and lives directly in
+methods/random_search.py instead."""
 
-TODO:
-- Re-export sh_emoa, mo_bohb, tpe entry points once implemented.
+from methods.external._ask_tell_shared import AskTellMethod, default_valid_sampler
+from methods.external.mo_bohb import mo_bohb_method
+from methods.external.sh_emoa import sh_emoa_method
+from methods.external.tpe import tpe_method
 
-Reference: chapters/v003/related_work/main.tex ("A systematic comparison of
-solvers on this setting [guerreroviu2021bagofbaselines]...").
-"""
+__all__ = [
+    "AskTellMethod",
+    "default_valid_sampler",
+    "mo_bohb_method",
+    "sh_emoa_method",
+    "tpe_method",
+]

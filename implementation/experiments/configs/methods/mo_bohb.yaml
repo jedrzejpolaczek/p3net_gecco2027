@@ -1,11 +1,17 @@
-# TODO: define the MO-BOHB baseline config.
+# MO-BOHB baseline (Multi-Objective Bayesian Optimization Hyperband).
 #
-# Must specify:
-#   - wraps methods/external/mo_bohb.py
-#   - explicit decision on whether/how this arm consumes the fidelity
-#     ladder (Hyperband is naturally fidelity-aware), documented rather
-#     than left implicit
+# UNVERIFIED AGAINST LIVE DATA: wraps methods/external/mo_bohb.py's
+# ask/tell scaffolding with the Stage-B stand-in sampler -- the real
+# HpBandSter/Optuna-based backend is not wired up yet (Stage C,
+# ../../TASKS.md). Also open, per that TASKS.md entry: whether/how this
+# arm consumes p3net.problem's generic fidelity ladder -- Hyperband is
+# naturally fidelity-aware, unlike every other arm in the main comparison
+# (which operates only at r_K) -- left explicitly undecided here rather
+# than guessed at, to be resolved once the real backend lands.
 #
 # Reference: chapters/v003/related_work/main.tex;
 # chapters/v003/problem_formulation/main.tex ("Multi fidelity
 # evaluation").
+
+method: mo_bohb
+params: {}

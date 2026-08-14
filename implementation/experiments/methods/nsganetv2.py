@@ -1,27 +1,109 @@
-"""
-NSGANetV2 (primary baseline): NSGA-II + absolute regressor surrogate,
-discretised Theta. Also covers the nsganetv2_continuous control variant
-(native real-valued Theta).
+"""NSGANetV2 (primary baseline): NSGA-II + absolute regressor surrogate,
+discretised Theta.
 
-TODO:
-- Implement NSGA-II (experiments.search_engines.nsga2) paired with
-  p3net.surrogates.absolute_regressor scoring full candidate encodings.
-- Default configuration searches the SAME discretised Theta as P3Net
-  (Fairness controls), via experiments/search_spaces/nas_genotype.py's
-  shared discretised encoding -- do not let this arm silently use a
-  continuous encoding by default.
-- Support a second configuration
-  (experiments/configs/methods/nsganetv2_continuous.yaml) using the
-  unconstrained, real-valued encoding of Theta this baseline would natively
-  use (the continuous variant defined in
-  experiments/search_spaces/nas_genotype.py), as an additional control
-  isolating the effect of discretisation itself -- implement as a
-  config-driven variant of this same module, not a separate
-  reimplementation, so the two configurations only differ in Theta's
-  encoding.
-- Apply identical dedup cache, seed policy, and stopping rule as every other
-  arm.
-
-Reference: chapters/v003/results/main.tex ("Baselines", "Fairness
-controls"); chapters/v003/notes/main.tex ("Encoding in baselines").
+Known simplification: only the shared discretised Theta encoding is
+implemented here. The nsganetv2_continuous control variant (native
+real-valued Theta, isolating the effect of discretisation itself from the
+search engine/surrogate) needs a parallel real-valued crossover operator
+this class doesn't have -- not yet implemented, tracked in TASKS.md rather
+than silently skipped.
 """
+
+from __future__ import annotations
+
+import random
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any
+
+from p3net.harness.evaluation_cache import EvaluationCache
+from p3net.harness.runner import Observation, RunState
+from p3net.problem.decoding import Validity, is_valid
+from p3net.problem.genotype import Genotype, SearchSpace
+from p3net.surrogates.absolute_regressor import AbsoluteRegressorSurrogate
+
+from methods._shared import mutate, random_valid_batch, select_survivors, uniform_crossover
+
+
+@dataclass
+class NSGANetV2:
+    """NSGA-II paired with an absolute regressor surrogate: generates a
+    larger pool of offspring than needed per generation, screens them with
+    a surrogate freshly fit on H_t, and only proposes the most promising
+    subset for full evaluation -- mirroring NSGANetV2's efficiency
+    mechanism. Searches the SAME discretised Theta encoding as P3Net
+    (Fairness controls)."""
+
+    search_space: SearchSpace
+    validity: Validity
+    model_factory: Callable[[], Any]
+    rng: random.Random
+    population_size: int = 20
+    offspring_pool_multiplier: int = 3
+    objective_index: int = 0
+    experiment_type: str = "nsganetv2"
+    protocol_version: str = "v1"
+    cache: EvaluationCache = field(default_factory=EvaluationCache)
+
+    _population: list[Genotype] = field(default_factory=list, init=False, repr=False)
+    _history: dict[Genotype, Observation] = field(default_factory=dict, init=False, repr=False)
+
+    def propose(self, state: RunState) -> list[Genotype]:
+        if len(self._population) < self.population_size:
+            return random_valid_batch(
+                self.population_size - len(self._population),
+                self.search_space,
+                self.validity,
+                self.rng,
+                self.cache,
+                experiment_type=self.experiment_type,
+                protocol_version=self.protocol_version,
+            )
+
+        pool = self._generate_offspring_pool(self.population_size * self.offspring_pool_multiplier)
+        if not pool:
+            return []
+
+        surrogate = AbsoluteRegressorSurrogate(model_factory=self.model_factory)
+        surrogate.fit(list(self._history.values()), objective_index=self.objective_index)
+        pool.sort(key=surrogate.predict)
+        selected = pool[: self.population_size]
+
+        return [
+            g
+            for g in selected
+            if not self.cache.record_proposal(
+                g, experiment_type=self.experiment_type, protocol_version=self.protocol_version
+            )
+        ]
+
+    def update(self, state: RunState, new_observations: list[Observation]) -> None:
+        for obs in new_observations:
+            self.cache.put(
+                obs.genotype,
+                obs.objectives,
+                experiment_type=self.experiment_type,
+                protocol_version=self.protocol_version,
+            )
+            self._history[obs.genotype] = obs
+            if obs.genotype not in self._population:
+                self._population.append(obs.genotype)
+        if len(self._population) > self.population_size:
+            self._population = select_survivors(
+                self._population, self._history, self.population_size
+            )
+
+    def _generate_offspring_pool(self, n: int) -> list[Genotype]:
+        pool: list[Genotype] = []
+        attempts = 0
+        while len(pool) < n and attempts < n * 20 + 50:
+            attempts += 1
+            parent_a, parent_b = self.rng.sample(self._population, 2)
+            child = uniform_crossover(parent_a, parent_b, self.rng)
+            child = mutate(child, self.search_space, self.rng, rate=0.1)
+            if not is_valid(child, self.validity):
+                continue
+            if child in pool or child in self._history:
+                continue
+            pool.append(child)
+        return pool

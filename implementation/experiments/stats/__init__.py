@@ -1,8 +1,23 @@
 """
 experiments.stats -- the statistical comparison plan for this paper.
 
-TODO:
-- Re-export the significance-testing entry point once implemented.
-
 Reference: chapters/v003/results/main.tex ("Statistical plan").
 """
+
+from stats.significance import (
+    Comparison,
+    ComparisonResult,
+    HolmResult,
+    cliffs_delta,
+    compare_p3net_to_baselines,
+    holm_bonferroni_correction,
+)
+
+__all__ = [
+    "Comparison",
+    "ComparisonResult",
+    "HolmResult",
+    "cliffs_delta",
+    "compare_p3net_to_baselines",
+    "holm_bonferroni_correction",
+]

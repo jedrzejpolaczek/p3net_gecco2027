@@ -1,16 +1,21 @@
-"""
-experiments.methods -- the eight baselines/ablations P3Net is compared
+"""experiments.methods -- the eight baselines/ablations P3Net is compared
 against (everything in Table tab:ablation-grid except P3Net itself, which
-is p3net.methods.p3net from the library), each wiring a search engine
-(p3net.search_engines.p3 or experiments.search_engines.nsga2) to a
-surrogate (p3net.surrogates.* or none) into a runnable arm -- except
-random_search.py, which needs neither a search engine nor a surrogate.
+is p3net.methods.p3net from the library)."""
 
-TODO:
-- Re-export all method entry points once implemented, matching
-  experiments/configs/methods/*.yaml one-to-one (minus p3net.yaml, which
-  configures the library's own p3net.methods.p3net directly).
+from methods.external import mo_bohb_method, sh_emoa_method, tpe_method
+from methods.nsga_net import NSGANet
+from methods.nsganetv2 import NSGANetV2
+from methods.p3_absolute import P3Absolute
+from methods.p3_alone import P3Alone
+from methods.random_search import RandomSearch
 
-Reference: chapters/v003/results/main.tex ("Baselines", Table
-tab:ablation-grid).
-"""
+__all__ = [
+    "NSGANet",
+    "NSGANetV2",
+    "P3Absolute",
+    "P3Alone",
+    "RandomSearch",
+    "mo_bohb_method",
+    "sh_emoa_method",
+    "tpe_method",
+]
