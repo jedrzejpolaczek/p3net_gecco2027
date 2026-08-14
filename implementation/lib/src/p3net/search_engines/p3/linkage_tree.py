@@ -1,32 +1,114 @@
-"""
-Linkage tree construction: agglomerative UPGMA clustering over normalised
+"""Linkage tree construction: agglomerative UPGMA clustering over normalised
 mutual information between genotype variables.
 
 Library-scope note: operates on any Genotype produced from the generic
 SearchSpace in problem/genotype.py -- must not assume "architecture edge" or
-"hyperparameter" variable semantics. The paper's own genotype (six
-architecture edges + discretised Theta, all categorical after applying its
-own discretisation option (i)) is just one instance of a SearchSpace this
-module is handed; it works identically on any other categorical genotype.
-
-TODO:
-- Compute a normalised mutual-information-based dependency measure between
-  genotype variables from the current population.
-- Build the tree via agglomerative, UPGMA-style hierarchical clustering over
-  that measure, yielding the nested family of variable subsets F used by
-  optimal mixing.
-- Require only that every variable in the genotype is categorical (finite
-  domain) -- continuous variables must already be discretised by whatever
-  SearchSpace/discretisation policy the caller chose (problem/genotype.py);
-  this module performs no discretisation itself and has no opinion on how a
-  caller reached a categorical encoding.
-- Enforce the rebuild granularity rule: the tree built at the start of a
-  search iteration is reused for every parent's sweep within that iteration,
-  and is only rebuilt at the next pass through step 6 of the search loop
-  (methods/p3net.py) -- do not rebuild mid-sweep.
-
-Reference: chapters/v003/proposed_optimizer/main.tex ("Representation and
-linkage tree", Figure fig:linkage-tree); chapters/v003/notes/main.tex
-("Search engine" table, "Tree rebuild granularity"). Concrete NAS genotype
-this is exercised against: ../experiments/search_spaces/nas_genotype.py.
+"hyperparameter" variable semantics. Requires only that every variable in
+the genotype is categorical (finite domain); continuous variables must
+already be discretised by whatever SearchSpace/discretisation policy the
+caller chose. This module performs no discretisation itself.
 """
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from sklearn.metrics import normalized_mutual_info_score
+
+from p3net.problem.genotype import Genotype
+
+
+@dataclass(frozen=True)
+class LinkageNode:
+    """One node of the linkage tree: a variable subset F, and (for internal
+    nodes) its two children. Leaves have no children."""
+
+    subset: frozenset[int]
+    left: LinkageNode | None = None
+    right: LinkageNode | None = None
+
+    @property
+    def is_leaf(self) -> bool:
+        return self.left is None and self.right is None
+
+
+def _pairwise_normalized_mutual_information(
+    population: list[Genotype], n: int
+) -> list[list[float]]:
+    columns = [[g.values[i] for g in population] for i in range(n)]
+    mi = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(i + 1, n):
+            score = normalized_mutual_info_score(columns[i], columns[j])
+            mi[i][j] = mi[j][i] = score
+    return mi
+
+
+def build_linkage_tree(population: list[Genotype]) -> LinkageNode:
+    """Agglomerative, UPGMA-style hierarchical clustering over normalised
+    mutual information between genotype variables (columns of the current
+    population), yielding the nested family of variable subsets F used by
+    optimal mixing (Figure fig:linkage-tree).
+    """
+    if not population:
+        raise ValueError("cannot build a linkage tree from an empty population")
+    n = len(population[0].values)
+    if n == 0:
+        raise ValueError("genotypes must have at least one variable")
+    if any(len(g.values) != n for g in population):
+        raise ValueError("all genotypes in the population must share the same dimensionality")
+    if n == 1:
+        return LinkageNode(subset=frozenset({0}))
+
+    mi = _pairwise_normalized_mutual_information(population, n)
+
+    clusters: dict[int, LinkageNode] = {i: LinkageNode(subset=frozenset({i})) for i in range(n)}
+    members: dict[int, set[int]] = {i: {i} for i in range(n)}
+    next_id = n
+
+    def distance(a: int, b: int) -> float:
+        pairs = [(i, j) for i in members[a] for j in members[b]]
+        avg_mi = sum(mi[i][j] for i, j in pairs) / len(pairs)
+        return 1.0 - avg_mi
+
+    active = list(range(n))
+    while len(active) > 1:
+        best_pair: tuple[int, int] | None = None
+        best_dist = float("inf")
+        for a_idx in range(len(active)):
+            for b_idx in range(a_idx + 1, len(active)):
+                a, b = active[a_idx], active[b_idx]
+                d = distance(a, b)
+                if d < best_dist:
+                    best_dist = d
+                    best_pair = (a, b)
+        assert best_pair is not None
+        a, b = best_pair
+        merged = LinkageNode(
+            subset=clusters[a].subset | clusters[b].subset, left=clusters[a], right=clusters[b]
+        )
+        clusters[next_id] = merged
+        members[next_id] = members[a] | members[b]
+        active.remove(a)
+        active.remove(b)
+        active.append(next_id)
+        next_id += 1
+
+    return clusters[active[0]]
+
+
+def linkage_subsets(root: LinkageNode) -> list[frozenset[int]]:
+    """Flatten a linkage tree into the list of internal-node subsets F used
+    by the optimal mixing sweep ("each internal node is a candidate linkage
+    subset F")."""
+    subsets: list[frozenset[int]] = []
+
+    def walk(node: LinkageNode) -> None:
+        if node.is_leaf:
+            return
+        subsets.append(node.subset)
+        walk(node.left)  # type: ignore[arg-type]
+        walk(node.right)  # type: ignore[arg-type]
+
+    walk(root)
+    return subsets

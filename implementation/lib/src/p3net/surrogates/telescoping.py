@@ -1,23 +1,51 @@
-"""
-Telescoping construction: reconstructing an absolute f1 estimate along a
-sweep chain.
+"""Telescoping construction: reconstructing an absolute f1 estimate along a
+sweep chain."""
 
-TODO:
-- Implement f_hat_1(x_m) = f1(x_0) - sum_i delta_hat_{F_i}(x_{i-1}, x_i),
-  telescoping back along the chain of tentatively accepted modifications
-  x_0, ..., x_m to the nearest ancestor x_0 with a *known*, fully evaluated
-  f1.
-- Enforce that x_0 (and the parent used to start a sweep) is always drawn
-  from H_t -- never from a transient, surrogate-only individual produced
-  mid-sweep. This is a hard invariant, not a suggestion: the construction
-  must never bottom out on an unknown f1(x_0).
-- Reduce correctly to the single-step case f_hat_1(x') = f1(x) -
-  delta_hat_F(x, x') when m = 1.
-- Respect the chain-depth bound kappa (harness/runner.py or
-  methods/p3net.py owns the actual limit-enforcement; this module just
-  needs to support being cut off at an arbitrary chain length).
+from __future__ import annotations
 
-Reference: chapters/v003/proposed_optimizer/main.tex ("Telescoping
-construction", "Parent, donor, and ancestor provenance", "Chain depth
-(kappa)").
-"""
+from dataclasses import dataclass
+
+from p3net.harness.runner import Observation
+from p3net.problem.genotype import Genotype
+from p3net.surrogates.relative_linkage_aware import RelativeLinkageAwareSurrogate
+
+
+class AncestorNotEvaluatedError(ValueError):
+    """Raised when the telescoping construction would bottom out on a
+    genotype without a known, fully evaluated f1 -- must never happen."""
+
+
+@dataclass(frozen=True)
+class ChainStep:
+    x_prev: Genotype
+    x_next: Genotype
+    subset: frozenset[int]
+
+
+def telescoped_estimate(
+    ancestor: Observation,
+    chain: list[ChainStep],
+    surrogate: RelativeLinkageAwareSurrogate,
+    known_evaluated: set[Genotype],
+    *,
+    objective_index: int = 0,
+) -> float:
+    """f_hat_1(x_m) = f1(x_0) - sum_i delta_hat_{F_i}(x_{i-1}, x_i),
+    telescoping back along the chain of tentatively accepted modifications
+    to the nearest fully-evaluated ancestor x_0. Reduces to the single-step
+    case f_hat_1(x') = f1(x) - delta_hat_F(x, x') when len(chain) == 1.
+
+    `ancestor` must be drawn from H_t (checked via `known_evaluated`) --
+    this function refuses to run rather than silently bottoming out on an
+    unknown value.
+    """
+    if ancestor.genotype not in known_evaluated:
+        raise AncestorNotEvaluatedError(
+            "telescoping ancestor x_0 must be drawn from H_t (a fully "
+            "evaluated genotype); got one with no known f1"
+        )
+    estimate = ancestor.objectives[objective_index]
+    for step in chain:
+        delta = surrogate.predict(step.x_prev, step.x_next, step.subset)
+        estimate -= delta
+    return estimate

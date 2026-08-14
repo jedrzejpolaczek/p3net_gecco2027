@@ -1,11 +1,16 @@
-"""
-P3 (Parameter-less Population Pyramid) search engine.
+"""P3 (Parameter-less Population Pyramid) search engine."""
 
-TODO:
-- Re-export Pyramid, build_linkage_tree, optimal_mixing_sweep once
-  implemented.
+from p3net.search_engines.p3.linkage_tree import LinkageNode, build_linkage_tree, linkage_subsets
+from p3net.search_engines.p3.optimal_mixing import Proposal, SweepState, propose_modification
+from p3net.search_engines.p3.pyramid import Pyramid, PyramidLevel
 
-Reference: chapters/v003/related_work/main.tex ("P3 additionally
-counteracts premature convergence..."); chapters/v003/proposed_optimizer/
-main.tex.
-"""
+__all__ = [
+    "LinkageNode",
+    "build_linkage_tree",
+    "linkage_subsets",
+    "Proposal",
+    "SweepState",
+    "propose_modification",
+    "Pyramid",
+    "PyramidLevel",
+]

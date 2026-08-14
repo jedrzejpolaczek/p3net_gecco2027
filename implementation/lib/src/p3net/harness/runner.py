@@ -1,37 +1,89 @@
-"""
-Generic search-loop driver: budget accounting + pluggable stopping rule.
+"""Generic search-loop driver: budget accounting + pluggable stopping rule."""
 
-Library-scope note: this module knows about "a method" (anything exposing
-the shape methods/p3net.py implements: propose/evaluate/update against a
-budget) and "a full-evaluation budget" -- nothing about {50, 100, 200}
-evaluations, R = 10 seeds, or the exploration-collapse criterion
-bartnik2026evolutionary needed for NAS-Bench-201-scale spaces. Those
-concrete numbers and that concrete criterion belong to the paper's
-experiment (configs/experiment/budgets.yaml and
-experiments/stopping_rules.py), not to the library.
+from __future__ import annotations
 
-TODO:
-- Implement a `Runner` that drives an arbitrary method against an arbitrary
-  black-box objective for a fixed full-evaluation budget (an integer count
-  of calls to the true objective, never to a surrogate), recording the
-  resulting observation dataset (H_t-style: every (genotype, objective
-  vector) pair from a full evaluation).
-- Define a `StoppingRule` protocol: given the run's state so far, return
-  whether to stop. Ship one default implementation (stop once the budget is
-  exhausted) as the library's baseline behaviour. Do NOT bake in any
-  domain-specific "premature convergence" heuristic here -- that is a
-  pluggable StoppingRule a caller supplies (see
-  experiments/stopping_rules.py for the paper's own exploration-collapse
-  criterion).
-- Support running R independent repetitions with a caller-supplied seed
-  list and identical initialization scheme; the library owns the mechanics
-  of "run N times with these seeds", not the choice of R or which seeds
-  (that choice, e.g. R = 10 with a fixed published seed list, is an
-  experiments/ concern -- harness/seeds.py in this library only provides
-  the R-vs-s distinction as a reusable utility).
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Protocol
 
-Reference (generic mechanism only): chapters/v003/results/main.tex
-("Budgets, seeds, stopping" -- the *mechanism* of budget accounting and a
-pluggable stopping rule is generic; the *specific* tiers, R, and
-convergence criterion described there are experiments/ concerns).
-"""
+from p3net.harness.seeds import SeedPolicy
+from p3net.problem.genotype import Genotype
+from p3net.problem.objectives import Objectives
+
+
+@dataclass(frozen=True)
+class Observation:
+    """One full evaluation: a (genotype, objective vector) pair -- the unit
+    an H_t-style observation dataset is built from."""
+
+    genotype: Genotype
+    objectives: Objectives
+
+
+@dataclass
+class RunState:
+    """Everything a StoppingRule needs to decide whether to stop: the
+    observation history so far and how many full evaluations have been
+    spent."""
+
+    history: list[Observation] = field(default_factory=list)
+    evaluations_used: int = 0
+
+
+class StoppingRule(Protocol):
+    def __call__(self, state: RunState, *, budget: int) -> bool: ...
+
+
+def budget_exhausted(state: RunState, *, budget: int) -> bool:
+    """Default StoppingRule: stop once the full-evaluation budget is
+    spent."""
+    return state.evaluations_used >= budget
+
+
+class Method(Protocol):
+    """The shape a runnable method must expose: propose the next batch of
+    genotypes to fully evaluate, and update itself given their results."""
+
+    def propose(self, state: RunState) -> list[Genotype]: ...
+
+    def update(self, state: RunState, new_observations: list[Observation]) -> None: ...
+
+
+@dataclass
+class Runner:
+    """Drives an arbitrary Method against an arbitrary full-evaluation
+    objective for a fixed budget, using a pluggable StoppingRule. Counts
+    cost exclusively in calls to the objective, never in calls to a
+    surrogate the method may use internally."""
+
+    objective: Callable[[Genotype], Objectives]
+    budget: int
+    stopping_rule: StoppingRule = budget_exhausted
+
+    def run(self, method: Method) -> RunState:
+        state = RunState()
+        while not self.stopping_rule(state, budget=self.budget):
+            proposals = method.propose(state)
+            if not proposals:
+                break
+            remaining = self.budget - state.evaluations_used
+            if remaining < len(proposals):
+                proposals = proposals[:remaining]
+            new_observations: list[Observation] = []
+            for genotype in proposals:
+                objectives = self.objective(genotype)
+                observation = Observation(genotype=genotype, objectives=objectives)
+                state.history.append(observation)
+                state.evaluations_used += 1
+                new_observations.append(observation)
+            method.update(state, new_observations)
+        return state
+
+    def run_repeated(
+        self, make_method: Callable[[int], Method], seed_policy: SeedPolicy
+    ) -> list[RunState]:
+        """Run R independent repetitions, one per seed in
+        seed_policy.run_seeds, using an identical initialisation scheme
+        (make_method(seed) must construct a freshly seeded Method each
+        time)."""
+        return [self.run(make_method(seed)) for seed in seed_policy.run_seeds]

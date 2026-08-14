@@ -1,11 +1,6 @@
-"""
-p3net.search_engines -- variation operators. Only P3 (linkage-learning)
-lives here; NSGA-II is not part of the library (it exists solely to build
-this paper's NSGA-II-based baselines) and lives in
-experiments/search_engines/nsga2/ instead.
+"""p3net.search_engines -- variation operators. Only P3 (linkage-learning)
+lives here."""
 
-TODO:
-- Re-export the public entry points of p3/ once implemented.
+from p3net.search_engines import p3
 
-Reference: chapters/v003/proposed_optimizer/main.tex.
-"""
+__all__ = ["p3"]

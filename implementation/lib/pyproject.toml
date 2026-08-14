@@ -6,10 +6,9 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
 dependencies = [
-    # TODO: add core deps as implementation lands (see TASKS.md Phase 1+) --
-    # expected to include a numeric/ML stack for the surrogates, e.g. numpy,
-    # scipy, and scikit-learn or a small torch model for delta_hat_F /
-    # absolute_regressor.
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
 ]
 
 [project.optional-dependencies]

@@ -1,13 +1,24 @@
-"""
-p3net.harness -- generic evaluation infrastructure: deduplication cache,
-seed policy (R vs s), and the pluggable-stopping-rule Runner.
+"""p3net.harness -- generic evaluation infrastructure."""
 
-TODO:
-- Re-export EvaluationCache, Runner, StoppingRule, and the seed-list
-  utilities once implemented.
+from p3net.harness.evaluation_cache import CacheKey, EvaluationCache
+from p3net.harness.runner import (
+    Method,
+    Observation,
+    Runner,
+    RunState,
+    StoppingRule,
+    budget_exhausted,
+)
+from p3net.harness.seeds import SeedPolicy
 
-Reference: chapters/v003/results/main.tex ("Fairness controls" -- the
-*mechanism* of a shared, identically-applied cache is generic; using it
-identically across nine paper-specific baselines is an experiments/
-concern).
-"""
+__all__ = [
+    "CacheKey",
+    "EvaluationCache",
+    "Method",
+    "Observation",
+    "Runner",
+    "RunState",
+    "StoppingRule",
+    "budget_exhausted",
+    "SeedPolicy",
+]

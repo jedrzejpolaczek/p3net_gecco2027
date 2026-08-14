@@ -1,13 +1,7 @@
-"""
-p3net.metrics -- generic multi-objective quality metrics: hypervolume, IGD+.
+"""p3net.metrics -- generic multi-objective quality metrics: hypervolume,
+IGD+."""
 
-Only domain-agnostic MOO metrics live here. Surrogate-quality tracking
-(rank correlation vs |H_t|) and genotype duplication-rate/archive-turnover
-diagnostics are specific to evaluating *this paper's* research question and
-live in experiments/metrics/ instead.
+from p3net.metrics.hypervolume import hypervolume, hypervolume_relative_to_best_known_front
+from p3net.metrics.igd_plus import igd_plus
 
-TODO:
-- Re-export hypervolume and igd_plus entry points once implemented.
-
-Reference: chapters/v003/results/main.tex ("Metrics").
-"""
+__all__ = ["hypervolume", "hypervolume_relative_to_best_known_front", "igd_plus"]

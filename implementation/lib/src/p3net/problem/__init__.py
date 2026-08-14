@@ -1,15 +1,36 @@
-"""
-p3net.problem -- generic search-space machinery: SearchSpace/Genotype,
-Decoder/Validity protocols, Pareto dominance and fidelity-ladder utilities.
+"""p3net.problem -- generic search-space machinery."""
 
-Domain-agnostic by design -- see genotype.py, decoding.py, objectives.py
-for what deliberately does NOT live here (any NAS-specific concept belongs
-in ../experiments/search_spaces/nas_genotype.py instead).
+from p3net.problem.decoding import Decoder, Validity, is_valid, valid_subset
+from p3net.problem.genotype import (
+    CategoricalDomain,
+    Genotype,
+    SearchSpace,
+    discretize_linear,
+    discretize_log_uniform,
+)
+from p3net.problem.objectives import (
+    FidelityLadder,
+    FidelityLevel,
+    Objectives,
+    dominates,
+    evaluate_with_noise,
+    pareto_front,
+)
 
-TODO:
-- Re-export the public API once genotype.py, decoding.py, objectives.py are
-  implemented (SearchSpace, Genotype, Decoder, Validity, pareto_front,
-  FidelityLadder, ...).
-
-Reference: chapters/v003/problem_formulation/main.tex
-"""
+__all__ = [
+    "CategoricalDomain",
+    "Genotype",
+    "SearchSpace",
+    "discretize_linear",
+    "discretize_log_uniform",
+    "Decoder",
+    "Validity",
+    "is_valid",
+    "valid_subset",
+    "FidelityLadder",
+    "FidelityLevel",
+    "Objectives",
+    "dominates",
+    "evaluate_with_noise",
+    "pareto_front",
+]

@@ -1,24 +1,103 @@
-"""
-p3net -- a linkage-learning search engine (P3) paired with a relative,
+"""p3net -- a linkage-learning search engine (P3) paired with a relative,
 linkage-aware surrogate, for black-box combinatorial (+ optionally
 discretised-continuous) optimisation problems.
 
-This is the library. It has no knowledge of neural architecture search,
-JAHS-Bench-201, NAS-HPO-Bench-II, or any other baseline method (NSGA-II,
-SH-EMOA, MO-BOHB, TPE) -- those live in the sibling experiments/ package,
-which reproduces the GECCO 2027 paper (chapters/v003) by consuming this
-library the same way any external user would.
-
-TODO:
-- Re-export the public entry points once implemented: the generic
-  SearchSpace/Genotype/Decoder/Validity types (problem/), the P3 search
-  engine (search_engines/p3/), the surrogates (surrogates/), the P3Net
-  method itself (methods/p3net.py), the evaluation cache and generic Runner
-  (harness/), and the generic multi-objective metrics (metrics/).
-- This is the package's public API surface -- keep it deliberately small
-  and stable; anything not re-exported here is an implementation detail
-  experiments/ (or any other consumer) should not depend on.
-
-Reference: chapters/v003/proposed_optimizer/main.tex (P3Net as a whole);
-see README.md for the library/experiments split rationale.
+This is the public API surface. Anything not re-exported here is an
+implementation detail that downstream consumers (e.g. the sibling
+experiments package) should not depend on directly.
 """
+
+from p3net.harness import (
+    EvaluationCache,
+    Method,
+    Observation,
+    Runner,
+    RunState,
+    SeedPolicy,
+    StoppingRule,
+)
+from p3net.methods import P3Net
+from p3net.metrics import hypervolume, hypervolume_relative_to_best_known_front, igd_plus
+from p3net.problem import (
+    CategoricalDomain,
+    Decoder,
+    FidelityLadder,
+    FidelityLevel,
+    Genotype,
+    Objectives,
+    SearchSpace,
+    Validity,
+    discretize_linear,
+    discretize_log_uniform,
+    dominates,
+    evaluate_with_noise,
+    is_valid,
+    pareto_front,
+    valid_subset,
+)
+from p3net.search_engines.p3 import (
+    LinkageNode,
+    Proposal,
+    Pyramid,
+    PyramidLevel,
+    SweepState,
+    build_linkage_tree,
+    linkage_subsets,
+    propose_modification,
+)
+from p3net.surrogates import (
+    AbsoluteRegressorSurrogate,
+    AncestorNotEvaluatedError,
+    ChainStep,
+    NoLinkageTreeError,
+    RelativeLinkageAwareSurrogate,
+    telescoped_estimate,
+)
+
+__all__ = [
+    "P3Net",
+    # problem
+    "CategoricalDomain",
+    "Decoder",
+    "FidelityLadder",
+    "FidelityLevel",
+    "Genotype",
+    "Objectives",
+    "SearchSpace",
+    "Validity",
+    "discretize_linear",
+    "discretize_log_uniform",
+    "dominates",
+    "evaluate_with_noise",
+    "is_valid",
+    "pareto_front",
+    "valid_subset",
+    # search_engines.p3
+    "LinkageNode",
+    "Proposal",
+    "Pyramid",
+    "PyramidLevel",
+    "SweepState",
+    "build_linkage_tree",
+    "linkage_subsets",
+    "propose_modification",
+    # surrogates
+    "AbsoluteRegressorSurrogate",
+    "AncestorNotEvaluatedError",
+    "ChainStep",
+    "NoLinkageTreeError",
+    "RelativeLinkageAwareSurrogate",
+    "telescoped_estimate",
+    # harness
+    "EvaluationCache",
+    "Method",
+    "Observation",
+    "Runner",
+    "RunState",
+    "SeedPolicy",
+    "StoppingRule",
+    # metrics
+    "hypervolume",
+    "hypervolume_relative_to_best_known_front",
+    "igd_plus",
+]

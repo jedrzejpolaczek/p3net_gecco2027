@@ -1,18 +1,40 @@
-"""
-Absolute regressor surrogate (NSGANetV2-style; also used by the P3+absolute
-ablation).
+"""Absolute regressor surrogate (NSGANetV2-style; also used by the
+P3+absolute ablation)."""
 
-TODO:
-- Implement an absolute regressor predicting f1(x) directly from the full
-  genotype encoding (not relative to a parent, not linkage-aware).
-- Used by two arms: methods/nsganetv2.py (paired with NSGA-II) and
-  methods/p3_absolute.py (paired with P3, isolating the linkage-aware-
-  surrogate contribution from the search-engine contribution).
-- Keep the model family swappable/consistent between both arms, since the
-  ablation's validity depends on the *only* difference between them being
-  the search engine.
+from __future__ import annotations
 
-Reference: chapters/v003/results/main.tex ("Baselines" -- "P3 with an
-absolute regressor surrogate... isolating the contribution of the linkage
-aware design from the contribution of the P3 engine itself").
-"""
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any
+
+from p3net.harness.runner import Observation
+from p3net.problem.genotype import Genotype
+from p3net.surrogates._encoding import build_vocab, one_hot
+
+
+@dataclass
+class AbsoluteRegressorSurrogate:
+    """Predicts f1(x) directly from the full genotype encoding. Used by
+    ../../../../experiments/methods/nsganetv2.py and
+    ../../../../experiments/methods/p3_absolute.py; both must use the same
+    model family so the P3-vs-NSGA-II ablation isolates the search engine,
+    not the surrogate."""
+
+    model_factory: Callable[[], Any]
+    _model: Any = field(default=None, init=False, repr=False)
+    _vocab: list[dict[Any, int]] | None = field(default=None, init=False, repr=False)
+
+    def fit(self, observations: list[Observation], *, objective_index: int = 0) -> None:
+        if not observations:
+            raise ValueError("cannot fit an absolute regressor on zero observations")
+        self._vocab = build_vocab(observations)
+        X = [one_hot(obs.genotype, self._vocab) for obs in observations]
+        y = [obs.objectives[objective_index] for obs in observations]
+        self._model = self.model_factory()
+        self._model.fit(X, y)
+
+    def predict(self, genotype: Genotype) -> float:
+        if self._vocab is None:
+            raise RuntimeError("AbsoluteRegressorSurrogate.predict called before fit")
+        x = one_hot(genotype, self._vocab)
+        return float(self._model.predict([x])[0])
