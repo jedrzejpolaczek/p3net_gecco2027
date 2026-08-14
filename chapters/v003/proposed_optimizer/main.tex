@@ -38,6 +38,11 @@
     accepted only by the surrogate $\hat\delta_F$, never yet confirmed by a full evaluation. The upper loop
     repeats for each linkage subset visited in the sweep, up to the chain-depth limit $\kappa$
     (Chain depth, below); the lower loop begins the next search iteration.}
+    \Description{A left-to-right flow diagram: parent x from H sub t leads to propose x-prime on subset F,
+    then score via delta-hat sub F, then tentative accept if delta-hat is at least zero, then select C-star
+    once the sweep is done or kappa is reached, then full evaluation of f sub 1, then update H sub t and
+    rebuild the linkage tree. A small loop returns from tentative accept back to propose for the next subset,
+    and a larger loop returns from the update step back to parent for the next search iteration.}
     \label{fig:p3net-loop}
 \end{figure*}
 
@@ -73,6 +78,9 @@
     the joint genotype $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$; each internal node is a
     candidate linkage subset $F$ that may be visited during the optimal mixing sweep (step~1, Search loop,
     below). A concrete subset, $F=\{1,2,3\}$, is highlighted.}
+    \Description{A binary tree over five leaf variables x sub 1 through x sub 5: x1 and x2 merge into a node,
+    which merges with x3 into a highlighted node representing the subset F equals 1, 2, 3; separately x4 and
+    x5 merge into another node; both merged nodes join at the root.}
     \label{fig:linkage-tree}
 \end{figure}
 
