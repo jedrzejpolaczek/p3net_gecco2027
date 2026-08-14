@@ -22,8 +22,11 @@
 \copyrightyear{2027}
 \setcopyright{none}
 \renewcommand\footnotetextcopyrightpermission[1]{}
-% ACM requires the reference-format block for anything over one page, so
-% printacmref is left at its default (true) rather than suppressed.
+% printacmref (the "ACM Reference Format:" self-citation block, with its
+% placeholder DOI/page-count) is ACM policy for the final, accepted paper,
+% not for an internal review draft — suppressed here, re-enable before the
+% real GECCO submission.
+\settopmatter{printacmref=false}
 \setlength{\headheight}{15.5pt}
 
 \begin{document}
