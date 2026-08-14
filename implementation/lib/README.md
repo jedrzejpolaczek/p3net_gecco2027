@@ -8,8 +8,73 @@ optimisation. This is the P3Net algorithm from the GECCO 2027 paper at
 `chapters/v003`, packaged as a reusable library rather than as one-off code
 tied to that paper's NAS experiment.
 
-See [`TASKS.md`](TASKS.md) for the library's task list in implementation
-order.
+See [`TASKS.md`](TASKS.md) for the library's task list, and
+[`docs/architecture/`](docs/architecture/README.md) for the C4 architecture
+documentation.
+
+## Usage
+
+```python
+import random
+
+from sklearn.linear_model import LinearRegression
+
+from p3net import CategoricalDomain, Genotype, P3Net, Runner, SearchSpace
+
+# 1. Define a search space: a Cartesian product of categorical domains.
+#    (Continuous coordinates are supported too -- discretise them first
+#    with discretize_log_uniform/discretize_linear.)
+space = SearchSpace(domains=(CategoricalDomain(values=(0, 1)),) * 12)
+
+
+# 2. Define the (single-)objective to minimise and a validity check.
+def objective(genotype: Genotype) -> tuple[float]:
+    return (float(sum(genotype.values)),)  # replace with your real f1
+
+
+def always_valid(genotype: Genotype) -> float:
+    return -1.0  # g(x) <= 0 always; replace with a real constraint check
+
+
+# 3. Construct P3Net and run it for a fixed full-evaluation budget.
+method = P3Net(
+    search_space=space,
+    validity=always_valid,
+    model_factory=LinearRegression,  # any sklearn-style regressor
+    rng=random.Random(0),
+    population_size=15,
+)
+state = Runner(objective=objective, budget=200).run(method)
+
+best = min(obs.objectives[0] for obs in state.history)
+print(f"best f1 found: {best} ({state.evaluations_used} full evaluations)")
+```
+
+See [`tests/test_p3net_integration.py`](tests/test_p3net_integration.py) for
+a complete runnable example against a structured toy problem, including a
+random-search comparison baseline.
+
+## Results
+
+`tests/test_p3net_integration.py` runs P3Net against a concatenated
+deceptive trap-function problem (3 blocks of 4 bits each, global optimum
+`f1 = -12`) — the classic benchmark for demonstrating linkage-learning
+value, since block-blind search gets stuck at the deceptive
+all-zeros-per-block local optimum. Best `f1` found under a 200-evaluation
+budget, across 3 independent seeds:
+
+| Seed | P3Net | Random search |
+|---|---|---|
+| 42 | -11.0 | -9.0 |
+| 7 | -10.0 | -8.0 |
+| 123 | -10.0 | -10.0 |
+
+P3Net matched or beat random search in every seed, and got noticeably
+closer to the known global optimum (`-12.0`) in two of three. This is a
+correctness sanity check, not a claim of the algorithm's full strength —
+see [`src/p3net/methods/p3net.py`](src/p3net/methods/p3net.py)'s module
+docstring for the simplifications this implementation currently carries
+relative to the paper's full description.
 
 ## Relationship to the experiments repository
 
@@ -52,7 +117,8 @@ repositories with no further rework once there's a concrete reason to
 - `src/p3net/metrics/` — generic multi-objective indicators: hypervolume,
   IGD+
 - `tests/` — one test module per library component
-- `docs/explanations/` — standalone explainers on P3 and P3Net
+- `docs/architecture/` — C4 architecture documentation
+- `docs/explanations/pl/` — standalone explainers on P3 and P3Net (Polish)
 
 ## Contributing
 
@@ -65,7 +131,12 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development workflow, and
 
 ## Status
 
-Scaffold stage — every file under `src/`, `tests/`, and `pyproject.toml`
-currently contains a task list (`TODO` comments), not implementation code,
-each referencing the exact paper section it corresponds to. Next step:
-[`TASKS.md`](TASKS.md) Phase 1.
+**Phases 0–7 implemented** (see [`TASKS.md`](TASKS.md) for the detailed
+breakdown): generic search-space machinery, the shared harness, the P3
+engine, both surrogates, the full `P3Net` search loop, generic
+multi-objective metrics, and top-level API wiring. 79 tests passing
+(`uv run pytest`), lint/format clean (`uv run ruff check .` /
+`uv run ruff format --check .`). Three documented simplifications remain
+(see `methods/p3net.py`'s module docstring) before this matches the
+paper's full description; none of them block using the library as
+described above.
