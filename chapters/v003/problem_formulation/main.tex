@@ -1,4 +1,5 @@
 \section{Problem Formulation}
+\label{sec:problem-formulation}
 
 \subsection*{Formal definition}
 
@@ -9,7 +10,7 @@ The search space is defined as the Cartesian product
 \]
 where each $\Lambda_i$ is a finite set of operations (e.g.\ \textsc{conv}$3{\times}3$, \textsc{skip}, \textsc{none}).
 A genotype $x = (x_1, \dots, x_n) \in \Lambda$ assigns one operation to each edge of the cell graph.
-Under the joint architecture and hyperparameter search setting targeted in the Results section, $\Lambda$
+Under the joint architecture and hyperparameter search setting targeted in Section~\ref{sec:results}, $\Lambda$
 is extended with continuous coordinates for training hyperparameters (e.g.\ learning rate, weight decay),
 giving $\Lambda = \Lambda_1 \times \cdots \times \Lambda_n \times \Theta$, where $\Theta \subset \mathbb{R}^m$
 collects these continuous coordinates. Two resolutions of how P3's block wise linkage tree crossover, defined
@@ -17,7 +18,7 @@ over discrete groups, is to handle $\Theta$ remain open, and both are compatible
 (i) discretising each coordinate of $\Theta$ into a finite set, absorbing it into the discrete product above
 without changing the crossover operator, or (ii) extending the linkage tree and optimal mixing to real valued
 mixing on $\Theta$ in the spirit of RV-GOMEA~\citep{andreadis2024maxclique}, alongside discrete mixing on $\Lambda_1 \times \cdots \times
-\Lambda_n$. Which of the two is used is fixed once, in the Proposed Optimizer section; either choice
+\Lambda_n$. Which of the two is used is fixed once, in Section~\ref{sec:proposed-optimizer}; either choice
 leaves $D$, $g$, $f_1$, and $f_2$ as defined below unchanged.
 
 \paragraph{Decoding and validity.}
@@ -57,26 +58,26 @@ resolution), each level $r_k$ additionally fixes a corresponding setting on thos
 full resource configuration rather than an epoch count alone. On benchmarks with a single resource axis,
 this reduces to $r_k$ denoting the number of training epochs only.
 The objective at level $r_k$ is $f_1^{(k)}(x)$; the value at the highest level $f_1^{(K)}(x)$ is the target quality measure.
-For model learning and selection, methods that exploit the fidelity ladder use $f_1^{(k)}(x)$ at the lowest level that correlates sufficiently with $f_1^{(K)}(x)$, preventing bias introduced by mixing fidelity levels; P3Net itself does not exploit this ladder, operating exclusively at $r_K$ (Proposed Optimizer). None of the methods compared in Results (Baselines) exploits it either; it is defined here as general, substrate-level machinery, useful should a future multi-fidelity baseline (e.g.\ a Hyperband-based method) be added to the comparison, rather than as an active component of the present experiment.
+For model learning and selection, methods that exploit the fidelity ladder use $f_1^{(k)}(x)$ at the lowest level that correlates sufficiently with $f_1^{(K)}(x)$, preventing bias introduced by mixing fidelity levels; P3Net itself does not exploit this ladder, operating exclusively at $r_K$ (Section~\ref{sec:proposed-optimizer}). None of the methods compared in Section~\ref{sec:results} (Baselines) exploits it either; it is defined here as general, substrate-level machinery, useful should a future multi-fidelity baseline (e.g.\ a Hyperband-based method) be added to the comparison, rather than as an active component of the present experiment.
 
 \paragraph{Evaluation noise.}
 Where the substrate answering $f_1$ carries genuine stochasticity, for instance live training or a
 benchmark's own recorded repeats, $f_1^{(k)}(x)$ is treated as a random variable: each configuration is
 evaluated with $s$ distinct seeds, or with samples drawn from the substrate's recorded repeats, and the
 median across them is used for selection and reporting. Deterministic substrates, such as a point estimate
-surrogate, require no such averaging. Both of P3Net's primary benchmarks (Results) answer queries
+surrogate, require no such averaging. Both of P3Net's primary benchmarks (Section~\ref{sec:results}) answer queries
 deterministically: a point-estimate surrogate for JAHS-Bench-201, a fixed lookup table for
 NAS-HPO-Bench-II within its exhaustively tabulated range (caveat on which fidelity level this refers to
-discussed in Related Work). So $s=1$ throughout this work and this averaging step is not exercised; it is retained
+discussed in Section~\ref{sec:related-work}). So $s=1$ throughout this work and this averaging step is not exercised; it is retained
 as general substrate-level machinery for future work on stochastic substrates such as live training. $s$
-should not be confused with $R$, the number of independent search runs per method (Results): $R$ remains
+should not be confused with $R$, the number of independent search runs per method (Section~\ref{sec:results}): $R$ remains
 meaningful regardless of substrate determinism, since randomness across runs comes from initialization and
 stochastic search operators, not from repeated queries to the same configuration.
 
 \paragraph{Surrogate model.}
 A full evaluation of $f_1(x)$ queries the true objective for $D(x)$; the concrete substrate for this
-query, whether live training, a benchmark lookup, or a benchmark's own surrogate, is instantiated in the
-Results section.
+query, whether live training, a benchmark lookup, or a benchmark's own surrogate, is instantiated in
+Section~\ref{sec:results}.
 After collecting $t$ full evaluations we have the observation dataset
 \[
     \mathcal{H}_t = \bigl\{ (x^{(i)},\, \mathbf{f}(x^{(i)})) \bigr\}_{i=1}^{t}.
@@ -97,4 +98,4 @@ This is what distinguishes P3Net from NSGANetV2 already at the level of problem 
 candidates relative to their parent using the structure discovered by P3, whereas NSGANetV2 scores each
 candidate in absolute terms from its encoding alone.
 The construction and update of $\hat{\delta}_F$, and its use within the P3Net search loop, are described in
-the Proposed Optimizer section.
+Section~\ref{sec:proposed-optimizer}.

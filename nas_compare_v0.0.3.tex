@@ -1,27 +1,27 @@
 % nas_compare_v0.0.3
-\documentclass[conference]{IEEEtran}
-\usepackage{titlesec}
-\IEEEoverridecommandlockouts
+% GECCO submission: ACM sigconf format (acmart), replacing the earlier IEEEtran draft.
+% authordraft mode: shows author names (not anonymised) and does not demand final
+% ACM rights/DOI/ISBN data, which is not yet known for a future GECCO'27 submission.
+\documentclass[sigconf,authordraft]{acmart}
 
-\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts}
-\usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
-\usepackage{natbib}
-\usepackage[T1]{fontenc}
 \usepackage{longtable}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
-\titleclass{\subsubsubsection}{straight}[\subsubsection]
-\newcounter{subsubsubsection}[subsubsection]
-\renewcommand\thesubsubsubsection{\thesubsubsection.\roman{subsubsubsection}}
-\titleformat{\subsubsubsection}[runin]{\normalfont\normalsize\bfseries}{\thesubsubsubsection}{1em}{}
-\titlespacing*{\subsubsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
-\titleformat{\subparagraph}[runin]{\normalfont\normalsize\bfseries}{\thesubparagraph}{1em}{}
-\titlespacing*{\subparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
+
+% TODO before camera-ready: fill in the real conference dates/location and,
+% once assigned, the ISBN/DOI/price via \acmISBN{}/\acmDOI{}/\acmPrice{}.
+\acmConference[GECCO '27]{Genetic and Evolutionary Computation Conference}{2027}{TBD}
+\acmYear{2027}
+\copyrightyear{2027}
+\setcopyright{none}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
 
 \begin{document}
 
@@ -35,7 +35,7 @@
 \input{chapters/v003/results/main}
 \input{chapters/v003/conclusions/main}
 
-\bibliographystyle{plainnat}
+\bibliographystyle{ACM-Reference-Format}
 \bibliography{refs}
 
 \input{chapters/v003/notes/main}

@@ -1,4 +1,5 @@
 \section{Results}
+\label{sec:results}
 
 This section reports surrogate quality, convergence under fixed evaluation budgets, Pareto front and
 hypervolume comparisons, and a fixed-budget summary table (median, IQR, corrected $p$~values, effect sizes),
@@ -23,7 +24,7 @@ datasets; it queries a learned surrogate over its full mixed
 categorical/continuous search space without live training, so no enumerable oracle front exists (see
 Metrics, below).
 NAS-HPO-Bench-II~\citep{hirose2021nashpobenchii}, a fixed grid lookup table over combinations of
-architecture and hyperparameters, is reported alongside it as the Category~1 counterpart: within its exhaustively tabulated range (up to 12 training epochs; Related Work confirms $r_K$ is fixed at this level, not the benchmark's separate 200-epoch surrogate extrapolation), an
+architecture and hyperparameters, is reported alongside it as the Category~1 counterpart: within its exhaustively tabulated range (up to 12 training epochs; Section~\ref{sec:related-work} confirms $r_K$ is fixed at this level, not the benchmark's separate 200-epoch surrogate extrapolation), an
 exact oracle front is enumerable, enabling the Inverted Generational Distance plus (IGD+) on this benchmark specifically. Any result that holds on
 both benchmarks is reported as the primary finding; a result that holds on only one is reported as
 specific to that benchmark and not over generalised.
@@ -65,19 +66,19 @@ surrogate'' via the P3-only vs.\ P3Net comparison should be read against this as
 
 Without a surrogate, P3 alone follows the canonical optimal-mixing acceptance rule: every proposed
 modification within a sweep is gated by a \emph{real} evaluation of $f_1$, exactly as step~3 of the P3Net
-loop (Proposed Optimizer) would be if $\hat{\delta}_F$ were replaced by $f_1$ itself, and as in the original
+loop (Section~\ref{sec:proposed-optimizer}) would be if $\hat{\delta}_F$ were replaced by $f_1$ itself, and as in the original
 P3 algorithm's own hill-climbing and cross-level mixing steps~\citep{goldman2014parameterless}. Under the
 $\{50,\, 100,\, 200\}$-evaluation budgets used here (Budgets, below), this is expected to exhaust most or
 all of the budget within a small number of sweeps: for a joint genotype with dozens of linkage subsets, a
 single parent's full sweep alone can approach the smallest tier. This is not a flaw in the ablation but its
 point: if P3 alone collapses under this budget, that result directly motivates pairing P3 with a cheap
-surrogate in the first place, which is what the central question (Introduction) actually compares. We
+surrogate in the first place, which is what the central question (Section~\ref{sec:introduction}) actually compares. We
 report the number of full sweeps completed within budget for this ablation specifically, alongside its
 hypervolume, so a weak result reads as budget starvation rather than as a failure of the search engine
 itself.
 
 \paragraph{Surrogate error accumulation ($\kappa$ and acceptance threshold).} The main comparison above
-fixes $\kappa$ at its default value, eLyMPuS's own $2\lceil\log_2(n)\rceil$-step bound (Proposed Optimizer),
+fixes $\kappa$ at its default value, eLyMPuS's own $2\lceil\log_2(n)\rceil$-step bound (Section~\ref{sec:proposed-optimizer}),
 and the step-3 acceptance rule at its default zero threshold ($\hat{\delta}_F \geq 0$). Both are swept
 jointly in the sensitivity analysis: $\kappa$ over a small grid (e.g.\ $\{1,\, \lceil\log_2(n)\rceil,\,
 2\lceil\log_2(n)\rceil,\, \infty\}$), and the acceptance threshold over a small margin grid (e.g.\ $\{0,\,
@@ -85,9 +86,9 @@ jointly in the sensitivity analysis: $\kappa$ over a small grid (e.g.\ $\{1,\, \
 hypervolume and surrogate rank correlation as a function of both.
 
 \paragraph{Fairness controls.} Identical genotype encoding, decoding function $D$, validity handling,
-full evaluation budget, seed policy, stopping rule, and deduplication cache (Proposed Optimizer) across all
+full evaluation budget, seed policy, stopping rule, and deduplication cache (Section~\ref{sec:proposed-optimizer}) across all
 compared methods, so that no method's apparent efficiency benefits from infrastructure the others lack. In
-particular, the discretisation of continuous hyperparameter coordinates (Proposed Optimizer) is applied
+particular, the discretisation of continuous hyperparameter coordinates (Section~\ref{sec:proposed-optimizer}) is applied
 identically to every baseline: NSGA-II/NSGANetV2 search the same discretised $\Theta$ as P3Net rather than
 the unconstrained real-valued encoding a joint-setting extension of NSGA-II/NSGANetV2 would otherwise use,
 so that any gain is attributable to the search engine and surrogate rather than to a difference in genotype
@@ -107,7 +108,7 @@ NSGANetV2 itself uses to reach its reported results~\citep{lu2020nsganetv2}, so 
 in which the primary baseline was originally shown to work well. This also keeps every tier below
 NAS-HPO-Bench-II's own convention of 500 trials for benchmarking search
 algorithms~\citep{hirose2021nashpobenchii}, a deliberate choice, not an oversight: the central question
-concerns a \emph{limited} budget (Introduction), so all three tiers stress-test a regime tighter than either
+concerns a \emph{limited} budget (Section~\ref{sec:introduction}), so all three tiers stress-test a regime tighter than either
 benchmark's own default, on both benchmarks alike. $R = 10$ independent runs per method with a fixed, published
 seed list, matching JAHS-Bench-201's recommended minimum~\citep{bansal2022jahsbench}; identical
 initialization scheme across methods; a stopping rule covering both the evaluation budget and, if the
@@ -127,10 +128,10 @@ work~\citep{bartnik2026evolutionary}, which report no effect size, and the diffe
 deliberate methodological improvement, not an oversight to reconcile.
 
 \paragraph{Diagnostics.} Genotype duplication rate and archive turnover over the course of the search,
-motivated directly by the genotype-to-phenotype redundancy documented in NSGA-Net (Introduction)~\citep{lu2019nsganet},
+motivated directly by the genotype-to-phenotype redundancy documented in NSGA-Net (Section~\ref{sec:introduction})~\citep{lu2019nsganet},
 measured under the identical joint genotype encoding fixed for every compared method (Fairness controls),
 so that any difference in duplication rate reflects the search operator rather than a difference in
-encoding. The deduplication cache (Proposed Optimizer) is applied identically to every compared method as
+encoding. The deduplication cache (Section~\ref{sec:proposed-optimizer}) is applied identically to every compared method as
 part of the shared evaluation harness (Fairness controls), so the measured duplication rate reflects what
 each search operator proposes, not an artifact of asymmetric caching. This rate is counted at proposal
 time, for every candidate a search operator generates, whether or not it is later intercepted by the cache,
