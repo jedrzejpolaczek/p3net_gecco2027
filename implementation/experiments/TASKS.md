@@ -1,14 +1,19 @@
 # Experiments task index (GECCO 2027 paper reproduction)
 
 Every file below currently contains only a task list (`TODO` comments), not
-implementation code. This assumes the `p3net` library ([`../TASKS.md`](../TASKS.md))
-is already implemented and installed here as a local editable dependency
-(`experiments/pyproject.toml`) — every phase below imports it as `p3net.*`,
-never via a relative path into `../src/p3net`.
+implementation code. This assumes the `p3net` library ([`../lib/TASKS.md`](../lib/TASKS.md))
+is already implemented and installed here as a local editable dependency on
+`../lib` (`experiments/pyproject.toml`) — every phase below imports it as
+`p3net.*`, never via a relative path into `../lib/src/p3net`.
 
 ## Phase 0 — Environment & scaffolding
 
-- [ ] [`pyproject.toml`](pyproject.toml) — manifest, local editable `p3net` dependency, benchmark/baseline deps
+- [x] Repo scaffolding — `README.md`, `LICENSE` (AGPLv3), `CODE_OF_CONDUCT.md`,
+      `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.gitattributes`,
+      `.gitignore`, `.github/workflows/ci.yml`, `.github/dependabot.yml`
+- [x] [`pyproject.toml`](pyproject.toml) — manifest scaffolded, incl. the
+      local editable `p3net` dependency (`[tool.uv.sources]`); benchmark/
+      baseline deps still to be filled in as Phase 2/4 lands
 
 ## Phase 1 — Concrete NAS search space
 
@@ -53,7 +58,7 @@ already implemented) or `experiments.search_engines.nsga2` (Phase 3), plus
 - [ ] [`methods/p3_alone.py`](methods/p3_alone.py) — P3 (library), no surrogate, real-eval-gated sweep
 - [ ] [`methods/nsganetv2.py`](methods/nsganetv2.py) — NSGA-II + absolute regressor (+ continuous-Θ control)
 - [ ] [`methods/p3_absolute.py`](methods/p3_absolute.py) — P3 (library) + absolute regressor
-- [ ] [`methods/external/random_search.py`](methods/external/random_search.py)
+- [ ] [`methods/random_search.py`](methods/random_search.py) — own implementation, not a wrapper (too simple to carry reimplementation risk)
 - [ ] [`methods/external/tpe.py`](methods/external/tpe.py)
 - [ ] [`methods/external/sh_emoa.py`](methods/external/sh_emoa.py)
 - [ ] [`methods/external/mo_bohb.py`](methods/external/mo_bohb.py)

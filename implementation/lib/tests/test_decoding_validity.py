@@ -8,7 +8,7 @@ TODO:
   p3net.methods.p3net's search loop.
 - The concrete NAS decoder/validity check (path-existence through a cell
   graph) gets its own test at
-  experiments/tests/test_nas_search_space.py -- do not duplicate
+  ../experiments/tests/test_nas_search_space.py -- do not duplicate
   NAS-specific assertions here.
 
 Reference: src/p3net/problem/decoding.py;

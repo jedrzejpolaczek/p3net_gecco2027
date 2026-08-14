@@ -11,7 +11,7 @@ TODO:
 
 Note: surrogate-quality (rank correlation vs |H_t|) and genotype
 duplication-rate diagnostics are experiments-specific and tested at
-experiments/tests/test_experiment_metrics.py instead.
+../experiments/tests/test_experiment_metrics.py instead.
 
 Reference: src/p3net/metrics/hypervolume.py, igd_plus.py;
 chapters/v003/results/main.tex ("Metrics").

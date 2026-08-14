@@ -34,5 +34,5 @@ Reference: chapters/v003/problem_formulation/main.tex (Formal definition,
 "Handling Theta's continuity in P3"); chapters/v003/proposed_optimizer/
 main.tex ("Representation and linkage tree"); chapters/v003/notes/main.tex
 ("Problem representation", "Encoding in baselines"). Generic interfaces
-this implements: src/p3net/problem/genotype.py, decoding.py.
+this implements: ../lib/src/p3net/problem/genotype.py, decoding.py.
 """

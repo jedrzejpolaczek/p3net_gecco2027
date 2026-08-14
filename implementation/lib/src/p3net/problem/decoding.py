@@ -7,7 +7,7 @@ objective consumes, and a user-supplied validity check filters out
 structurally infeasible genotypes. The NAS-specific decoder (genotype -> a
 network description consumable by a benchmark adapter) and validity check
 (does an input-output path exist through the cell graph) live in
-experiments/search_spaces/nas_genotype.py, not here.
+../experiments/search_spaces/nas_genotype.py, not here.
 
 TODO:
 - Define a `Decoder` protocol: a callable `Genotype -> T` for whatever
@@ -29,5 +29,5 @@ TODO:
 Reference (generic mechanism only): chapters/v003/problem_formulation/
 main.tex ("Decoding and validity"); chapters/v003/proposed_optimizer/
 main.tex ("Constraint handling"). Concrete NAS instantiation:
-experiments/search_spaces/nas_genotype.py.
+../experiments/search_spaces/nas_genotype.py.
 """

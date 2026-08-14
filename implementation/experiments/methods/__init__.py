@@ -3,7 +3,8 @@ experiments.methods -- the eight baselines/ablations P3Net is compared
 against (everything in Table tab:ablation-grid except P3Net itself, which
 is p3net.methods.p3net from the library), each wiring a search engine
 (p3net.search_engines.p3 or experiments.search_engines.nsga2) to a
-surrogate (p3net.surrogates.* or none) into a runnable arm.
+surrogate (p3net.surrogates.* or none) into a runnable arm -- except
+random_search.py, which needs neither a search engine nor a surrogate.
 
 TODO:
 - Re-export all method entry points once implemented, matching

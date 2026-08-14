@@ -5,7 +5,7 @@ Library-scope note: this module must stay domain-agnostic. The NAS-specific
 instantiation (six architecture-edge dimensions + discretised training
 hyperparameters, as used by the GECCO paper's JAHS-Bench-201 /
 NAS-HPO-Bench-II experiments) is NOT implemented here -- it lives in
-experiments/search_spaces/nas_genotype.py as a concrete user of the interface
+../experiments/search_spaces/nas_genotype.py as a concrete user of the interface
 defined in this file. Anyone using p3net on a different combinatorial +
 continuous problem should be able to define their own search space here
 without touching anything NAS-related.
@@ -25,7 +25,7 @@ TODO:
 - Genotype/SearchSpace must carry no notion of "architecture edge",
   "network", or "hyperparameter" -- those are domain vocabulary that belongs
   to a concrete SearchSpace instance a library user defines (see
-  experiments/search_spaces/nas_genotype.py for the NAS example), not to the
+  ../experiments/search_spaces/nas_genotype.py for the NAS example), not to the
   library's core type.
 
 Reference (generic mechanism only -- see file header for what does NOT

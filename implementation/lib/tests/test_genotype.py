@@ -7,8 +7,8 @@ TODO:
 - Test a caller-supplied discretisation policy is applied once and stays
   stable.
 - Test Genotype equality/hashing used by the deduplication cache.
-- The NAS-specific instantiation (experiments/search_spaces/nas_genotype.py)
-  gets its own test at experiments/tests/test_nas_search_space.py -- do not
+- The NAS-specific instantiation (../experiments/search_spaces/nas_genotype.py)
+  gets its own test at ../experiments/tests/test_nas_search_space.py -- do not
   duplicate NAS-specific assertions here.
 
 Reference: src/p3net/problem/genotype.py;

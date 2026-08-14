@@ -18,5 +18,5 @@ TODO:
 Reference: chapters/v003/results/main.tex ("Budgets, seeds, stopping" --
 "a stopping rule covering both the evaluation budget and... an exploration
 collapse criterion"). Generic interface this implements:
-src/p3net/harness/runner.py (StoppingRule protocol).
+../lib/src/p3net/harness/runner.py (StoppingRule protocol).
 """

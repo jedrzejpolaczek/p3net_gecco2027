@@ -23,5 +23,5 @@ TODO:
 Reference: chapters/v003/problem_formulation/main.tex ("Surrogate model"
 preamble, "Multi fidelity evaluation"); chapters/v003/results/main.tex
 ("Benchmark and search space"). Generic interfaces this plugs into:
-src/p3net/problem/objectives.py, harness/runner.py.
+../lib/src/p3net/problem/objectives.py, harness/runner.py.
 """

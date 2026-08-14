@@ -4,13 +4,18 @@ Every file below currently contains only a task list (`TODO` comments), not
 implementation code. This file orders those tasks into a build sequence for
 **the library only** (`src/p3net/`) — domain-agnostic code with no knowledge
 of NAS, specific benchmarks, or comparison baselines. Once this is
-implemented, [`experiments/TASKS.md`](experiments/TASKS.md) picks up and
+implemented, [`../experiments/TASKS.md`](../experiments/TASKS.md) picks up and
 reproduces the actual GECCO 2027 paper by consuming this library as a
 dependency.
 
 ## Phase 0 — Environment & scaffolding
 
-- [ ] [`pyproject.toml`](pyproject.toml) — package manifest, dependency list, packaging tool decision
+- [x] Repo scaffolding — `README.md`, `LICENSE` (AGPLv3), `CODE_OF_CONDUCT.md`,
+      `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.gitattributes`,
+      `.gitignore`, `.github/workflows/ci.yml`, `.github/dependabot.yml`
+- [x] [`pyproject.toml`](pyproject.toml) — manifest scaffolded (`uv` +
+      `hatchling`, `ruff`, `pytest`); `dependencies = []` still to be filled
+      in as Phase 1+ lands
 
 ## Phase 1 — Generic problem machinery
 
@@ -92,13 +97,14 @@ depends on it.
 1. **Donor provenance in optimal mixing** (`search_engines/p3/optimal_mixing.py`)
    — must a donor come from H_t, or may it be a transient surrogate-only
    individual? Paper flags this as an open TODO.
-2. **Packaging tool** (`pyproject.toml`) — uv / poetry / plain pip+venv; must
-   support `experiments/pyproject.toml` depending on this package locally
-   and editably.
+
+Resolved: packaging tool is `uv` + `hatchling` (matches the repo scaffolding
+in Phase 0; `../experiments/pyproject.toml` depends on this package locally
+and editably via `[tool.uv.sources]`).
 
 ## After this: experiments/
 
 Once Phases 0–7 above are implemented and the library's public API
 (`src/p3net/__init__.py`) is stable enough to build against,
-[`experiments/TASKS.md`](experiments/TASKS.md) reproduces the paper's actual
+[`../experiments/TASKS.md`](../experiments/TASKS.md) reproduces the paper's actual
 comparison on top of it.

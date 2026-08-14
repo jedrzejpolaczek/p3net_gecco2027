@@ -28,5 +28,5 @@ TODO:
 Reference: chapters/v003/proposed_optimizer/main.tex ("Representation and
 linkage tree", Figure fig:linkage-tree); chapters/v003/notes/main.tex
 ("Search engine" table, "Tree rebuild granularity"). Concrete NAS genotype
-this is exercised against: experiments/search_spaces/nas_genotype.py.
+this is exercised against: ../experiments/search_spaces/nas_genotype.py.
 """

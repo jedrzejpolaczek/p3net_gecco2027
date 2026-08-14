@@ -1,30 +1,55 @@
-# TODO: define the Python package manifest for the experiments package.
-#
-# Must specify:
-#   - a LOCAL, EDITABLE dependency on the p3net library at ../ (e.g.
-#     `p3net = { path = "..", develop = true }` in Poetry, or
-#     `p3net @ file://../` / a `[tool.uv.sources]` path entry in
-#     uv/pip) -- experiments/ must consume p3net exactly the way an
-#     external downstream user would, never via relative imports into
-#     ../src/p3net. This is deliberate: it is the forcing function that
-#     keeps the library's public API honest.
-#   - benchmark dependencies: JAHS-Bench-201's and NAS-HPO-Bench-II's own
-#     Python packages
-#   - baseline-wrapper dependencies for methods/external/* (SH-EMOA,
-#     MO-BOHB, TPE implementations -- e.g. whatever
-#     guerreroviu2021bagofbaselines / HpBandSter / Optuna-based packages
-#     are wrapped there)
-#   - dev dependencies: pytest, a stats package for stats/significance.py
-#     (paired Wilcoxon, Holm-Bonferroni, Cliff's delta), a plotting
-#     library for reporting/plots.py, a YAML loader for configs/
-#   - these dependencies are DELIBERATELY kept out of the library's own
-#     pyproject.toml (../pyproject.toml) -- they are heavy, benchmark- and
-#     baseline-specific, and irrelevant to anyone using p3net outside this
-#     paper's reproduction
-#   - packaging tool choice should match whatever ../pyproject.toml settles
-#     on (open decision, see ../TASKS.md notes), since experiments/ depends
-#     on it directly
-#
-# Reference: chapters/v003/ (whole paper -- dependencies follow from
-# substrates/, search_engines/nsga2/, methods/external/, stats/,
-# reporting/ above).
+[project]
+name = "p3net-experiments"
+version = "0.0.1"
+description = "Reproduction of the P3Net GECCO 2027 paper experiment: joint neural architecture and hyperparameter search on JAHS-Bench-201 and NAS-HPO-Bench-II."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "p3net",
+    # TODO: add benchmark deps (JAHS-Bench-201, NAS-HPO-Bench-II Python
+    # packages) and baseline-wrapper deps for methods/external/* (SH-EMOA,
+    # MO-BOHB, TPE implementations) as implementation lands (see TASKS.md).
+    # These are deliberately kept out of ../lib/pyproject.toml -- heavy,
+    # benchmark- and baseline-specific, irrelevant to anyone using p3net
+    # outside this paper's reproduction.
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+# Local, editable dependency on the sibling p3net library -- experiments/
+# must consume p3net exactly the way an external downstream user would,
+# never via relative imports into ../lib/src/p3net. This is deliberate: it
+# is the forcing function that keeps the library's public API honest.
+[tool.uv.sources]
+p3net = { path = "../lib", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "search_spaces",
+    "substrates",
+    "search_engines",
+    "methods",
+    "metrics",
+    "stats",
+    "reporting",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["."]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
