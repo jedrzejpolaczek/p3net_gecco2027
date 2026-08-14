@@ -1,11 +1,12 @@
 # Contributing to p3net-experiments
 
-Thanks for your interest in contributing. This project is at the scaffolding
-stage (see [`TASKS.md`](TASKS.md)) — every file currently holds a task list,
-not implementation code, and it assumes the `p3net` library is implemented
-first (see [`../lib/TASKS.md`](../lib/TASKS.md)). The most useful
-contribution right now is picking up one of the experiments tasks in
-dependency order.
+Thanks for your interest in contributing. `TASKS.md` Phases 1–6 are
+implemented against structural/fake substrates (the real JAHS-Bench-201 /
+NAS-HPO-Bench-II packages aren't installed yet). The most useful
+contribution right now is either Stage C (wiring the real benchmark and
+baseline packages — see `TASKS.md`'s open items) or picking up one of the
+remaining gaps it lists explicitly (the `nsganetv2_continuous` control
+variant, `scripts/run_kappa_sensitivity.py`, `reporting/`).
 
 By participating, you agree to abide by the
 [Code of Conduct](CODE_OF_CONDUCT.md).
