@@ -5,7 +5,8 @@
 \documentclass[sigconf,authordraft]{acmart}
 
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb,amsfonts}
+% amsmath/amssymb/amsfonts are already loaded internally by acmart's math
+% setup (newtxmath); re-loading them here redefines \Bbbk and errors out.
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
@@ -20,13 +21,18 @@
 \acmYear{2027}
 \copyrightyear{2027}
 \setcopyright{none}
-\settopmatter{printacmref=false}
 \renewcommand\footnotetextcopyrightpermission[1]{}
+% ACM requires the reference-format block for anything over one page, so
+% printacmref is left at its default (true) rather than suppressed.
+\setlength{\headheight}{15.5pt}
 
 \begin{document}
 
 \input{chapters/v003/title/main}
 \input{chapters/v003/abstract/main}
+% \maketitle must come after \title/\author (title/main.tex) and after
+% \begin{abstract}/\keywords (abstract/main.tex); acmart errors otherwise.
+\maketitle
 
 \input{chapters/v003/introduction/main}
 \input{chapters/v003/related_work/main}
