@@ -99,9 +99,13 @@ def test_real_configs_load_and_parse():
     ]:
         config = run_experiment.load_method_config(name)
         assert config["method"]
-    for name in ["jahs_bench_201", "nas_hpo_bench_ii"]:
-        config = run_experiment.load_search_space_config(name)
-        assert config["search_space"] == "nas_genotype"
+    assert (
+        run_experiment.load_search_space_config("jahs_bench_201")["search_space"] == "nas_genotype"
+    )
+    assert (
+        run_experiment.load_search_space_config("nas_hpo_bench_ii")["search_space"]
+        == "nas_hpo_bench_ii_genotype"
+    )
     budgets = run_experiment.load_budgets_config()
     assert budgets["budget_tiers"] == [50, 100, 200]
     assert len(budgets["seeds"]) == 10

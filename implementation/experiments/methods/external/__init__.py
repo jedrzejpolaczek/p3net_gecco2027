@@ -1,18 +1,15 @@
-"""Thin wrappers around established external baseline implementations --
-not reimplementations. Only for algorithms complex enough that
-reimplementing them from scratch would risk an unfair comparison. Random
-search does not meet that bar and lives directly in
-methods/random_search.py instead."""
+"""Real wrappers around external baseline implementations -- MO-BOHB
+(hpbandster) and TPE (optuna). SH-EMOA and random search don't live here:
+random search is too simple to carry reimplementation risk
+(methods/random_search.py); no published SH-EMOA package exists to wrap
+(methods/sh_emoa.py, a real from-scratch implementation instead)."""
 
-from methods.external._ask_tell_shared import AskTellMethod, default_valid_sampler
+from methods.external._ask_tell_shared import AskTellMethod
 from methods.external.mo_bohb import mo_bohb_method
-from methods.external.sh_emoa import sh_emoa_method
 from methods.external.tpe import tpe_method
 
 __all__ = [
     "AskTellMethod",
-    "default_valid_sampler",
     "mo_bohb_method",
-    "sh_emoa_method",
     "tpe_method",
 ]

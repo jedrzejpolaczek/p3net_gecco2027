@@ -29,17 +29,20 @@ from p3net.methods.p3net import P3Net
 from sklearn.linear_model import LinearRegression
 
 from methods import (
+    SHEMOA,
     NSGANet,
     NSGANetV2,
     P3Absolute,
     P3Alone,
     RandomSearch,
     mo_bohb_method,
-    sh_emoa_method,
     tpe_method,
 )
-from methods.external._ask_tell_shared import default_valid_sampler
 from search_spaces.nas_genotype import nas_search_space, nas_validity
+from search_spaces.nas_hpo_bench_ii_genotype import (
+    nas_hpo_bench_ii_search_space,
+    nas_hpo_bench_ii_validity,
+)
 from stopping_rules import BudgetOrExplorationCollapse
 from substrates.jahs_bench_201 import JAHSBench201Substrate
 from substrates.nas_hpo_bench_ii import NASHPOBenchIISubstrate
@@ -49,11 +52,16 @@ CONFIGS_DIR = EXPERIMENTS_ROOT / "configs"
 RESULTS_DIR = EXPERIMENTS_ROOT / "results" / "raw"
 
 # search_space name (configs/search_spaces/*.yaml "search_space" field) ->
-# () -> (SearchSpace, Validity). Only one concrete search space exists so
-# far (search_spaces/nas_genotype.py); registry kept open for
+# () -> (SearchSpace, Validity). One entry per benchmark -- the two
+# benchmarks do NOT share a genotype (search_spaces/nas_hpo_bench_ii_
+# genotype.py's module docstring explains why); registry kept open for
 # nsganetv2_continuous's separate representation once that lands.
 _SEARCH_SPACE_BUILDERS = {
     "nas_genotype": lambda: (nas_search_space(), nas_validity),
+    "nas_hpo_bench_ii_genotype": lambda: (
+        nas_hpo_bench_ii_search_space(),
+        nas_hpo_bench_ii_validity,
+    ),
 }
 
 # substrate name (configs/search_spaces/*.yaml "substrate" field) ->
@@ -61,12 +69,6 @@ _SEARCH_SPACE_BUILDERS = {
 _SUBSTRATE_BUILDERS = {
     "jahs_bench_201": lambda cfg: JAHSBench201Substrate(dataset=cfg.get("dataset", "cifar10")),
     "nas_hpo_bench_ii": lambda cfg: NASHPOBenchIISubstrate(),
-}
-
-_ASK_TELL_FACTORIES = {
-    "sh_emoa": sh_emoa_method,
-    "mo_bohb": mo_bohb_method,
-    "tpe": tpe_method,
 }
 
 
@@ -147,9 +149,12 @@ def build_method(method_config: dict[str, Any], *, search_space, validity, rng, 
         return RandomSearch(
             search_space=search_space, validity=validity, rng=rng, cache=cache, **params
         )
-    if kind in _ASK_TELL_FACTORIES:
-        sampler = default_valid_sampler(search_space, validity, rng)
-        return _ASK_TELL_FACTORIES[kind](sampler, cache=cache, **params)
+    if kind == "sh_emoa":
+        return SHEMOA(search_space=search_space, validity=validity, rng=rng, cache=cache, **params)
+    if kind == "tpe":
+        return tpe_method(search_space, validity, cache=cache, **params)
+    if kind == "mo_bohb":
+        return mo_bohb_method(search_space, validity, rng, cache=cache, **params)
     raise NotImplementedError(
         f"method {kind!r} is not runnable yet (configs/methods/{kind}.yaml is a "
         f"documented placeholder -- see its 'not_yet_implemented' note and ../TASKS.md)"
