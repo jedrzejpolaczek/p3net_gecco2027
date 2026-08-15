@@ -7,7 +7,7 @@ units, and for a library with no server process, no database, and no
 message queue, the honest answer is that it doesn't split. Forcing an
 artificial multi-container diagram here would misrepresent the system.
 The interesting internal structure lives one level down, at
-[C3 — Components](../c3/components.md).
+[C3 — Components](../README.md#c3-components) (one file per subpackage).
 
 ```mermaid
 C4Container

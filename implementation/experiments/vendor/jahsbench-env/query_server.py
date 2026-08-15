@@ -1,8 +1,8 @@
 """Persistent query server for JAHS-Bench-201, run under this
-directory's own Python 3.10 environment (see ../../TASKS.md -- jahs-bench
-cannot install in the project's main Python 3.13 environment: it
-hard-pins scikit-learn<1.1.0, which has no wheel for Python >=3.11 and
-can't build from source since Python 3.12 removed distutils).
+directory's own Python 3.10 environment -- jahs-bench cannot install in
+the project's main Python 3.13 environment: it hard-pins
+scikit-learn<1.1.0, which has no wheel for Python >=3.11 and can't build
+from source since Python 3.12 removed distutils.
 
 Protocol: reads one JSON object per line from stdin, writes one JSON
 object per line to stdout, flushing after each. Loads the Benchmark

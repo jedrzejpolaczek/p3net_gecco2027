@@ -8,9 +8,8 @@ optimisation. This is the P3Net algorithm from the GECCO 2027 paper at
 `chapters/v003`, packaged as a reusable library rather than as one-off code
 tied to that paper's NAS experiment.
 
-See [`TASKS.md`](TASKS.md) for the library's task list, and
-[`docs/architecture/`](docs/architecture/README.md) for the C4 architecture
-documentation.
+See [`docs/architecture/`](docs/architecture/README.md) for the C4
+architecture documentation.
 
 ## Usage
 
@@ -42,7 +41,10 @@ method = P3Net(
     validity=always_valid,
     model_factory=LinearRegression,  # any sklearn-style regressor
     rng=random.Random(0),
-    population_size=15,
+    # No population_size -- the population pyramid starts small
+    # (growth_factor individuals) and grows itself once a level stops
+    # improving. growth_factor=2 by default; pass growth_factor=N to
+    # change the growth rate.
 )
 state = Runner(objective=objective, budget=200).run(method)
 
@@ -61,18 +63,28 @@ deceptive trap-function problem (3 blocks of 4 bits each, global optimum
 `f1 = -12`) — the classic benchmark for demonstrating linkage-learning
 value, since block-blind search gets stuck at the deceptive
 all-zeros-per-block local optimum. Best `f1` found under a 200-evaluation
-budget, across 3 independent seeds:
+budget, across 3 independent seeds (re-measured 2026-08-15 after wiring
+the population pyramid in — see below):
 
 | Seed | P3Net | Random search |
 |---|---|---|
-| 42 | -11.0 | -9.0 |
+| 42 | -9.0 | -9.0 |
 | 7 | -10.0 | -8.0 |
 | 123 | -10.0 | -10.0 |
 
-P3Net matched or beat random search in every seed, and got noticeably
-closer to the known global optimum (`-12.0`) in two of three. This is a
-correctness sanity check, not a claim of the algorithm's full strength —
-see [`src/p3net/methods/p3net.py`](src/p3net/methods/p3net.py)'s module
+P3Net matched or beat random search in every seed. Before the population
+pyramid was wired in (population size fixed at construction, e.g. 15),
+these numbers were slightly stronger (-11.0/-10.0/-10.0) — a genuine,
+expected tradeoff of the pyramid starting from a tiny level 0
+(`growth_factor` individuals, 2 by default) and growing itself, rather
+than committing to a reasonably-sized fixed population from evaluation
+one. On a problem this small, a well-chosen fixed size can out-compete
+the pyramid's early, small levels within a short budget; the pyramid's
+actual advantage is not needing to choose that size in the first place,
+which matters more as the search space and required population size
+grow. This is a correctness sanity check, not a claim of the algorithm's
+full strength — see
+[`src/p3net/methods/p3net.py`](src/p3net/methods/p3net.py)'s module
 docstring for the simplifications this implementation currently carries
 relative to the paper's full description.
 
@@ -131,12 +143,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development workflow, and
 
 ## Status
 
-**Phases 0–7 implemented** (see [`TASKS.md`](TASKS.md) for the detailed
-breakdown): generic search-space machinery, the shared harness, the P3
-engine, both surrogates, the full `P3Net` search loop, generic
-multi-objective metrics, and top-level API wiring. 79 tests passing
-(`uv run pytest`), lint/format clean (`uv run ruff check .` /
-`uv run ruff format --check .`). Three documented simplifications remain
-(see `methods/p3net.py`'s module docstring) before this matches the
-paper's full description; none of them block using the library as
-described above.
+Fully implemented: generic search-space machinery, the shared harness,
+the P3 engine (including the population pyramid), both surrogates, the
+full `P3Net` search loop, generic multi-objective metrics, and top-level
+API wiring. 92 tests passing (`uv run pytest`), lint/format clean
+(`uv run ruff check .` / `uv run ruff format --check .`). One documented
+simplification remains (see `methods/p3net.py`'s module docstring) before
+this matches the paper's full description; it doesn't block using the
+library as described above.

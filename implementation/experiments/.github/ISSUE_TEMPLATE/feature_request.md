@@ -8,8 +8,8 @@ labels: enhancement
 **What's missing or limiting**
 
 Describe the gap. If this is one of the follow-ups already listed in
-[`TASKS.md`](../../TASKS.md) or `CHANGELOG.md`'s "Known gaps" section, link
-to it instead of re-describing it.
+`CHANGELOG.md`'s "Known gaps" section, link to it instead of
+re-describing it.
 
 **Proposed approach**
 

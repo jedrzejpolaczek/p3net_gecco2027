@@ -3,14 +3,13 @@ Concrete NAS search space: cell-graph architecture edges + discretised
 training hyperparameters, implementing p3net.problem's generic
 SearchSpace/Decoder/Validity interfaces.
 
-Unverified-against-live-data note: the concrete dimensions/ranges below
-(cell operations, hyperparameter ranges) are based on the *published*
-description of the JAHS-Bench-201 / NAS-Bench-201 search space, not a live
-query against the jahs-bench package (Stage C in ../TASKS.md hasn't run
-yet). The cell topology (4 nodes, 6 edges, DAG from node 0 to node 3) is
-the standard NAS-Bench-201 convention and is unlikely to be wrong; the
-exact hyperparameter bounds should be double-checked once the real
-benchmark package is installed.
+Verified against live data: reading `jahs_bench.lib.core.configspace`
+directly confirmed its real ConfigSpace matches what this module assumes
+(5 ops via the package's own `nb201_to_ops` translation table,
+`LearningRate`/`WeightDecay` bounds identical to the discretisation
+grids below, `TrivialAugment`/`Activation` choices identical). The cell
+topology (4 nodes, 6 edges, DAG from node 0 to node 3) is the standard
+NAS-Bench-201 convention.
 
 This is the NAS-specific content that used to live directly in the
 library's problem/genotype.py and problem/decoding.py before the

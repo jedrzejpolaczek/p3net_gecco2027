@@ -10,71 +10,57 @@ adds only what's specific to this one paper.
 
 ## How to Read This Documentation
 
-A single page, not a full C4 set — this package is a thin, mostly-linear
-pipeline (config → search space + substrate → method → harness → results),
-not a system with enough internal complexity to need C2/C4-level
-deep-dives yet. See [`../../lib/docs/architecture/`](../../../lib/docs/architecture/README.md)
-for the library's full C1–C4 documentation, which this package builds on.
+This documentation follows the **C4 Model**, adapted for a single-package
+system rather than a networked, multi-service one — the same convention
+[`p3net`'s own architecture docs](../../../lib/docs/architecture/README.md)
+use:
 
-## C1 — System Context
+- **C1: System Context** — `p3net-experiments` in relation to the
+  researcher running it, the `p3net` library it builds on, and the real
+  benchmarks/baseline packages it queries
+- **C2: Containers** — deliberately thin here too: one importable Python
+  package plus CLI entry-point scripts, not a distributed system
+- **C3: Components** — one file per subsystem: search spaces & substrates,
+  methods, harness orchestration, and metrics/statistics/reporting
+- **C4: Code** — class-level deep dives into the most algorithmically
+  involved pieces: the run pipeline's diagnostics plumbing, SH-EMOA,
+  MO-BOHB's Tchebycheff adaptation, and the reporting pipeline's
+  best-known-front construction
 
-```mermaid
-C4Context
-  title System Context for p3net-experiments
+Start at C1 for the big picture, then descend into the level of detail you
+need.
 
-  Person(researcher, "Researcher", "Runs scripts/run_experiment.py or run_grid.py to reproduce a result from chapters/v003")
+---
 
-  System(experiments, "p3net-experiments", "Config-driven runner: wires a method, a search space, and a benchmark substrate through p3net's harness, and persists H_t")
+## Documentation Index
 
-  System_Ext(p3net, "p3net", "The P3 engine, delta_hat_F, and the generic harness/metrics this package builds every method on top of")
-  System_Ext(nashpobench, "NAS-HPO-Bench-II", "Real, installed directly (nashpobench2api) -- queries data/cache/nashpobench2/")
-  System_Ext(jahsbench, "JAHS-Bench-201", "Real, but only installable under Python 3.10 (TASKS.md) -- queried via a persistent subprocess bridge to vendor/jahsbench-env/")
-  System_Ext(baseline_libs, "Optuna / HpBandSter", "Real: TPESampler and BOHB's config generator, both via each library's own ask/tell API")
+### C1: System Context
 
-  Rel(researcher, experiments, "uv run python scripts/run_experiment.py --method ... --search-space ... --budget ... --seed ...")
-  Rel(experiments, p3net, "Depends on as a local editable package (same boundary any external p3net user would cross)")
-  Rel(experiments, nashpobench, "In-process query via nashpobench2api")
-  Rel(experiments, jahsbench, "JSON-lines over stdin/stdout to a long-lived subprocess (query_server.py)")
-  Rel(experiments, baseline_libs, "In-process ask/tell (study.ask/tell; CG_BOHB.get_config/new_result)")
+- [System Context Diagram](c1/system-context.md)
 
-  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="2")
-```
+### C2: Containers
 
-## Module map (C3-equivalent)
+- [Containers Overview](c2/containers.md)
 
-The one container (`p3net-experiments`) has eight subpackages plus two
-top-level modules. Dependency direction is top-to-bottom; nothing here
-depends on `scripts/`.
+### C3: Components
 
-| Module | Depends on | Responsibility |
-|---|---|---|
-| `search_spaces/` | `p3net.problem` | Two genotypes, one per benchmark: `nas_genotype.py` (JAHS-Bench-201, 10-dim) and `nas_hpo_bench_ii_genotype.py` (NAS-HPO-Bench-II, 8-dim — a real, verified-different search space, not a variant); `_cell_graph.py` factors out what they share |
-| `substrates/` | `search_spaces/` | JAHS-Bench-201 (subprocess bridge to `vendor/jahsbench-env/`) and NAS-HPO-Bench-II (in-process `nashpobench2api`) adapters — both real as of Stage C |
-| `search_engines/nsga2/` | `p3net.problem` | Fast nondominated sort + crowding distance, for the NSGA-II-based arms |
-| `methods/` | `p3net.*`, `search_engines/nsga2/`, `methods/_shared.py` | The nine non-P3Net arms (`p3net.methods.p3net` itself is library code); includes `sh_emoa.py`, a real (mu+lambda) EMOA — no published SH-EMOA package exists to wrap |
-| `methods/external/` | `p3net.harness` | Real ask/tell wrappers for MO-BOHB (`hpbandster`'s BOHB config generator + Tchebycheff scalarisation, a documented adaptation) and TPE (`optuna`'s `TPESampler`, native multi-objective) |
-| `stopping_rules.py` | `p3net.harness.runner` | `ExplorationCollapse` + composition with the library's default budget rule |
-| `metrics/` | `p3net.harness`, `p3net.problem` | Surrogate-quality (rank correlation / pairwise-comparison-accuracy) and duplication-rate/archive-turnover diagnostics |
-| `stats/` | (pure) | Paired Wilcoxon + Holm–Bonferroni + Cliff's delta over the defined P3Net-vs-nine-arms comparison set |
-| `reporting/` | `metrics/`, `stats/`, `p3net.metrics` | **Not implemented yet** (Phase 7) — tables/plots for the paper's Results section |
-| `scripts/` | everything above | CLI entry points: `run_experiment.py` (single run), `run_grid.py` (full sweep); `run_kappa_sensitivity.py`/`generate_report.py` not implemented yet |
-| `configs/` | (data only) | YAML: which method/search-space/budget a run targets — no Python logic |
+| Component | Description |
+|---|---|
+| [Search Spaces & Substrates](c3/search-spaces-and-substrates.md) | The two benchmarks' genotypes (deliberately not shared) and the real query adapters behind them |
+| [Methods](c3/methods.md) | All ten comparison arms: five implemented directly, two wrapping real external optimisers (TPE, MO-BOHB) via a shared ask/tell adapter, plus the NSGA-II engine both NSGA-II-based arms share |
+| [Harness Orchestration](c3/harness-orchestration.md) | Configs, the stopping rule, and the `run_experiment.py`/`run_grid.py` CLI entry points tying everything above into a reproducible run |
+| [Metrics, Statistics & Reporting](c3/metrics-stats-reporting.md) | This paper's own diagnostics, the statistical comparison plan, and the reporting layer producing the Results-section tables/figures |
 
-## Notes
+### C4: Code
 
-- No secrets, no user data, no authentication anywhere in this system —
-  confirmed via a full git-history scan during the open-source-readiness
-  audit (2026-08-14), zero findings beyond the author's own intentionally
-  public contact email.
-- `methods/external/*.py` and `substrates/*.py` are all real as of
-  Stage C. Only `methods/sh_emoa.py` and `methods/external/mo_bohb.py`
-  carry a documented gap: both operate at the single fixed fidelity r_K
-  only, since the harness doesn't yet support querying below it.
-- JAHS-Bench-201's bridge (`vendor/jahsbench-env/query_server.py`) is a
-  **persistent** subprocess, not one spawned per query — its surrogate
-  models take several minutes just to load, so `substrates/
-  jahs_bench_201.py` starts it once (lazily, on first query) and reuses
-  it for every subsequent query in the same `Substrate` instance's
-  lifetime.
-- See [`../../TASKS.md`](../../TASKS.md) for the phase-by-phase
-  implementation record, including every documented gap.
+| Module | Description |
+|---|---|
+| [Run Experiment Pipeline](c4/run-experiment-pipeline.md) | `RunResult`/`persist_run`: why per-run diagnostics needed a wider return type than `p3net`'s own `RunState` |
+| [SH-EMOA](c4/sh-emoa.md) | The real (mu+lambda) EMOA, its SMS-EMOA-style hypervolume-contribution survivor selection, and its documented multi-fidelity gap |
+| [MO-BOHB Adaptation](c4/mo-bohb-adaptation.md) | Wrapping the real, single-objective `hpbandster` BOHB config generator with Tchebycheff scalarisation |
+| [Reporting Pipeline](c4/reporting-pipeline.md) | Best-known-front construction, the reference-point derivation, and why significance is corrected once over the whole comparison set |
+
+---
+
+**For questions on specific topics**: browse the C-level that matches
+your question's granularity.

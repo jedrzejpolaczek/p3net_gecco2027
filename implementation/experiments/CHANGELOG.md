@@ -2,17 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to the phase-based scaffolding described in
-[`TASKS.md`](TASKS.md) rather than strict [Semantic Versioning](https://semver.org/)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+This project does not yet follow strict [Semantic Versioning](https://semver.org/)
 until a first `0.1.0` release is reached.
 
 ## [Unreleased]
 
 ### Added
 
-- Implemented `TASKS.md` Phases 1–6 (search space, substrates, NSGA-II,
-  baseline/ablation methods, stopping rule + run driver, metrics/stats),
+- Implemented the search space, substrates, NSGA-II,
+  baseline/ablation methods, stopping rule + run driver, metrics/stats,
   all against a local synthetic/fake substrate since the real benchmark
   packages (jahs-bench, nashpobench2api) aren't installed yet — TDD
   throughout, 99 tests, `uv run ruff check .` clean.
@@ -134,13 +133,57 @@ until a first `0.1.0` release is reached.
   removed — no callers left once SH-EMOA/MO-BOHB/TPE were all wired to
   real backends.
 
-### Known gaps (tracked in `TASKS.md`, not silently dropped)
+### Added (Phase 7 reporting, 2026-08-15)
+
+- `reporting/{_common,tables,plots,__init__}.py` — turns `results/raw/*.json`
+  into the paper's Results-section artifacts: `fixed_budget_summary_table`
+  (median/IQR, IGD+ or best-known-front-relative hypervolume, Holm-corrected
+  significance + Cliff's delta vs. P3Net over exactly the defined comparison
+  set), `p3_alone_sweep_completion_table` (the "Baselines" paragraph's
+  sweeps-completed side table), and `convergence_curve_figure`/
+  `pareto_front_progression_figure`/`sensitivity_figure`/
+  `duplication_rate_figure` (each returns a `matplotlib.figure.Figure`,
+  file-writing left to the caller). `matplotlib` added as an optional
+  `reporting` extra (`pyproject.toml`), not a base dependency.
+- `scripts/generate_report.py` — loads every raw run, writes the tables to
+  `results/tables/*.md` and the figures to `results/figures/*.png`, in the
+  paper's promised reporting order; skips the kappa/threshold sensitivity
+  step with an explicit note (its data source, `run_kappa_sensitivity.py`,
+  isn't implemented yet) rather than silently omitting it.
+- `tests/test_reporting.py` — 23 tests: synthetic-data smoke checks for
+  every table/plot function (per the implementation plan's own note that
+  these aren't unit-tested against one checkable value, since they render
+  output), a `persist_run`/`load_raw_run` round-trip test, and a real
+  end-to-end `generate_report()` run.
+- `.github/workflows/ci.yml` now syncs `--extra reporting` alongside
+  `--extra dev`, since `tests/test_reporting.py` imports `matplotlib`.
+
+### Changed
+
+- `scripts/run_experiment.py`'s `run_single` now returns a `RunResult`
+  (state + cache + method) instead of a bare `RunState`, so `persist_run`
+  can capture per-run diagnostics (`duplication_rate`; `sweeps_completed`
+  for `p3_alone`) that `reporting/tables.py`'s sweep-completion table
+  needs — an additive JSON field (`"diagnostics"`), older raw files without
+  it still load correctly (`reporting._common.load_raw_run` defaults it to
+  `{}`). Ripple-updated `run_grid.py` and the 4 `run_single`/`persist_run`
+  call sites in `tests/test_run_experiment.py`.
+- `configs/methods/p3net.yaml` and a `test_run_experiment.py` test:
+  `population_size` replaced with `growth_factor`, following the library's
+  `P3Net` dropping `population_size` as a constructor argument entirely
+  in favour of a self-growing population pyramid.
+
+### Known gaps (tracked, not silently dropped)
 
 - `methods/nsganetv2.py` only implements the shared discretised-Θ variant;
   the `nsganetv2_continuous` control needs a real-valued crossover
   operator this class doesn't have yet.
-- `scripts/run_kappa_sensitivity.py` and `reporting/*` (Phase 7) are not
-  implemented — deferred past this Stage B pass.
+- `scripts/run_kappa_sensitivity.py` is not implemented yet;
+  `reporting/plots.py`'s `sensitivity_figure` is ready to consume its
+  output once it exists.
+- `reporting/plots.py` has no archive-turnover plot: it needs
+  per-generation population snapshots `scripts/run_experiment.py` doesn't
+  persist (only the final H_t is written) — a harness-level gap.
 - `methods/sh_emoa.py` and `methods/external/mo_bohb.py` each implement
   only the fixed-fidelity (r_K) half of their real algorithms; the
   successive-halving/multi-fidelity half needs harness-level support for

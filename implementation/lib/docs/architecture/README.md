@@ -41,20 +41,27 @@ need.
 
 ### C3: Components
 
-The internal structure of the one container: how the six subpackages
-depend on each other.
+The internal structure of the one container: one file per subpackage,
+each with its own component diagram, responsibility table, and — where
+relevant — a note on why it's shaped the way it is.
 
-- [Components](c3/components.md)
+| Component | Description |
+|---|---|
+| [problem](c3/problem.md) | `SearchSpace`/`Genotype`, `Decoder`/`Validity`, Pareto dominance, fidelity ladder, evaluation-noise handling — the zero-dependency base layer |
+| [harness](c3/harness.md) | `EvaluationCache`, `SeedPolicy`, the generic `Runner` + `StoppingRule` every `Method` is driven through |
+| [search_engines.p3](c3/search-engines-p3.md) | UPGMA linkage tree, the acceptance-agnostic optimal-mixing sweep, the population pyramid |
+| [surrogates](c3/surrogates.md) | `AbsoluteRegressorSurrogate`, `RelativeLinkageAwareSurrogate` (δ̂_F), telescoping chain reconstruction |
+| [methods.p3net](c3/methods.md) | `P3Net`: the sole integration point wiring every other component into the full search loop |
+| [metrics](c3/metrics.md) | Generic hypervolume (incl. a best-known-front fallback) and IGD+ |
 
 ### C4: Code
 
 | Module | Description |
 |---|---|
-| [P3Net search loop](c4/p3net-method.md) | The `P3Net` class: propose/update, the six-step search loop, the three documented simplifications |
+| [P3Net search loop](c4/p3net-method.md) | The `P3Net` class: propose/update, the six-step search loop, and its documented simplifications (two of three resolved as of 2026-08-15 — Pyramid wiring, the analytic-cost hook) |
 | [Relative linkage-aware surrogate](c4/relative-surrogate.md) | `RelativeLinkageAwareSurrogate` (δ̂_F) and the telescoping reconstruction — including a real encoding bug found and fixed during implementation |
 
 ---
 
 **For questions on specific topics**: browse the C-level that matches your
-question's granularity, or see [`../../TASKS.md`](../../TASKS.md) for the
-file-by-file implementation record (including gaps and follow-ups).
+question's granularity.

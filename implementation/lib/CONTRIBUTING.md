@@ -1,9 +1,8 @@
 # Contributing to p3net
 
-Thanks for your interest in contributing. This project is at the scaffolding
-stage (see [`TASKS.md`](TASKS.md)) — every file currently holds a task list,
-not implementation code. The most useful contribution right now is picking
-up one of those tasks in dependency order.
+Thanks for your interest in contributing. See
+[`docs/architecture/`](docs/architecture/README.md) for how the library is
+structured before picking somewhere to start.
 
 By participating, you agree to abide by the
 [Code of Conduct](CODE_OF_CONDUCT.md).

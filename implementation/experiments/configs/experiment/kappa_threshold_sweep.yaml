@@ -3,10 +3,10 @@
 # accumulation (kappa and acceptance threshold)").
 #
 # NOT YET CONSUMED: scripts/run_kappa_sensitivity.py is not implemented
-# yet (deferred to Phase 6, ../../TASKS.md, since it reports surrogate
-# rank correlation via metrics/surrogate_quality.py, which doesn't exist
-# yet either). This file's data is settled now so Phase 6 doesn't have to
-# also decide the grid.
+# yet, though the surrogate-quality metric it would report through
+# (metrics/surrogate_quality.py's rank_correlation) already exists. This
+# file's data is settled now so implementing that script later doesn't
+# also have to decide the grid.
 
 # kappa grid: {1, ceil(log2(n)), 2*ceil(log2(n)), infinity}. "auto_1x" /
 # "auto_2x" are resolved at run time from the genotype dimensionality n

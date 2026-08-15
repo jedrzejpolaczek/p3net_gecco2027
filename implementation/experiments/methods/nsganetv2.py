@@ -5,8 +5,8 @@ Known simplification: only the shared discretised Theta encoding is
 implemented here. The nsganetv2_continuous control variant (native
 real-valued Theta, isolating the effect of discretisation itself from the
 search engine/surrogate) needs a parallel real-valued crossover operator
-this class doesn't have -- not yet implemented, tracked in TASKS.md rather
-than silently skipped.
+this class doesn't have -- not yet implemented, tracked in CHANGELOG.md's
+"Known gaps" section rather than silently skipped.
 """
 
 from __future__ import annotations

@@ -75,6 +75,24 @@ one-hot-vocabulary logic, in `surrogates/_encoding.py` — extracted after
 the maintainability audit found the same `build_vocab`/`one_hot` code
 duplicated verbatim in both surrogate files.
 
+## A real performance issue found and fixed here during implementation
+
+`fit()`'s pairwise loop calls `_pair_features` (equivalently: `one_hot`)
+once per *pair* in `H_t`, but the number of distinct genotypes only grows
+linearly while the number of pairs grows quadratically — the same
+genotype gets re-encoded from scratch every time it reappears in a new
+pair. `cProfile` on the 200-budget integration test (2026-08-15) found
+this was the single largest cost in a full run: `one_hot` called ~5.4M
+times, ~77% of `fit()`'s own profiled cost. Fixed by encoding each
+distinct genotype once per `fit()` call into a local cache, then building
+every pair's feature vector from that cache instead of re-encoding
+(`RelativeLinkageAwareSurrogate.fit()`, not shown in the `_pair_features`
+snippet above — `predict()` still calls `_pair_features` directly, since
+it only ever scores one pair at a time and has no cache to benefit from).
+Pure caching change: same fitted model, same predictions, verified by the
+full test suite staying green unchanged. Cut the 200-budget integration
+test's wall time from 116.53s to 65.55s.
+
 ## Telescoping reconstruction
 
 `telescoped_estimate` reduces a chain of tentatively-accepted modifications

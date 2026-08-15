@@ -16,6 +16,6 @@ plain `git subtree`/history-preserving extraction, not a rewrite.
   consumed as a local editable dependency exactly the way an external user
   would.
 
-Each has its own `README.md`, `TASKS.md`, `pyproject.toml`, `LICENSE`
+Each has its own `README.md`, `pyproject.toml`, `LICENSE`
 (GNU AGPLv3), and the rest of the standard project scaffolding — start
 there, not here. This file is only a pointer.

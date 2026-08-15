@@ -34,7 +34,7 @@ _requires_real_jahs_bench = pytest.mark.skipif(
     reason=(
         "jahs-bench live queries take several minutes just to load the surrogate "
         "models -- opt in explicitly with RUN_JAHS_BENCH_LIVE_TESTS=1 (also requires "
-        "vendor/jahsbench-env, see ../TASKS.md)"
+        "vendor/jahsbench-env)"
     ),
 )
 

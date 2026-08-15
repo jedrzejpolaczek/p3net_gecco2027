@@ -13,10 +13,8 @@ declared in `pyproject.toml`), not via relative imports into
 a real, API-tested library rather than code that merely happens to be
 reusable.
 
-See [`TASKS.md`](TASKS.md) for this package's task list in implementation
-order (it assumes the library's own [`../lib/TASKS.md`](../lib/TASKS.md) is
-implemented first), and [`docs/architecture/`](docs/architecture/README.md)
-for a C1 system-context diagram and module map.
+See [`docs/architecture/`](docs/architecture/README.md) for the full
+C1–C4 architecture documentation.
 
 ## What lives here vs. in the library
 
@@ -58,16 +56,11 @@ uv run python scripts/run_experiment.py \
   --method random_search --search-space nas_hpo_bench_ii --budget 5 --seed 1
 ```
 
-This wires up the real search space, method, and harness end-to-end. It
-currently fails loudly with a `NotImplementedError` from the substrate
-(`substrates/nas_hpo_bench_ii.py`), by design: the real benchmark packages
-aren't installed yet (Stage C, [`TASKS.md`](TASKS.md)), and the substrate
-deliberately refuses to return fake data instead. Every part of the
-pipeline up to that boundary — config loading, search space, method,
-`p3net.harness.Runner`, result persistence — is real, tested code; see
+This wires up the real search space, method, harness, and benchmark
+substrate end-to-end, and persists the result to `results/raw/`. See
 [`tests/test_run_experiment.py`](tests/test_run_experiment.py) and
-[`tests/test_run_grid.py`](tests/test_run_grid.py), which exercise the
-same path against an in-repo fake substrate.
+[`tests/test_run_grid.py`](tests/test_run_grid.py) for the same path
+exercised against an in-repo fake substrate.
 
 ## Contributing
 
@@ -80,14 +73,23 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the development workflow, and
 
 ## Status
 
-**Phases 1–6 implemented** (see [`TASKS.md`](TASKS.md) for the detailed
-breakdown): concrete NAS search space, benchmark substrate adapters
-(structural — real queries deferred to Stage C), NSGA-II, all ten
-baseline/ablation methods, the stopping rule, the config-driven run
-driver (`scripts/run_experiment.py` / `run_grid.py`), and this paper's
-metrics/statistics. 99 tests passing (`uv run pytest`), lint/format clean
-(`uv run ruff check .` / `uv run ruff format --check .`). Known gaps,
-tracked rather than silently dropped: the `nsganetv2_continuous` control
-variant, `scripts/run_kappa_sensitivity.py`, and `reporting/` (Phase 7) —
-see [`CHANGELOG.md`](CHANGELOG.md). Stage C (real benchmark/baseline
-package integration) has not started.
+Fully implemented: concrete NAS search space, benchmark substrate
+adapters, NSGA-II, all ten baseline/ablation methods, the stopping rule,
+the config-driven run driver (`scripts/run_experiment.py` /
+`run_grid.py`), this paper's metrics/statistics, and reporting
+(`reporting/*.py` + `scripts/generate_report.py`, rendering
+`results/raw/*.json` into the Results-section tables/figures). 149 tests
+passing (`uv run pytest`), lint/format clean (`uv run ruff check .` /
+`uv run ruff format --check .`). Real benchmark/baseline package
+integration is done: JAHS-Bench-201, NAS-HPO-Bench-II, TPE, and MO-BOHB
+all query real data/packages, not stand-ins. Known gaps, tracked rather
+than silently dropped: the `nsganetv2_continuous` control variant,
+`scripts/run_kappa_sensitivity.py` (the kappa/acceptance-threshold sweep
+itself — `reporting/plots.py`'s `sensitivity_figure` is ready to consume
+its output once it exists), and the archive-turnover diagnostic plot
+(needs per-generation population snapshots the harness doesn't persist
+yet) — see [`CHANGELOG.md`](CHANGELOG.md). Running the actual R=10-seed
+experimental grid and populating the paper's `Results` section with real
+numbers has not been done — that's a separate, much larger undertaking
+than writing the code that can produce those artifacts once it has real
+data to read.

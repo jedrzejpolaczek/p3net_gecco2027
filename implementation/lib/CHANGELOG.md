@@ -2,9 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to the phase-based scaffolding described in
-[`TASKS.md`](TASKS.md) rather than strict [Semantic Versioning](https://semver.org/)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+This project does not yet follow strict [Semantic Versioning](https://semver.org/)
 until a first `0.1.0` release is reached.
 
 ## [Unreleased]
@@ -23,10 +22,17 @@ until a first `0.1.0` release is reached.
 - `P3Net` (`methods.p3net`): the full search loop, with three documented
   simplifications (single population rather than the full pyramid, no
   analytic-cost hook for multi-objective C* selection, random-reinjection
-  stall recovery) — see the module docstring.
+  stall recovery) — see the module docstring. Two of the three later
+  resolved (below).
 - Generic multi-objective metrics (`metrics`): hypervolume (incl. a
   best-known-front fallback), IGD+.
-- 79 tests, all passing; lint/format clean.
+- 92 tests, all passing; lint/format clean.
+- `P3Net.analytic_cost: Callable[[Genotype], Objectives] | None = None`
+  constructor argument: when supplied, step 4's C* selection computes
+  every non-`f1` objective fresh per candidate instead of inheriting the
+  ancestor's value; the previous approximation remains the default when
+  it isn't supplied (resolves module-docstring simplification 2). See
+  `tests/test_p3net_analytic_cost.py`.
 - [`docs/architecture/`](docs/architecture/README.md): C4 model
   documentation (context, containers, components, and two code-level deep
   dives), adapted for a single-package library.
@@ -45,6 +51,26 @@ until a first `0.1.0` release is reached.
   (`NoLinkageTreeError`, `AncestorNotEvaluatedError`), with `logging`
   calls, so an unrelated real bug propagates instead of being silently
   swallowed (maintainability + production-readiness audit findings).
+- `P3Net`: `Pyramid` (Phase 3) is wired in, resolving module-docstring
+  simplification 1. `population_size` is gone as a constructor argument;
+  `growth_factor: int = 2` now controls level 0's starting size and the
+  rate new, larger levels grow at once the current level's sweep passes
+  stop improving. Still simplified relative to canonical P3: only the
+  newest level actively sweeps, older levels freeze (see the module
+  docstring for the exact scope). See
+  `tests/test_p3net_pyramid_integration.py` and
+  [`docs/architecture/c4/p3net-method.md`](docs/architecture/c4/p3net-method.md).
+  Re-measured README's `Results` table under the new behaviour: one seed
+  (42) went from beating random search to tying it — a real, documented
+  tradeoff of starting from a tiny level 0 instead of a fixed
+  reasonably-sized population.
+- `surrogates/relative_linkage_aware.py`: `fit()` now encodes each
+  distinct genotype once and reuses it across every pair it appears in,
+  instead of re-encoding on every pair — `one_hot` was profiled as the
+  dominant cost of a 200-budget run (~5.4M redundant calls); after the
+  fix, the same run's wall time dropped from 116.53s to 65.55s with
+  unchanged behaviour (79/79, now 92/92, tests unaffected — this is a
+  black-box-equivalent optimisation).
 
 ### Fixed (during implementation, not released separately)
 

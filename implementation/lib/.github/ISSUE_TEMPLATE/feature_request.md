@@ -7,9 +7,9 @@ labels: enhancement
 
 **What's missing or limiting**
 
-Describe the gap. If this is one of the follow-ups already listed in
-[`TASKS.md`](../../TASKS.md) or `methods/p3net.py`'s "Known simplifications"
-docstring, link to it instead of re-describing it.
+Describe the gap. If this is one of the simplifications already listed in
+`methods/p3net.py`'s "Known simplifications" docstring, link to it instead
+of re-describing it.
 
 **Proposed approach**
 

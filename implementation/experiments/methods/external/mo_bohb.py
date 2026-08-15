@@ -21,9 +21,8 @@ implementation's own MOBOHBWorker.tchebycheff_norm, applied here to the
 REAL hpbandster.optimizers.config_generators.bohb.BOHB class rather than
 their unpublished custom generator.
 
-Fidelity-ladder usage, now resolved concretely (was an open decision --
-see ../../TASKS.md): CG_BOHB.get_config(budget) IS genuinely
-budget-aware (real Hyperband mechanics), but this project's harness
+Fidelity-ladder usage, now resolved concretely: CG_BOHB.get_config(budget)
+IS genuinely budget-aware (real Hyperband mechanics), but this project's harness
 (p3net.harness.Runner / substrates.Substrate) only supports single-
 fidelity (r_K) full evaluations, so this module always calls it with one
 fixed budget value -- the same harness-level limitation already

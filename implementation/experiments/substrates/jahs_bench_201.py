@@ -5,8 +5,8 @@ Real, live-queried via a subprocess bridge to vendor/jahsbench-env/ -- a
 dedicated Python 3.10 environment, since jahs-bench cannot install in
 this project's main Python 3.13 environment (hard-pins
 scikit-learn<1.1.0, which has no wheel for Python >=3.11 and can't build
-from source since Python 3.12 removed distutils; see ../TASKS.md). The
-bridge (vendor/jahsbench-env/query_server.py) is a persistent, long-lived
+from source since Python 3.12 removed distutils). The bridge
+(vendor/jahsbench-env/query_server.py) is a persistent, long-lived
 subprocess rather than one spawned per query -- reloading the several-GB
 XGBoost surrogate models on every single evaluation would be
 impractically slow for even a 50-evaluation budget.
@@ -84,7 +84,7 @@ class JAHSBench201Substrate(Substrate):
             if not BRIDGE_PYTHON.exists():
                 raise RuntimeError(
                     f"jahs-bench bridge environment not found at {BRIDGE_PYTHON} -- "
-                    "see ../TASKS.md for how it was built (vendor/jahsbench-env)."
+                    "see vendor/jahsbench-env/ for how to build it."
                 )
             self._process = subprocess.Popen(
                 [str(BRIDGE_PYTHON), str(BRIDGE_SCRIPT), str(self.data_dir)],

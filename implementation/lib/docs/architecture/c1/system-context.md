@@ -56,8 +56,7 @@ file storage beyond what a caller chooses to do with the returned data.
   the result.
 - The GECCO 2027 paper (`chapters/v003`) is the *specification* this
   library implements, not a runtime dependency — there is no diagram node
-  for it because C1 documents runtime relationships, not provenance. See
-  `TASKS.md` for the section-by-section traceability instead.
+  for it because C1 documents runtime relationships, not provenance.
 - No secrets, no user data, no authentication anywhere in this system —
   confirmed during the maintainability/open-source-readiness audit (full
   git history scan, zero findings beyond the author's own intentionally

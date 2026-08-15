@@ -3,9 +3,8 @@ oracle front).
 
 Real, live-queried against the downloaded dataset
 (data/cache/nashpobench2/ -- fetched via `gdown` from the Google Drive
-link in nashpobench2api's own README; see ../TASKS.md for the exact
-steps and provenance). query_f1/analytic_f2 query the real
-NASHPOBench2API, not a placeholder.
+link in nashpobench2api's own README). query_f1/analytic_f2 query the
+real NASHPOBench2API, not a placeholder.
 
 Genotype decoding uses search_spaces/nas_hpo_bench_ii_genotype.py, NOT
 search_spaces/nas_genotype.py -- this benchmark's real search space (4
