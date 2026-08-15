@@ -27,13 +27,15 @@ C4Context
   System(experiments, "p3net-experiments", "Config-driven runner: wires a method, a search space, and a benchmark substrate through p3net's harness, and persists H_t")
 
   System_Ext(p3net, "p3net", "The P3 engine, delta_hat_F, and the generic harness/metrics this package builds every method on top of")
-  System_Ext(benchmarks, "JAHS-Bench-201 / NAS-HPO-Bench-II", "External benchmark packages -- not installed yet (Stage C, TASKS.md); substrates/*.py raise NotImplementedError rather than fake data until they are")
-  System_Ext(baseline_libs, "pymoo / Optuna / HpBandSter", "External baseline-algorithm packages backing SH-EMOA/MO-BOHB/TPE -- also Stage C, currently a documented stand-in sampler")
+  System_Ext(nashpobench, "NAS-HPO-Bench-II", "Real, installed directly (nashpobench2api) -- queries data/cache/nashpobench2/")
+  System_Ext(jahsbench, "JAHS-Bench-201", "Real, but only installable under Python 3.10 (TASKS.md) -- queried via a persistent subprocess bridge to vendor/jahsbench-env/")
+  System_Ext(baseline_libs, "Optuna / HpBandSter", "Real: TPESampler and BOHB's config generator, both via each library's own ask/tell API")
 
   Rel(researcher, experiments, "uv run python scripts/run_experiment.py --method ... --search-space ... --budget ... --seed ...")
   Rel(experiments, p3net, "Depends on as a local editable package (same boundary any external p3net user would cross)")
-  Rel(experiments, benchmarks, "Will query for f1 once Stage C installs them")
-  Rel(experiments, baseline_libs, "Will query via ask/tell once Stage C installs them")
+  Rel(experiments, nashpobench, "In-process query via nashpobench2api")
+  Rel(experiments, jahsbench, "JSON-lines over stdin/stdout to a long-lived subprocess (query_server.py)")
+  Rel(experiments, baseline_libs, "In-process ask/tell (study.ask/tell; CG_BOHB.get_config/new_result)")
 
   UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="2")
 ```
@@ -46,11 +48,11 @@ depends on `scripts/`.
 
 | Module | Depends on | Responsibility |
 |---|---|---|
-| `search_spaces/` | `p3net.problem` | The concrete NAS genotype (6 edges + discretised Θ) every arm shares |
-| `substrates/` | `search_spaces/` | JAHS-Bench-201 / NAS-HPO-Bench-II adapters — structural only, `NotImplementedError` until Stage C |
+| `search_spaces/` | `p3net.problem` | Two genotypes, one per benchmark: `nas_genotype.py` (JAHS-Bench-201, 10-dim) and `nas_hpo_bench_ii_genotype.py` (NAS-HPO-Bench-II, 8-dim — a real, verified-different search space, not a variant); `_cell_graph.py` factors out what they share |
+| `substrates/` | `search_spaces/` | JAHS-Bench-201 (subprocess bridge to `vendor/jahsbench-env/`) and NAS-HPO-Bench-II (in-process `nashpobench2api`) adapters — both real as of Stage C |
 | `search_engines/nsga2/` | `p3net.problem` | Fast nondominated sort + crowding distance, for the NSGA-II-based arms |
-| `methods/` | `p3net.*`, `search_engines/nsga2/`, `methods/_shared.py` | The nine non-P3Net arms (`p3net.methods.p3net` itself is library code) |
-| `methods/external/` | `p3net.harness` | Ask/tell scaffolding for SH-EMOA/MO-BOHB/TPE — real backends are Stage C |
+| `methods/` | `p3net.*`, `search_engines/nsga2/`, `methods/_shared.py` | The nine non-P3Net arms (`p3net.methods.p3net` itself is library code); includes `sh_emoa.py`, a real (mu+lambda) EMOA — no published SH-EMOA package exists to wrap |
+| `methods/external/` | `p3net.harness` | Real ask/tell wrappers for MO-BOHB (`hpbandster`'s BOHB config generator + Tchebycheff scalarisation, a documented adaptation) and TPE (`optuna`'s `TPESampler`, native multi-objective) |
 | `stopping_rules.py` | `p3net.harness.runner` | `ExplorationCollapse` + composition with the library's default budget rule |
 | `metrics/` | `p3net.harness`, `p3net.problem` | Surrogate-quality (rank correlation / pairwise-comparison-accuracy) and duplication-rate/archive-turnover diagnostics |
 | `stats/` | (pure) | Paired Wilcoxon + Holm–Bonferroni + Cliff's delta over the defined P3Net-vs-nine-arms comparison set |
@@ -64,9 +66,15 @@ depends on `scripts/`.
   confirmed via a full git-history scan during the open-source-readiness
   audit (2026-08-14), zero findings beyond the author's own intentionally
   public contact email.
-- `substrates/*.py` and `methods/external/*.py` deliberately fail loudly
-  (`NotImplementedError`) rather than return placeholder data — the
-  correct C1 relationships to the two external system boxes above exist
-  in code today, but no live call across them has been made yet.
+- `methods/external/*.py` and `substrates/*.py` are all real as of
+  Stage C. Only `methods/sh_emoa.py` and `methods/external/mo_bohb.py`
+  carry a documented gap: both operate at the single fixed fidelity r_K
+  only, since the harness doesn't yet support querying below it.
+- JAHS-Bench-201's bridge (`vendor/jahsbench-env/query_server.py`) is a
+  **persistent** subprocess, not one spawned per query — its surrogate
+  models take several minutes just to load, so `substrates/
+  jahs_bench_201.py` starts it once (lazily, on first query) and reuses
+  it for every subsequent query in the same `Substrate` instance's
+  lifetime.
 - See [`../../TASKS.md`](../../TASKS.md) for the phase-by-phase
   implementation record, including every documented gap.

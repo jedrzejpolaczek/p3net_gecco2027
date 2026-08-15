@@ -71,6 +71,69 @@ until a first `0.1.0` release is reached.
 - Added `.github/ISSUE_TEMPLATE/{bug_report,feature_request}.md` and
   `.github/PULL_REQUEST_TEMPLATE.md`, present in `../lib/` but missing here.
 
+### Added (Stage C, 2026-08-15)
+
+- `search_spaces/nas_hpo_bench_ii_genotype.py` — NAS-HPO-Bench-II's own
+  real search space (4 cell operations, not 5; `learning_rate` x
+  `batch_size` only, not JAHS-Bench-201's 4-hyperparameter shape),
+  verified against the real downloaded dataset rather than guessed —
+  including an empirical determination of which cellcode digit is the
+  null operation (querying `'3|33|333'` against the real data scores
+  ~9.7% accuracy, chance level, confirming digit 3, not the usual
+  NAS-Bench-201 convention of digit 0). `search_spaces/_cell_graph.py`
+  factored out the six-edge DAG topology + path-existence check shared
+  with `nas_genotype.py`, avoiding a second copy of that logic.
+- `substrates/nas_hpo_bench_ii.py` now queries the real
+  `NASHPOBench2API` against `data/cache/nashpobench2/` (dataset fetched
+  via `gdown` from the Google Drive link in `nashpobench2api`'s own
+  README) — no longer raises `NotImplementedError`. Verified end-to-end
+  with a real `scripts/run_experiment.py` run.
+- `methods/sh_emoa.py` — real (mu+lambda) EMOA implementation (uniform
+  mutation/crossover, tournament selection, hypervolume-contribution
+  survivor selection via `p3net.metrics.hypervolume`), replacing the old
+  `methods/external/sh_emoa.py` ask/tell stub. No published SH-EMOA
+  package exists to wrap; verified by reading
+  `automl/multi-obj-baselines` (the paper's own reference code) directly.
+- Installed `optuna`, `nashpobench2api`, and `hpbandster` (the latter via
+  a local `netifaces` stub package, `vendor/netifaces-stub/` — the real
+  `netifaces` has no prebuilt wheel for modern Python on Windows and is
+  only ever touched by hpbandster's distributed-worker nameserver, which
+  this project's ask/tell usage never starts).
+- `substrates/jahs_bench_201.py` now queries real JAHS-Bench-201 data,
+  via a subprocess bridge to `vendor/jahsbench-env/` (a dedicated Python
+  3.10 environment — jahs-bench cannot install in this project's main
+  Python 3.13 environment at all, see Known gaps in the previous entry,
+  now resolved). `vendor/jahsbench-env/query_server.py` is a
+  **persistent** bridge process (JSON-lines over stdin/stdout), not one
+  spawned per query, since loading the surrogate models takes several
+  minutes. Surrogate data (~1.65GB) downloaded to `data/cache/
+  jahs_bench_201/` (gitignored) via `curl` with resume support, after
+  the package's own downloader (no retry, buffers the whole file in
+  memory) failed twice on transient connection drops.
+  `search_spaces/nas_genotype.py` needed no changes — its assumed search
+  space was verified correct against the real `jahs_bench.lib.core.
+  configspace` module, unlike NAS-HPO-Bench-II's.
+- `methods/external/tpe.py` now wraps real `optuna.samplers.TPESampler`
+  via optuna's ask/tell API. Every optuna trial is eventually told
+  something real (FAILED for invalid genotypes, the real cached value
+  for duplicates, or the real evaluation result) rather than left
+  permanently un-told, which would leak optuna-internal state.
+- `methods/external/mo_bohb.py` now wraps the real, pip-installed
+  `hpbandster.optimizers.config_generators.bohb.BOHB` config generator.
+  The paper's actual MO-BOHB depends on a custom, unpublished fork of
+  hpbandster (`automl/multi-obj-baselines`'s own vendored copy) not
+  available via `pip install hpbandster` — this is a documented
+  adaptation: real BOHB, single-objective by construction, driven with
+  random-weight Tchebycheff scalarisation of `(f1, f2)` into the one
+  loss it needs (the same technique visible, unwired, in the reference
+  implementation's own `MOBOHBWorker.tchebycheff_norm`). Resolves the
+  fidelity-ladder-usage open decision concretely: always queries at r_K
+  (fixed budget), the same harness-level limitation already documented
+  for `methods/sh_emoa.py`'s missing successive-halving half.
+- `methods/external/_ask_tell_shared.py`'s `default_valid_sampler`
+  removed — no callers left once SH-EMOA/MO-BOHB/TPE were all wired to
+  real backends.
+
 ### Known gaps (tracked in `TASKS.md`, not silently dropped)
 
 - `methods/nsganetv2.py` only implements the shared discretised-Θ variant;
@@ -78,6 +141,12 @@ until a first `0.1.0` release is reached.
   operator this class doesn't have yet.
 - `scripts/run_kappa_sensitivity.py` and `reporting/*` (Phase 7) are not
   implemented — deferred past this Stage B pass.
-- `methods/external/*` wrap a Stage-B stand-in sampler; the real
-  pymoo/Optuna/HpBandSter backends, and MO-BOHB's fidelity-ladder usage,
-  are Stage C decisions.
+- `methods/sh_emoa.py` and `methods/external/mo_bohb.py` each implement
+  only the fixed-fidelity (r_K) half of their real algorithms; the
+  successive-halving/multi-fidelity half needs harness-level support for
+  querying below r_K, which doesn't exist yet (`p3net.harness.Runner` /
+  `substrates.Substrate`).
+- JAHS-Bench-201 live-query tests (`tests/test_substrates.py`) are
+  opt-in (`RUN_JAHS_BENCH_LIVE_TESTS=1`) since starting the bridge takes
+  several minutes just to load the surrogate models — not run by
+  default `uv run pytest`.
