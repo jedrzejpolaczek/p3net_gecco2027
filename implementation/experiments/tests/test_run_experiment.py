@@ -32,15 +32,15 @@ def fake_search_space_config(monkeypatch):
 
 def test_run_single_random_search_respects_budget(fake_search_space_config):
     method_config = {"method": "random_search", "params": {}}
-    state = run_experiment.run_single(method_config, fake_search_space_config, budget=15, seed=0)
-    assert state.evaluations_used == 15
-    assert len(state.history) == 15
+    result = run_experiment.run_single(method_config, fake_search_space_config, budget=15, seed=0)
+    assert result.state.evaluations_used == 15
+    assert len(result.state.history) == 15
 
 
 def test_run_single_p3net_respects_budget(fake_search_space_config):
-    method_config = {"method": "p3net", "params": {"population_size": 8}}
-    state = run_experiment.run_single(method_config, fake_search_space_config, budget=20, seed=1)
-    assert state.evaluations_used == 20
+    method_config = {"method": "p3net", "params": {"growth_factor": 2}}
+    result = run_experiment.run_single(method_config, fake_search_space_config, budget=20, seed=1)
+    assert result.state.evaluations_used == 20
 
 
 @pytest.mark.parametrize(
@@ -48,8 +48,14 @@ def test_run_single_p3net_respects_budget(fake_search_space_config):
 )
 def test_run_single_every_wired_method_completes(fake_search_space_config, kind):
     method_config = {"method": kind, "params": {}}
-    state = run_experiment.run_single(method_config, fake_search_space_config, budget=12, seed=2)
-    assert state.evaluations_used == 12
+    result = run_experiment.run_single(method_config, fake_search_space_config, budget=12, seed=2)
+    assert result.state.evaluations_used == 12
+
+
+def test_run_single_p3_alone_reports_sweeps_completed_diagnostic(fake_search_space_config):
+    method_config = {"method": "p3_alone", "params": {}}
+    result = run_experiment.run_single(method_config, fake_search_space_config, budget=30, seed=2)
+    assert result.method.sweeps_completed >= 1
 
 
 def test_build_method_rejects_a_not_yet_implemented_kind():
@@ -66,15 +72,29 @@ def test_build_method_rejects_a_not_yet_implemented_kind():
 def test_persist_run_writes_readable_json(tmp_path, monkeypatch, fake_search_space_config):
     monkeypatch.setattr(run_experiment, "RESULTS_DIR", tmp_path)
     method_config = {"method": "random_search", "params": {}}
-    state = run_experiment.run_single(method_config, fake_search_space_config, budget=5, seed=3)
+    result = run_experiment.run_single(method_config, fake_search_space_config, budget=5, seed=3)
     out_path = run_experiment.persist_run(
-        state, method_name="random_search", search_space_name="fake_space", budget=5, seed=3
+        result, method_name="random_search", search_space_name="fake_space", budget=5, seed=3
     )
     assert out_path.exists()
     payload = json.loads(out_path.read_text())
     assert payload["evaluations_used"] == 5
     assert len(payload["history"]) == 5
     assert payload["seed"] == 3
+    assert "duplication_rate" in payload["diagnostics"]
+
+
+def test_persist_run_includes_sweeps_completed_for_p3_alone(
+    tmp_path, monkeypatch, fake_search_space_config
+):
+    monkeypatch.setattr(run_experiment, "RESULTS_DIR", tmp_path)
+    method_config = {"method": "p3_alone", "params": {}}
+    result = run_experiment.run_single(method_config, fake_search_space_config, budget=30, seed=2)
+    out_path = run_experiment.persist_run(
+        result, method_name="p3_alone", search_space_name="fake_space", budget=30, seed=2
+    )
+    payload = json.loads(out_path.read_text())
+    assert payload["diagnostics"]["sweeps_completed"] == result.method.sweeps_completed
 
 
 def test_result_path_is_deterministic_given_the_same_inputs():

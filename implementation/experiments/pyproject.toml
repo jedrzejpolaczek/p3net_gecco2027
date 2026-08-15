@@ -29,6 +29,12 @@ dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
 ]
+# Split out of dev/base deps -- only reporting/plots.py and
+# scripts/generate_report.py need a plotting stack; every other module
+# (including the full grid runner) works without it.
+reporting = [
+    "matplotlib>=3.8",
+]
 
 # Local, editable dependency on the sibling p3net library -- experiments/
 # must consume p3net exactly the way an external downstream user would,

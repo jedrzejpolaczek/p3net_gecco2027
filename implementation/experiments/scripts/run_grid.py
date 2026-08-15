@@ -78,10 +78,10 @@ def run_grid(
             continue
         method_config = load_method_config(point.method)
         search_space_config = load_search_space_config(point.search_space)
-        state = run_single(method_config, search_space_config, point.budget, point.seed)
+        result = run_single(method_config, search_space_config, point.budget, point.seed)
         written.append(
             persist_run(
-                state,
+                result,
                 method_name=point.method,
                 search_space_name=point.search_space,
                 budget=point.budget,

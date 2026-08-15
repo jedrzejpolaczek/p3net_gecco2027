@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -157,8 +158,22 @@ def build_method(method_config: dict[str, Any], *, search_space, validity, rng, 
         return mo_bohb_method(search_space, validity, rng, cache=cache, **params)
     raise NotImplementedError(
         f"method {kind!r} is not runnable yet (configs/methods/{kind}.yaml is a "
-        f"documented placeholder -- see its 'not_yet_implemented' note and ../TASKS.md)"
+        f"documented placeholder -- see its 'not_yet_implemented' note)"
     )
+
+
+@dataclass(frozen=True)
+class RunResult:
+    """run_single's full output: the RunState reporting.* ultimately cares
+    about, plus the cache and method instance it was produced with -- both
+    needed to capture per-run diagnostics (duplication rate; P3-alone's
+    sweeps_completed) that RunState itself has no reason to carry, since
+    they're experiments-specific bookkeeping, not part of the library's
+    generic harness contract."""
+
+    state: RunState
+    cache: EvaluationCache
+    method: Any
 
 
 def run_single(
@@ -166,7 +181,7 @@ def run_single(
     search_space_config: dict[str, Any],
     budget: int,
     seed: int,
-) -> RunState:
+) -> RunResult:
     search_space, validity = build_search_space(search_space_config)
     substrate = build_substrate(search_space_config)
     rng = random.Random(seed)
@@ -177,7 +192,8 @@ def run_single(
     runner = Runner(
         objective=substrate.objectives, budget=budget, stopping_rule=BudgetOrExplorationCollapse()
     )
-    return runner.run(method)
+    state = runner.run(method)
+    return RunResult(state=state, cache=cache, method=method)
 
 
 def result_path(*, method_name: str, search_space_name: str, budget: int, seed: int) -> Path:
@@ -188,8 +204,20 @@ def _observation_to_dict(obs: Observation) -> dict[str, Any]:
     return {"genotype": list(obs.genotype.values), "objectives": list(obs.objectives)}
 
 
+def _diagnostics(result: RunResult) -> dict[str, Any]:
+    """Per-run diagnostics reporting/*.py needs but RunState doesn't carry
+    (see RunResult's docstring). Additive-only: readers of older raw JSON
+    without a "diagnostics" key must still work (reporting/_common.py
+    defaults it to {})."""
+    diagnostics: dict[str, Any] = {"duplication_rate": result.cache.duplication_rate}
+    sweeps_completed = getattr(result.method, "sweeps_completed", None)
+    if sweeps_completed is not None:
+        diagnostics["sweeps_completed"] = sweeps_completed
+    return diagnostics
+
+
 def persist_run(
-    state: RunState, *, method_name: str, search_space_name: str, budget: int, seed: int
+    result: RunResult, *, method_name: str, search_space_name: str, budget: int, seed: int
 ) -> Path:
     out_path = result_path(
         method_name=method_name, search_space_name=search_space_name, budget=budget, seed=seed
@@ -200,8 +228,9 @@ def persist_run(
         "search_space": search_space_name,
         "budget": budget,
         "seed": seed,
-        "evaluations_used": state.evaluations_used,
-        "history": [_observation_to_dict(obs) for obs in state.history],
+        "evaluations_used": result.state.evaluations_used,
+        "history": [_observation_to_dict(obs) for obs in result.state.history],
+        "diagnostics": _diagnostics(result),
     }
     out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return out_path
@@ -217,15 +246,15 @@ def main(argv: list[str] | None = None) -> None:
 
     method_config = load_method_config(args.method)
     search_space_config = load_search_space_config(args.search_space)
-    state = run_single(method_config, search_space_config, args.budget, args.seed)
+    result = run_single(method_config, search_space_config, args.budget, args.seed)
     out_path = persist_run(
-        state,
+        result,
         method_name=args.method,
         search_space_name=args.search_space,
         budget=args.budget,
         seed=args.seed,
     )
-    print(f"wrote {out_path} ({state.evaluations_used} evaluations)")
+    print(f"wrote {out_path} ({result.state.evaluations_used} evaluations)")
 
 
 if __name__ == "__main__":

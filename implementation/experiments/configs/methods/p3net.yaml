@@ -5,6 +5,10 @@
 #   - search engine: P3 (p3net.search_engines.p3)
 #   - surrogate: relative, linkage-aware delta_hat_F
 #     (p3net.surrogates.relative_linkage_aware)
+#   - growth_factor: 2 (P3Net's own default) -- population size is no
+#     longer a config knob; the pyramid starts at growth_factor
+#     individuals and grows a new, larger level itself once the current
+#     one stops improving
 #   - kappa: null below defers to P3Net's own default,
 #     2*ceil(log2(n)) (eLyMPuS's bound), n = full extended discretised
 #     genotype dimensionality (architecture + Theta)
@@ -17,7 +21,7 @@
 
 method: p3net
 params:
-  population_size: 20
+  growth_factor: 2
   kappa: null
   acceptance_threshold: 0.0
   objective_index: 0
