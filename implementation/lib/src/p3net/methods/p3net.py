@@ -3,30 +3,41 @@
 Known simplifications in this implementation, documented rather than
 silently shipped:
 
-1. **Single population, not the full pyramid.** This runs the search loop
-   (Proposed Optimizer, steps 1-6) over one fixed-size evolving
-   population, rather than the full multi-level population pyramid
-   (search_engines/p3/pyramid.py, implemented and unit-tested standalone
-   but not yet wired in here). Population size is a constructor argument
-   (`population_size`), not yet genuinely "parameter-less". Follow-up, not
-   done here.
-2. **f2 (analytic cost) is not freshly computed for unevaluated
-   candidates.** Step 4's C* selection is supposed to use nondomination in
-   (f_hat_1, f2), with f2 computed analytically per candidate without a
-   full evaluation. This class has no analytic-cost hook yet, so any
-   objective other than f1 (index `objective_index`) is approximated at
-   its ancestor's value during C* selection rather than freshly computed
-   for the candidate. Correct and complete for single-objective use;
-   incomplete for genuine multi-objective (f1, f2) use until an
-   analytic-cost callable is added. Follow-up, not done here.
-3. **Stall recovery is simple random reinjection, not pyramid growth.** In
-   the real P3 algorithm, a sweep converging with nothing left to accept
-   is exactly what triggers growing a new, larger pyramid level (see
-   simplification 1). Here, if an iteration's C* ends up empty after
-   dedup (every candidate a sweep produced already fully evaluated), this
-   class falls back to proposing a small batch of fresh random valid
-   genotypes instead, so the search keeps spending its budget rather than
-   stalling. A real pyramid-growth response is a follow-up.
+1. **Single active level at a time, not full simultaneous cross-level
+   cascading.** `search_engines/p3/pyramid.py`'s `Pyramid` IS wired in
+   here (2026-08-15): population size is no longer a constructor
+   argument -- level 0 starts at `growth_factor` individuals and a new,
+   larger level is grown automatically once the current level's sweep
+   passes stop improving (`Pyramid.all_stalled`), genuinely
+   "parameter-less". What's still simplified relative to the canonical
+   P3/GOMEA pyramid: only the newest level is actively swept at a time.
+   Canonical P3 keeps every level live, cascading a single new solution's
+   improvement attempt upward through all of them; here, once a level
+   stalls and a new one is grown, the old level's population is frozen
+   (its observations remain in H_t, but it is never swept again). A
+   faithful multi-level-simultaneous cascade is a follow-up, not done
+   here.
+2. **f2 (analytic cost) is only freshly computed if the caller supplies
+   `analytic_cost`.** Step 4's C* selection is supposed to use
+   nondomination in (f_hat_1, f2), with f2 computed analytically per
+   candidate without a full evaluation. The optional `analytic_cost`
+   constructor argument (`Callable[[Genotype], Objectives]`) does exactly
+   this when supplied: every objective other than f1 (index
+   `objective_index`) is computed fresh for each candidate during C*
+   selection. Left at its default (`None`), the previous approximation
+   still applies -- every non-f1 objective is inherited from the
+   ancestor's value rather than freshly computed -- correct and complete
+   for single-objective use, and a documented, opt-in-to-fix
+   simplification for multi-objective use rather than a silent gap.
+3. **Stall recovery within one sweep pass is still random reinjection.**
+   If a single sweep pass's C* ends up empty after dedup (every candidate
+   that pass produced was already fully evaluated), this class falls
+   back to proposing a small batch of fresh random valid genotypes for
+   *that pass*, so the search keeps spending its budget rather than
+   halting outright. This is a different, narrower situation than
+   simplification 1's pyramid growth (which triggers on a pass
+   completing without any real improvement, not on a pass producing zero
+   *proposals*) -- both mechanisms coexist and do not conflict.
 """
 
 from __future__ import annotations
@@ -42,9 +53,10 @@ from p3net.harness.evaluation_cache import EvaluationCache
 from p3net.harness.runner import Observation, RunState
 from p3net.problem.decoding import Validity, is_valid
 from p3net.problem.genotype import Genotype, SearchSpace
-from p3net.problem.objectives import Objectives, pareto_front
+from p3net.problem.objectives import Objectives, dominates, pareto_front
 from p3net.search_engines.p3.linkage_tree import build_linkage_tree, linkage_subsets
 from p3net.search_engines.p3.optimal_mixing import SweepState
+from p3net.search_engines.p3.pyramid import Pyramid, PyramidLevel
 from p3net.surrogates.relative_linkage_aware import (
     NoLinkageTreeError,
     RelativeLinkageAwareSurrogate,
@@ -68,30 +80,48 @@ class P3Net:
     validity: Validity
     model_factory: Callable[[], Any]
     rng: random.Random
-    population_size: int = 20
+    growth_factor: int = 2
     kappa: int | None = None
     acceptance_threshold: float = 0.0
     objective_index: int = 0
+    analytic_cost: Callable[[Genotype], Objectives] | None = None
     experiment_type: str = "p3net"
     protocol_version: str = "v1"
     cache: EvaluationCache = field(default_factory=EvaluationCache)
 
-    _population: list[Genotype] = field(default_factory=list, init=False, repr=False)
+    _pyramid: Pyramid = field(init=False, repr=False)
     _history: dict[Genotype, Observation] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self) -> None:
         if self.kappa is None:
             n = max(self.search_space.n, 2)
             self.kappa = 2 * math.ceil(math.log2(n))
+        self._pyramid = Pyramid(growth_factor=self.growth_factor)
+        self._pyramid.add_level()
+
+    @property
+    def _level(self) -> PyramidLevel:
+        return self._pyramid.levels[-1]
+
+    @property
+    def _level_index(self) -> int:
+        return len(self._pyramid.levels) - 1
 
     # -- harness.Method protocol ------------------------------------------
 
     def propose(self, state: RunState) -> list[Genotype]:
-        if len(self._population) < self.population_size:
-            return self._bootstrap_proposals()
-        return self._sweep_proposals()
+        if self._pyramid.all_stalled:
+            self._pyramid.add_level()
+        level = self._level
+        if len(level.population) < level.size:
+            return self._bootstrap_proposals(level)
+        return self._sweep_proposals(level)
 
     def update(self, state: RunState, new_observations: list[Observation]) -> None:
+        level = self._level
+        level_index = self._level_index
+        bootstrapping = len(level.population) < level.size
+
         for obs in new_observations:
             self.cache.put(
                 obs.genotype,
@@ -100,26 +130,66 @@ class P3Net:
                 protocol_version=self.protocol_version,
             )
             self._history[obs.genotype] = obs
-            if obs.genotype not in self._population:
-                self._population.append(obs.genotype)
-        if len(self._population) > self.population_size:
-            self._population.sort(key=lambda g: self._history[g].objectives[self.objective_index])
-            self._population = self._population[: self.population_size]
+
+        if bootstrapping:
+            # No established population to compare against yet -- fill
+            # the level directly, no promote()/stall judgement (see
+            # _seed_best_objectives below for how the baseline gets set
+            # once bootstrap completes).
+            for obs in new_observations:
+                if obs.genotype not in level.population:
+                    level.population.append(obs.genotype)
+            if len(level.population) >= level.size:
+                self._seed_best_objectives(level)
+        else:
+            # One promote() call per sweep pass (not per observation):
+            # a pass's real outcome is its single best result, by Pareto
+            # dominance -- calling promote() once per observation in a
+            # mixed improve/non-improve batch would let a later
+            # non-improving call overwrite an earlier improving one's
+            # "not stalled" signal, incorrectly marking a genuinely
+            # improving pass as stalled.
+            best_obs = new_observations[0]
+            for obs in new_observations[1:]:
+                if dominates(obs.objectives, best_obs.objectives):
+                    best_obs = obs
+            self._pyramid.promote(level_index, best_obs.genotype, best_obs.objectives)
+            for obs in new_observations:
+                if obs.genotype not in level.population:
+                    level.population.append(obs.genotype)
+
+        if len(level.population) > level.size:
+            level.population.sort(key=lambda g: self._history[g].objectives[self.objective_index])
+            level.population = level.population[: level.size]
 
     # -- internals ---------------------------------------------------------
 
-    def _bootstrap_proposals(self) -> list[Genotype]:
+    def _seed_best_objectives(self, level: PyramidLevel) -> None:
+        """Fold the just-completed bootstrap population down to its
+        single best (by Pareto dominance) to give promote() a real
+        baseline for the level's first post-bootstrap sweep pass --
+        without this, that first pass would always count as "improving"
+        simply because best_objectives was still None."""
+        best: Genotype | None = None
+        for g in level.population:
+            obj = self._history[g].objectives
+            if best is None or dominates(obj, self._history[best].objectives):
+                best = g
+        if best is not None:
+            level.best_objectives = self._history[best].objectives
+
+    def _bootstrap_proposals(self, level: PyramidLevel) -> list[Genotype]:
         """No linkage tree or surrogate can exist yet -- propose uniform
-        random valid genotypes until the population reaches
-        population_size."""
-        needed = self.population_size - len(self._population)
+        random valid genotypes until this level reaches its target
+        size."""
+        needed = level.size - len(level.population)
         return self._diversity_injection(n=needed)
 
-    def _sweep_proposals(self) -> list[Genotype]:
+    def _sweep_proposals(self, level: PyramidLevel) -> list[Genotype]:
         # Step 6 (of the *previous* iteration): the tree and surrogate are
         # rebuilt once here, at the start of this iteration, and reused for
         # every parent's sweep below (steps 1-3) -- never rebuilt mid-sweep.
-        linkage_root = build_linkage_tree(self._population)
+        linkage_root = build_linkage_tree(level.population)
         subsets = linkage_subsets(linkage_root)
         surrogate: RelativeLinkageAwareSurrogate | None = RelativeLinkageAwareSurrogate(
             model_factory=self.model_factory
@@ -132,7 +202,7 @@ class P3Net:
             logger.debug(
                 "not enough pairwise data to fit delta_hat_F this iteration "
                 "(population=%d); proceeding without a surrogate",
-                len(self._population),
+                len(level.population),
             )
             surrogate = None
 
@@ -140,9 +210,9 @@ class P3Net:
         # sweep's final individual and its (surrogate- or exactly-known)
         # estimated objectives, scoped to this iteration only.
         candidate_estimates: dict[Genotype, Objectives] = {}
-        for parent in self._population:
+        for parent in level.population:
             ancestor = self._history[parent]
-            sweep = SweepState.start(parent, linkage_root, self._population, self.rng)
+            sweep = SweepState.start(parent, linkage_root, level.population, self.rng)
             chain: list[ChainStep] = []
             current_estimate: Objectives = ancestor.objectives
             while not sweep.done:
@@ -155,7 +225,9 @@ class P3Net:
                         x_prev=proposal.parent, x_next=proposal.candidate, subset=proposal.subset
                     )
                 ]
-                accept, trial_estimate = self._tentatively_accept(surrogate, ancestor, trial_chain)
+                accept, trial_estimate = self._tentatively_accept(
+                    surrogate, ancestor, trial_chain, proposal.candidate
+                )
                 if accept:
                     chain = trial_chain
                     sweep.accept(proposal)
@@ -183,12 +255,13 @@ class P3Net:
         ]
         if proposals:
             return proposals
-        # Stall: every candidate this sweep produced was already fully
-        # evaluated (e.g. nothing was accepted anywhere, so every sweep's
-        # `current` fell back to its already-known parent). Simplification
-        # 3 (module docstring): inject fresh random diversity rather than
-        # halting the whole run, since this class doesn't yet implement
-        # the real algorithm's pyramid-growth response to a stalled sweep.
+        # Stall (module docstring, simplification 3): every candidate this
+        # one sweep pass produced was already fully evaluated -- inject
+        # fresh random diversity rather than halting the whole run. This
+        # is a per-pass proposal-generation stall, distinct from
+        # simplification 1's pyramid-growth trigger (which fires when a
+        # *completed* pass yields no real improvement, not when a pass
+        # yields zero proposals).
         return self._diversity_injection()
 
     def _diversity_injection(self, *, n: int = 1) -> list[Genotype]:
@@ -215,6 +288,7 @@ class P3Net:
         surrogate: RelativeLinkageAwareSurrogate | None,
         ancestor: Observation,
         chain: list[ChainStep],
+        candidate: Genotype,
     ) -> tuple[bool, Objectives]:
         """Step 2-3: score a proposed chain via delta_hat_F, and tentatively
         accept iff it predicts nonnegative improvement (the configurable
@@ -240,8 +314,14 @@ class P3Net:
             return True, ancestor.objectives
         predicted_improvement = ancestor.objectives[self.objective_index] - estimate_f1
         accept = predicted_improvement >= self.acceptance_threshold
+        # Known simplification 2 (module docstring): non-f1 objectives are
+        # freshly computed for `candidate` when analytic_cost is supplied,
+        # otherwise inherited from the ancestor's value as before.
+        non_f1_source = (
+            self.analytic_cost(candidate) if self.analytic_cost is not None else ancestor.objectives
+        )
         estimated_objectives = tuple(
-            estimate_f1 if i == self.objective_index else ancestor.objectives[i]
+            estimate_f1 if i == self.objective_index else non_f1_source[i]
             for i in range(len(ancestor.objectives))
         )
         return accept, estimated_objectives

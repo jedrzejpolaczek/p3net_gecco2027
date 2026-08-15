@@ -65,7 +65,6 @@ def test_p3net_completes_full_budget_without_error():
         validity=always_valid,
         model_factory=LinearRegression,
         rng=random.Random(0),
-        population_size=10,
     )
     state = Runner(objective=toy_objective, budget=80).run(method)
     assert state.evaluations_used == 80
@@ -79,7 +78,6 @@ def test_p3net_respects_dedup_cache_and_records_h_t_without_duplicates():
         validity=always_valid,
         model_factory=LinearRegression,
         rng=random.Random(1),
-        population_size=10,
         cache=cache,
     )
     Runner(objective=toy_objective, budget=60).run(method)
@@ -97,7 +95,6 @@ def test_p3net_outperforms_random_search_on_a_toy_structured_problem():
         validity=always_valid,
         model_factory=LinearRegression,
         rng=random.Random(42),
-        population_size=15,
     )
     p3net_state = Runner(objective=toy_objective, budget=budget).run(p3net_method)
     p3net_best = min(obs.objectives[0] for obs in p3net_state.history)

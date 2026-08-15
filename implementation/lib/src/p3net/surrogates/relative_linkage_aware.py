@@ -73,7 +73,18 @@ class RelativeLinkageAwareSurrogate:
                 "subsets that actually partition the observed variation"
             )
         self._vocab = build_vocab(observations)
-        X = [_pair_features(a.genotype, b.genotype, self._vocab) for a, b in pairs]
+        # Encode each distinct genotype once and reuse it across every pair
+        # it appears in, rather than recomputing one_hot per pair -- H_t
+        # grows over a run, so this loop's pair count grows quadratically
+        # in |H_t| while the number of distinct genotypes only grows
+        # linearly (profiled: one_hot was the single largest cost in a
+        # 200-budget run, ~5.4M calls from re-encoding the same genotypes
+        # repeatedly).
+        encoded: dict[Genotype, list[float]] = {}
+        for obs in observations:
+            if obs.genotype not in encoded:
+                encoded[obs.genotype] = one_hot(obs.genotype, self._vocab)
+        X = [encoded[a.genotype] + encoded[b.genotype] for a, b in pairs]
         y = [a.objectives[objective_index] - b.objectives[objective_index] for a, b in pairs]
         self._model = self.model_factory()
         self._model.fit(X, y)
