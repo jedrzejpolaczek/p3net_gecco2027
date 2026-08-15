@@ -6,11 +6,10 @@ import random
 import pytest
 from p3net.problem.genotype import Genotype
 
+from search_spaces._cell_graph import CELL_EDGES, N_EDGES
 from search_spaces.nas_genotype import (
     ACTIVATIONS,
-    CELL_EDGES,
     CELL_OPERATIONS,
-    N_EDGES,
     ContinuousThetaBounds,
     decode_nas_genotype,
     nas_search_space,

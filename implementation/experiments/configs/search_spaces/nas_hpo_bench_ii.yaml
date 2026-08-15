@@ -1,10 +1,13 @@
 # NAS-HPO-Bench-II search-space config (Category 1: fixed grid lookup
 # table, exact oracle front).
 #
-# Same shared search_spaces/nas_genotype.py::nas_search_space() as every
-# other config -- the fixed cell topology architecture dimensions plus
-# the learning-rate and weight-decay hyperparameter dimensions and their
-# discretisation.
+# Uses its OWN search space (search_spaces/nas_hpo_bench_ii_genotype.py),
+# NOT search_spaces/nas_genotype.py -- the two benchmarks have genuinely
+# different hyperparameter axes (chapters/v003/related_work/main.tex:
+# JAHS-Bench-201 searches learning rate/weight decay/activation/
+# augmentation, NAS-HPO-Bench-II varies only learning rate and batch
+# size). Reusing one shared genotype for both was a Stage B mistake,
+# caught and fixed while wiring real queries (Stage C).
 #
 # r_K fixed at the tabulated range only (up to
 # substrates.nas_hpo_bench_ii.MAX_TABULATED_EPOCHS training epochs) --
@@ -15,7 +18,7 @@
 # NAS-HPO-Bench-II as Category 1 assumes that P3Net queries only its
 # exhaustively tabulated range...").
 
-search_space: nas_genotype
+search_space: nas_hpo_bench_ii_genotype
 substrate: nas_hpo_bench_ii
 
 fidelity:

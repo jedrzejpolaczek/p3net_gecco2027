@@ -25,17 +25,7 @@ from dataclasses import dataclass
 
 from p3net.problem.genotype import CategoricalDomain, Genotype, SearchSpace, discretize_log_uniform
 
-# -- Cell-graph architecture edges -------------------------------------------
-#
-# Standard NAS-Bench-201 cell: 4 nodes (0 = input, 3 = output), 6 directed
-# edges forming a DAG. Fixed edge-index convention used throughout this
-# module (documented since NAS-Bench-201 itself doesn't mandate one):
-#
-#   edge 0: (0 -> 1)   edge 1: (0 -> 2)   edge 2: (1 -> 2)
-#   edge 3: (0 -> 3)   edge 4: (1 -> 3)   edge 5: (2 -> 3)
-CELL_EDGES: tuple[tuple[int, int], ...] = ((0, 1), (0, 2), (1, 2), (0, 3), (1, 3), (2, 3))
-N_NODES = 4
-N_EDGES = len(CELL_EDGES)
+from search_spaces._cell_graph import N_EDGES, has_input_output_path
 
 CELL_OPERATIONS: tuple[str, ...] = (
     "none",
@@ -132,30 +122,10 @@ def decode_nas_genotype(genotype: Genotype) -> NASConfiguration:
     )
 
 
-def _has_input_output_path(edges: tuple[str, ...]) -> bool:
-    """True iff a path from node 0 to node N_NODES-1 exists using only
-    edges whose operation is not NONE_OPERATION (a "none" edge removes
-    that connection from the graph)."""
-    adjacency: dict[int, list[int]] = {n: [] for n in range(N_NODES)}
-    for (src, dst), op in zip(CELL_EDGES, edges):
-        if op != NONE_OPERATION:
-            adjacency[src].append(dst)
-
-    visited = {0}
-    frontier = [0]
-    while frontier:
-        node = frontier.pop()
-        for neighbour in adjacency[node]:
-            if neighbour not in visited:
-                visited.add(neighbour)
-                frontier.append(neighbour)
-    return (N_NODES - 1) in visited
-
-
 def nas_validity(genotype: Genotype) -> float:
     """g(x) <= 0 iff an input-output path exists through the cell graph
     (Problem Formulation: "does an input-output path exist between input
     and output of the cell"). Boolean validity expressed in the real-valued
     {-1, +1} form p3net.problem.decoding.Validity expects."""
     config = decode_nas_genotype(genotype)
-    return -1.0 if _has_input_output_path(config.edges) else 1.0
+    return -1.0 if has_input_output_path(config.edges, NONE_OPERATION) else 1.0
