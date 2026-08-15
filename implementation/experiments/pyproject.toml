@@ -9,12 +9,18 @@ dependencies = [
     "p3net",
     "scikit-learn>=1.4",
     "pyyaml>=6.0",
-    # TODO: add benchmark deps (JAHS-Bench-201, NAS-HPO-Bench-II Python
-    # packages) and baseline-wrapper deps for methods/external/* (SH-EMOA,
-    # MO-BOHB, TPE implementations) as implementation lands (see TASKS.md).
-    # These are deliberately kept out of ../lib/pyproject.toml -- heavy,
-    # benchmark- and baseline-specific, irrelevant to anyone using p3net
-    # outside this paper's reproduction.
+    "optuna>=4.9.0",
+    "nashpobench2api>=1.0.0",
+    "pyro4>=4.82",
+    "serpent>=1.43",
+    "configspace>=1.2.2",
+    "statsmodels>=0.14.6",
+    # Declared directly (not just a transitive dep of hpbandster) so the
+    # [tool.uv.sources] redirect to the local stub below actually applies
+    # -- uv only honors a source override for packages in the resolvable
+    # requirement set, not arbitrary transitive dependencies.
+    "netifaces",
+    "hpbandster>=0.7.4",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +36,12 @@ dev = [
 # is the forcing function that keeps the library's public API honest.
 [tool.uv.sources]
 p3net = { path = "../lib", editable = true }
+# netifaces has no prebuilt wheel for modern Python on Windows and needs
+# MSVC Build Tools to build from source. It's a hard install_requires of
+# hpbandster (MO-BOHB's backend) but is only ever used inside a lazy
+# import in a function this project's usage never calls -- see
+# vendor/netifaces-stub/netifaces/__init__.py for the verified reasoning.
+netifaces = { path = "vendor/netifaces-stub", editable = true }
 
 [build-system]
 requires = ["hatchling"]
