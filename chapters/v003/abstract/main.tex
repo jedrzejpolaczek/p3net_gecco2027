@@ -1,42 +1,47 @@
 \begin{abstract}
-% TODO: write the abstract. Points to hit, one to two sentences each, in this order
-% (adapted from the old planning notes to match the current P3Net design):
-%   1. Problem: evaluation-limited joint architecture+hyperparameter search in a discrete
-%      space; the accuracy/compute-cost multiobjective trade-off.
-%   2. Method: P3Net = P3 (linkage-tree-guided crossover, no mutation) + a relative,
-%      linkage-aware surrogate delta-hat_F that predicts the CHANGE in accuracy from a
-%      proposed modification, contrasted with NSGANetV2's absolute-regressor surrogate.
-%   3. Evaluation design: NSGANetV2 + matched engine/surrogate ablations + SH-EMOA/MO-BOHB,
-%      on JAHS-Bench-201 and NAS-HPO-Bench-II, budgets {50,100,200}, R=10 seeds,
-%      hypervolume (+ IGD+ where an oracle front is enumerable).
-%   4. Headline result(s) — ONLY once Results/Findings is populated; no invented numbers.
-%   5. (optional) reproducibility/artifact statement, if one is planned.
-% Peer-review must-haves: don't claim anything not backed by a figure/table in Results;
-% name the primary metric explicitly.
+Joint neural architecture and hyperparameter search must trade prediction accuracy against a fixed, limited
+budget of expensive full evaluations, and the field's dominant engine, NSGA-II-style crossover paired with an
+absolute-regressor surrogate (as in NSGANetV2), varies genotype coordinates independently of whether they
+actually interact. We propose P3Net, which instead couples the Parameter-less Population Pyramid (P3), a
+linkage-tree-guided crossover operator with no separate mutation step, to a relative, linkage-aware surrogate
+$\hat\delta_F$ that predicts the \emph{change} in accuracy from a proposed modification, restricted to the one
+linkage subset that changed, rather than regressing absolute accuracy from the full encoding. We evaluate
+P3Net against NSGANetV2, matched engine/surrogate ablations that isolate each design lever, and four further
+baselines (SH-EMOA, MO-BOHB, TPE, random search) on JAHS-Bench-201 (CIFAR-10, Colorectal-Histology,
+Fashion-MNIST) and NAS-HPO-Bench-II, across four evaluation budgets and $R=30$ seeds per cell, using
+hypervolume relative to the best-known front.
+
+The result is a largely negative, but diagnostically rigorous, finding: P3Net does not separate statistically
+from uniform random search in any of the sixteen (search-space, budget) cells tested. We trace a substantial
+part of this to a structural pathology in \texttt{Pyramid}'s geometric level-growth rule, which we show
+forces an increasing share of the evaluation budget into uniform-random population bootstrap as the budget
+grows (up to $93$--$94\%$ at the largest budget tested); a warm-start and hypervolume-contribution redesign
+measurably, but only partially, corrects this. Once a population-engine confound in the matched
+P3-plus-absolute-regressor ablation is independently identified and closed, that ablation also shows no
+measurable advantage for the relative surrogate over a simpler absolute one, and a targeted fix for
+$\hat\delta_F$'s provably additive-only representational limit, though independently verified to add real
+capacity, likewise shows no benefit at this benchmark scale. We report these as honest null results rather
+than omitting or reframing them, alongside the one benchmark cell where P3Net does win significantly, and
+argue from the P3/GOMEA literature that the mechanism under test is more likely to pay off on larger,
+structurally richer search spaces than the four evaluated here.
 \end{abstract}
 
-% TODO before submission: CCS concepts are mandatory for papers over two
-% pages. The codes below are PLACEHOLDERS (not real ACM taxonomy IDs) —
-% generate the real ones at https://dl.acm.org/ccs by searching for concepts
-% such as "Computing methodologies~Genetic algorithms", "...~Neural
-% networks", and "...~Search methodologies", then paste the tool's output
-% here in place of this block.
 \begin{CCSXML}
 <ccs2012>
 <concept>
-<concept_id>00000000.00000000.00000000</concept_id>
-<concept_desc>Computing methodologies~Genetic algorithms</concept_desc>
+<concept_id>10010147.10010178.10010205.10010207</concept_id>
+<concept_desc>Computing methodologies~Discrete space search</concept_desc>
 <concept_significance>500</concept_significance>
 </concept>
 <concept>
-<concept_id>00000000.00000000.00000000</concept_id>
+<concept_id>10010147.10010257.10010293.10010294</concept_id>
 <concept_desc>Computing methodologies~Neural networks</concept_desc>
 <concept_significance>300</concept_significance>
 </concept>
 </ccs2012>
 \end{CCSXML}
 
-\ccsdesc[500]{Computing methodologies~Genetic algorithms}
+\ccsdesc[500]{Computing methodologies~Discrete space search}
 \ccsdesc[300]{Computing methodologies~Neural networks}
 
 \keywords{neural architecture search, surrogate predictor, P3, evolutionary optimisation, multi objective optimisation}

@@ -1,0 +1,21 @@
+# P3-alone (engine-only ablation, P3 side): P3's optimal-mixing sweep with
+# NO surrogate -- every accepted step is gated by a REAL f1 evaluation
+# (canonical optimal-mixing acceptance rule), exactly as in the original P3
+# hill-climbing / cross-level mixing steps.
+#
+# budget_starvation_expected: true flags this arm as expected to exhaust
+# most/all of a small budget within a handful of sweeps under the
+# {50,100,200} tiers -- this is the point of the ablation, not a flaw
+# (Results: motivates pairing P3 with a cheap surrogate in the first
+# place). methods.p3_alone.P3Alone.sweeps_completed is the corresponding
+# diagnostic, so a weak result reads as budget starvation, not engine
+# failure.
+#
+# Reference: chapters/v003/results/main.tex ("Baselines" -- P3-alone
+# paragraph).
+
+method: p3_alone
+budget_starvation_expected: true
+params:
+  population_size: 10
+  objective_index: 0

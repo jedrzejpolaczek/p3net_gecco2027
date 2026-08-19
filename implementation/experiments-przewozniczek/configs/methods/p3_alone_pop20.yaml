@@ -1,0 +1,21 @@
+# Population-size ablation of p3_alone (2026-08-16): identical to
+# p3_alone.yaml (same "method: p3_alone", same P3Alone class) except
+# population_size 10 -> 20, matching every external baseline's own
+# population_size (nsga_net.yaml, nsganetv2.yaml, sh_emoa.yaml all use 20 --
+# p3_alone.yaml's 10 was the one arm in the grid running a smaller
+# population than everyone it's compared against). Isolates whether
+# p3_alone's low duplication-rate diagnostic score, high duplication rate,
+# and low hypervolume-relative median (results/archive/
+# R10_budgets-50-100-200_2026-08-16/) reflect "no surrogate" or simply "half
+# the population of its peers" -- a confound the original config carried
+# unexamined. A distinct method name (not a param override on the original
+# p3_alone.yaml) so results/raw/ keeps this ablation's output as separate,
+# identifiable files rather than overwriting the original config's runs.
+#
+# Reference: chapters/v003/results/main.tex ("Baselines", "Diagnostics:
+# genotype duplication").
+
+method: p3_alone
+params:
+  population_size: 20
+  objective_index: 0

@@ -1,0 +1,14 @@
+# Population-size ablation of p3_alone (2026-08-16), second point on the
+# same dose-response curve as p3_alone_pop20.yaml: population_size 40,
+# double every external baseline's 20, to see whether p3_alone's diagnostics
+# keep improving past parity with its peers or plateau once the "smaller
+# population than everyone else" confound (p3_alone.yaml's original
+# population_size: 10) is removed.
+#
+# Reference: chapters/v003/results/main.tex ("Baselines", "Diagnostics:
+# genotype duplication").
+
+method: p3_alone
+params:
+  population_size: 40
+  objective_index: 0

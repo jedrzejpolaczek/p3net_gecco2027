@@ -1,0 +1,35 @@
+# BartnikP3: reconstruction of the algorithm class Bartnik
+# (bartnik2026evolutionary) showed separating from baselines on
+# architecture-only NAS-Bench-201 -- notes/plans/experiments-bartnik-plan.md.
+#
+#   - search engine: canonical, single-individual-climbing P3
+#     (p3net.search_engines.p3.canonical_pyramid, Goldman 2014, Algorithm
+#     3/4 shape) -- NOT the batch-bootstrap Pyramid p3net/p3_absolute use.
+#   - surrogate: deterministic, per-objective Random Forest
+#     (p3net.surrogates.absolute_random_forest), climbed against exclusively
+#     -- FIHC/GOM decisions inside one climb use predicted objectives, not
+#     real ones (methods/bartnik_p3.py's own module docstring explains why).
+#   - acceptance gate: lambda-quantile threshold on predicted f1 improvement
+#     over the current best real f1 (Dushatskiy 2021, Algorithm 7/8 shape),
+#     relaxed by eta each time a climb attempt has to fall back to a random
+#     genotype, reset to a fresh quantile whenever the real Pareto front
+#     changes.
+#   - warmup: ell random real evaluations before any surrogate/pyramid
+#     activity (null below defers to the search space's own dimensionality,
+#     ell = 6 for architecture-only NAS-Bench-201's six edges).
+#
+# Explicitly NOT implemented here (plan's Faza 5): probabilistic surrogate,
+# probabilistic acceptance gate, online surrogate selection, PXrLL.
+#
+# Reference: notes/plans/experiments-bartnik-plan.md; conclusions/main.tex
+# ("Why the results are what they are").
+
+method: bartnik_p3
+default_grid: false
+params:
+  warmup: null
+  lambda_quantile: 0.5
+  eta: 0.999
+  n_estimators: 100
+  objective_index: 0
+  max_climb_attempts: 5

@@ -1,0 +1,19 @@
+# NSGANetV2-with-continuous-Theta control: same as nsganetv2.yaml, except
+# Theta would use its native unconstrained real-valued encoding instead of
+# the discretised encoding every other arm shares -- isolates the effect
+# of discretisation itself from the effect of the search engine/surrogate.
+#
+# NOT YET RUNNABLE: methods/nsganetv2.py only implements the shared
+# discretised-Theta variant ("Known simplification" in that module's
+# docstring); the continuous-Theta variant needs a parallel real-valued
+# crossover operator this class doesn't have yet, tracked here rather
+# than silently claimed complete -- scripts/run_grid.py skips this config
+# until methods/nsganetv2.py grows a continuous mode.
+#
+# Reference: chapters/v003/results/main.tex ("Baselines" -- "NSGANetV2
+# extended to the joint setting with an unconstrained, real-valued
+# encoding of Theta as an additional control baseline").
+
+method: nsganetv2_continuous
+not_yet_implemented: true
+params: {}

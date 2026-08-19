@@ -1,0 +1,27 @@
+# kappa / acceptance-threshold sensitivity sweep grid for P3Net
+# specifically (chapters/v003/results/main.tex, "Surrogate error
+# accumulation (kappa and acceptance threshold)").
+#
+# NOT YET CONSUMED: scripts/run_kappa_sensitivity.py is not implemented
+# yet, though the surrogate-quality metric it would report through
+# (metrics/surrogate_quality.py's rank_correlation) already exists. This
+# file's data is settled now so implementing that script later doesn't
+# also have to decide the grid.
+
+# kappa grid: {1, ceil(log2(n)), 2*ceil(log2(n)), infinity}. "auto_1x" /
+# "auto_2x" are resolved at run time from the genotype dimensionality n
+# (mirrors p3net.methods.p3net.P3Net's own default derivation); "infinity"
+# is represented as null (no chain-depth cap).
+kappa_grid: [1, "auto_1x", "auto_2x", null]
+
+# acceptance-threshold grid: {0, epsilon, 2*epsilon} for a fixed epsilon > 0.
+epsilon: 0.01
+acceptance_threshold_grid: [0.0, "epsilon", "2*epsilon"]
+
+# Swept JOINTLY (full cross product of both grids above); P3Net otherwise
+# unchanged from configs/methods/p3net.yaml.
+swept_jointly: true
+
+metrics:
+  - fixed_budget_hypervolume
+  - surrogate_rank_correlation

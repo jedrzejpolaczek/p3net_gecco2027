@@ -1,0 +1,28 @@
+# JAHS-Bench-201 search-space config (primary benchmark, Category 2 --
+# continuous surrogate, no enumerable oracle front).
+#
+# The searched genotype itself is defined once in code
+# (search_spaces/nas_genotype.py::nas_search_space()) and shared,
+# unmodified, by every arm except nsganetv2_continuous (Fairness
+# controls) -- the six categorical architecture-edge dimensions
+# (Lambda_1..Lambda_6) plus the four discretised hyperparameter
+# dimensions (learning rate: log-spaced grid, weight decay: log-spaced
+# grid, activation function, data augmentation). This file only selects
+# which dataset/substrate/fidelity this config targets, not a second
+# definition of the search space.
+#
+# Reference: chapters/v003/results/main.tex ("Benchmark and search
+# space"); chapters/v003/proposed_optimizer/main.tex ("Representation and
+# linkage tree").
+
+search_space: nas_genotype
+substrate: jahs_bench_201
+dataset: cifar10  # one of substrates.jahs_bench_201.JAHS_DATASETS
+
+# The four additional fidelity dimensions (epochs, resolution, ...),
+# tracked separately from the searched genotype. f1 is evaluated at r_K
+# (this level); f2 is held fixed at this same r_K resolution regardless of
+# which fidelity f1 is queried at.
+fidelity:
+  epochs: 200
+  resolution: 1.0

@@ -1,0 +1,40 @@
+# NAS-Bench-201 search-space config, architecture-only (isolation
+# experiment, glimmering-swimming-book.md).
+#
+# Uses its OWN search space (search_spaces/nas_bench_201_genotype.py),
+# NOT search_spaces/nas_genotype.py -- six architecture edges only, no
+# Theta (hyperparameter) domains. Built to test P3Net without this
+# project's own joint architecture+hyperparameter extension, isolating
+# whether that extension is what's behind P3Net's failure to separate
+# from random_search on both joint benchmarks (JAHS-Bench-201,
+# NAS-HPO-Bench-II) -- see conclusions/main.tex, "Why the results are
+# what they are: a unified account, and an open, undertested hypothesis".
+#
+# f2 = FLOPs, not Bartnik's own measured GPU energy consumption -- a
+# documented deviation, not a silent substitution (substrates/
+# nas_bench_201.py's module docstring explains why).
+#
+# dataset = cifar10 is an ASSUMPTION (Bartnik's own choice is not
+# precisely documented in this project's related_work.tex), not a
+# confirmed match to bartnik2026evolutionary.
+#
+# r_K fixed at a single fidelity level (200 epochs, full training) by
+# deliberate design -- a real multi-fidelity ladder would introduce a
+# second variable alongside removing Theta, breaking the isolation this
+# experiment exists to provide.
+
+# default_grid: false -- a genuinely separate, single-axis isolation
+# experiment (Conclusions, "Why the results are what they are"), not part
+# of the main ten/eleven-arm comparison grid. Same mechanism
+# configs/methods/*.yaml already uses (scripts/run_grid.py's own module
+# docstring); a plain `run_grid.py` with no flags must not silently try
+# to query real NATS-Bench data most environments won't have downloaded.
+# Pass --search-spaces nas_bench_201 explicitly to run it.
+default_grid: false
+
+search_space: nas_bench_201_genotype
+substrate: nas_bench_201
+dataset: cifar10
+
+fidelity:
+  epochs: 200

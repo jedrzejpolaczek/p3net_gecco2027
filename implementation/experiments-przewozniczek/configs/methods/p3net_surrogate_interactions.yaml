@@ -1,0 +1,33 @@
+# Single-axis ablation of p3net.yaml (2026-08-18, Phase 4 of the
+# pyramid/surrogate fix plan): RelativeLinkageAwareSurrogate gains binary
+# "did coordinates i, j change together" interaction columns
+# (p3net.surrogates.relative_linkage_aware.py's include_interactions),
+# letting the shared linear model represent joint effects a purely
+# additive model cannot -- delta_hat_F(x, x') = w.onehot(x) - w.onehot(x')
+# is provably restricted to additive, no-interaction functions of the
+# genotype coordinates, in tension with linkage-guided crossover's own
+# premise that the variable groups it protects have a joint effect on
+# fitness (Results, "Diagnostics: surrogate representational capacity";
+# Conclusions).
+#
+# Otherwise identical to p3net.yaml, including the Phase 2 pyramid fix
+# (warm-start, hypervolume-contribution stall, RidgeCV) already wired in
+# by scripts/run_experiment.py::build_method for every "method: p3net"
+# config -- this is a single-axis test against that Phase-2-fixed
+# baseline, not a variant of the pre-fix pyramid.
+#
+# default_grid: false -- this is a design-choice ablation, not a twelfth
+# main-comparison arm (reporting.MAIN_COMPARISON_METHODS independently
+# guards the report against it regardless).
+#
+# Reference: chapters/v003/conclusions/main.tex (surrogate
+# representational capacity bullet); CHANGELOG.md.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  use_surrogate_interactions: true

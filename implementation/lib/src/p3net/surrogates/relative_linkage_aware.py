@@ -17,12 +17,36 @@ class NoLinkageTreeError(RuntimeError):
     context -- it cannot pair with NSGA-II, which has no linkage tree."""
 
 
-def _pair_features(x: Genotype, x_prime: Genotype, vocab: list[dict[Any, int]]) -> list[float]:
+def _pair_features(
+    x: Genotype, x_prime: Genotype, vocab: list[dict[Any, int]], *, include_interactions: bool = False
+) -> list[float]:
     """One-hot encoding of BOTH endpoints, concatenated -- captures the
     full directional transition. A same-coordinates-changed diff mask
     alone cannot distinguish x -> x' from x' -> x, which have opposite-sign
     deltas; encoding both endpoints' actual values fixes that."""
-    return one_hot(x, vocab) + one_hot(x_prime, vocab)
+    features = one_hot(x, vocab) + one_hot(x_prime, vocab)
+    if include_interactions:
+        features = features + _interaction_features(x, x_prime)
+    return features
+
+
+def _interaction_features(x: Genotype, x_prime: Genotype) -> list[float]:
+    """Binary "did coordinates i and j change together" indicator for
+    every unordered coordinate pair in the genotype (2026-08-18, Results
+    "Diagnostics: surrogate representational capacity") -- lets the
+    shared linear model learn a distinct joint-change coefficient instead
+    of only ever summing marginal per-coordinate effects, the
+    mathematical restriction a plain concatenated one-hot encoding
+    imposes. Naturally scoped to whichever linkage subset a given (x, x')
+    pair actually differs within: fit() only ever trains on pairs
+    restricted to a single subset (_matching_subset below), so a
+    coordinate pair {i, j} outside that subset can never show both i and
+    j changed at once for THIS pair -- no separate subset bookkeeping
+    needed here, and the feature vector's length stays fixed (n choose 2)
+    regardless of which subset the linkage tree currently proposes."""
+    n = len(x.values)
+    changed = [x.values[i] != x_prime.values[i] for i in range(n)]
+    return [1.0 if changed[i] and changed[j] else 0.0 for i in range(n) for j in range(i + 1, n)]
 
 
 def _matching_subset(
@@ -48,6 +72,13 @@ class RelativeLinkageAwareSurrogate:
     """
 
     model_factory: Callable[[], Any]
+    #: Single-axis ablation (2026-08-18, Phase 4 of the pyramid/surrogate
+    #: fix plan; configs/methods/p3net_surrogate_interactions.yaml):
+    #: whether to augment the plain concatenated one-hot encoding with
+    #: pairwise "changed together" interaction columns (_interaction_
+    #: features above). Default False keeps p3net.yaml's own behaviour
+    #: (and every already-published result) exactly unchanged.
+    include_interactions: bool = False
     _model: Any = field(default=None, init=False, repr=False)
     _vocab: list[dict[Any, int]] | None = field(default=None, init=False, repr=False)
     _fitted_subsets: set[frozenset[int]] = field(default_factory=set, init=False, repr=False)
@@ -84,7 +115,15 @@ class RelativeLinkageAwareSurrogate:
         for obs in observations:
             if obs.genotype not in encoded:
                 encoded[obs.genotype] = one_hot(obs.genotype, self._vocab)
-        X = [encoded[a.genotype] + encoded[b.genotype] for a, b in pairs]
+        X = [
+            encoded[a.genotype] + encoded[b.genotype]
+            + (
+                _interaction_features(a.genotype, b.genotype)
+                if self.include_interactions
+                else []
+            )
+            for a, b in pairs
+        ]
         y = [a.objectives[objective_index] - b.objectives[objective_index] for a, b in pairs]
         self._model = self.model_factory()
         self._model.fit(X, y)
@@ -97,4 +136,7 @@ class RelativeLinkageAwareSurrogate:
             )
         if subset not in self._fitted_subsets:
             raise ValueError("this surrogate instance was not fit against the given linkage subset")
-        return float(self._model.predict([_pair_features(x, x_prime, self._vocab)])[0])
+        features = _pair_features(
+            x, x_prime, self._vocab, include_interactions=self.include_interactions
+        )
+        return float(self._model.predict([features])[0])

@@ -7,9 +7,12 @@ import pytest
 from p3net.problem.objectives import (
     FidelityLadder,
     FidelityLevel,
+    crowding_distance,
     dominates,
     evaluate_with_noise,
+    fast_nondominated_sort,
     pareto_front,
+    select_survivors,
 )
 
 
@@ -80,3 +83,37 @@ def test_evaluate_with_noise_reduces_stochastic_repeats_via_median():
 def test_evaluate_with_noise_rejects_s_below_one():
     with pytest.raises(ValueError):
         evaluate_with_noise(lambda: 1.0, s=0)
+
+
+def test_fast_nondominated_sort_ranks_items_into_fronts():
+    # (4,4) is dominated by (3,3); everything else is mutually nondominated.
+    items = [(1.0, 5.0), (5.0, 1.0), (3.0, 3.0), (4.0, 4.0)]
+    fronts = fast_nondominated_sort(items, lambda x: x)
+    assert set(fronts[0]) == {(1.0, 5.0), (5.0, 1.0), (3.0, 3.0)}
+    assert fronts[1] == [(4.0, 4.0)]
+
+
+def test_crowding_distance_boundary_points_are_infinite():
+    front = [(1.0, 5.0), (3.0, 3.0), (5.0, 1.0)]
+    distances = crowding_distance(front, lambda x: x)
+    assert distances[0] == float("inf")  # extreme on objective 0 (and 1)
+    assert distances[2] == float("inf")  # extreme on objective 0 (and 1)
+    assert distances[1] < float("inf")  # interior point
+
+
+def test_select_survivors_keeps_a_nondominated_point_over_a_dominated_one_with_better_single_objective():
+    # `cheap` has the worst objective-0 value in the set but is Pareto-optimal
+    # (best objective-1 value); `dominated` is beaten in both objectives by
+    # `best`, but ranks second-best on objective 0 alone. A survivor selection
+    # that sorted by objective 0 alone would keep `dominated` over `cheap`;
+    # nondominated-sort + crowding distance must not.
+    best = (1.0, 9.0)
+    dominated = (1.5, 9.5)  # dominated by `best`
+    filler = (3.0, 7.0)
+    cheap = (10.0, 0.5)  # worst objective 0, best objective 1 -- nondominated
+
+    survivors = select_survivors([best, dominated, filler, cheap], lambda x: x, target_size=3)
+
+    assert len(survivors) == 3
+    assert cheap in survivors
+    assert dominated not in survivors

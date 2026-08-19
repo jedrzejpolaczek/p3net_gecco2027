@@ -1,5 +1,11 @@
 """P3 (Parameter-less Population Pyramid) search engine."""
 
+from p3net.search_engines.p3.canonical_pyramid import (
+    CanonicalPyramid,
+    CanonicalPyramidLevel,
+    climb,
+    first_improvement_hill_climber,
+)
 from p3net.search_engines.p3.linkage_tree import LinkageNode, build_linkage_tree, linkage_subsets
 from p3net.search_engines.p3.optimal_mixing import Proposal, SweepState, propose_modification
 from p3net.search_engines.p3.pyramid import Pyramid, PyramidLevel
@@ -13,4 +19,8 @@ __all__ = [
     "propose_modification",
     "Pyramid",
     "PyramidLevel",
+    "CanonicalPyramid",
+    "CanonicalPyramidLevel",
+    "climb",
+    "first_improvement_hill_climber",
 ]

@@ -1,0 +1,13 @@
+# Tree-structured Parzen Estimator (TPE) sanity baseline.
+#
+# Real: wraps optuna.samplers.TPESampler via optuna's ask/tell API
+# (methods/external/tpe.py). Same discretised joint genotype encoding as
+# every other arm. n_objectives is not set here since it depends on the
+# search space (2 for both benchmarks currently); left to
+# tpe_method's default.
+#
+# Reference: chapters/v003/results/main.tex ("Baselines" -- sanity
+# baselines).
+
+method: tpe
+params: {}

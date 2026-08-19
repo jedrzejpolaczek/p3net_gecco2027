@@ -11,6 +11,7 @@ caller chose. This module performs no discretisation itself.
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 from sklearn.metrics import normalized_mutual_info_score
@@ -37,10 +38,24 @@ def _pairwise_normalized_mutual_information(
 ) -> list[list[float]]:
     columns = [[g.values[i] for g in population] for i in range(n)]
     mi = [[0.0] * n for _ in range(n)]
-    for i in range(n):
-        for j in range(i + 1, n):
-            score = normalized_mutual_info_score(columns[i], columns[j])
-            mi[i][j] = mi[j][i] = score
+    # sklearn's normalized_mutual_info_score warns whenever a column's
+    # values don't look like small-integer cluster labels -- expected and
+    # harmless here: genotype columns are discretised (this module's own
+    # docstring requires it), but the discretised values themselves are
+    # still floats/strings, not relabelled integers, which is all the
+    # warning is actually detecting. Suppressed narrowly (this exact
+    # message, this exact call site) rather than globally, so an
+    # unrelated warning elsewhere still surfaces normally.
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="Clustering metrics expects discrete values",
+            category=UserWarning,
+        )
+        for i in range(n):
+            for j in range(i + 1, n):
+                score = normalized_mutual_info_score(columns[i], columns[j])
+                mi[i][j] = mi[j][i] = score
     return mi
 
 

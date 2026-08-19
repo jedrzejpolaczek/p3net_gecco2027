@@ -1,0 +1,18 @@
+# JAHS-Bench-201 search-space config, Fashion-MNIST dataset variant
+# (secondary robustness check, added 2026-08-16 -- see
+# jahs_bench_201_colorectal.yaml's header for the full rationale, shared
+# verbatim by this file).
+#
+# Fashion-MNIST is grayscale (1 channel vs. cifar10's 3) and a different
+# object category (clothing items vs. natural photos), the third and last
+# of substrates.jahs_bench_201.JAHS_DATASETS.
+#
+# Reference: chapters/v003/results/main.tex ("Benchmark and search space").
+
+search_space: nas_genotype
+substrate: jahs_bench_201
+dataset: fashion_mnist  # one of substrates.jahs_bench_201.JAHS_DATASETS
+
+fidelity:
+  epochs: 200
+  resolution: 1.0

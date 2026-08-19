@@ -1,0 +1,24 @@
+# JAHS-Bench-201 search-space config, Colorectal Histology dataset variant
+# (secondary robustness check, added 2026-08-16 -- mitigates the
+# single-dataset limitation the R30_budgets-50-100-200-350_2026-08-16
+# grid carries, since NAS-HPO-Bench-II offers no dataset choice at all and
+# the original jahs_bench_201.yaml pinned cifar10 with no recorded
+# rationale for excluding this or fashion_mnist).
+#
+# Everything else identical to jahs_bench_201.yaml (same genotype, same
+# fidelity settings) -- only `dataset` differs. Medical tissue imagery, a
+# meaningfully different visual domain from cifar10's natural photos, while
+# staying within the same cell-based architecture search space and small
+# (32x32) image scale -- this checks robustness across JAHS-Bench-201's own
+# built-in dataset family, not generalisation beyond it (Section
+# "Limitations" distinguishes the two).
+#
+# Reference: chapters/v003/results/main.tex ("Benchmark and search space").
+
+search_space: nas_genotype
+substrate: jahs_bench_201
+dataset: colorectal_histology  # one of substrates.jahs_bench_201.JAHS_DATASETS
+
+fidelity:
+  epochs: 200
+  resolution: 1.0

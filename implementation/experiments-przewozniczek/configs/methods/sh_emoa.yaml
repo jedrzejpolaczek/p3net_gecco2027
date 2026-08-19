@@ -1,0 +1,21 @@
+# SH-EMOA baseline: real (mu+lambda) EMOA implementation
+# (methods/sh_emoa.py) -- uniform mutation/crossover, tournament parent
+# selection, hypervolume-contribution survivor selection. Not a wrapper:
+# no published SH-EMOA package exists (verified against
+# automl/multi-obj-baselines, the paper's own reference code, which is
+# self-contained and does not use pymoo).
+#
+# Known gap: only the (mu+lambda) EMOA half is implemented. The
+# successive-halving / multi-fidelity budget-escalation half needs this
+# project's harness to support querying substrates at fidelities below
+# r_K, which it does not yet.
+#
+# Reference: chapters/v003/related_work/main.tex ("A systematic comparison
+# of solvers on this setting...").
+
+method: sh_emoa
+params:
+  population_size: 20
+  mutation_rate: 0.2
+  crossover_probability: 0.5
+  tournament_size: 3

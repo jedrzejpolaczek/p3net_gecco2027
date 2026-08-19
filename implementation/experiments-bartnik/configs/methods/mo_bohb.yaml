@@ -1,0 +1,22 @@
+# MO-BOHB baseline (Multi-Objective Bayesian Optimization Hyperband).
+#
+# Real, but a documented adaptation, not a faithful reproduction --
+# guerreroviu2021bagofbaselines's own MO-BOHB depends on a custom,
+# unpublished fork of hpbandster; this wraps the REAL, pip-installed
+# hpbandster.optimizers.config_generators.bohb.BOHB (fundamentally
+# single-objective) with random-weight Tchebycheff scalarisation to
+# reduce (f1, f2) to the one loss it needs. See
+# methods/external/mo_bohb.py's module docstring for the full reasoning.
+#
+# Fidelity-ladder usage, now resolved (was an open decision): this arm
+# always queries at r_K (budget fixed to 1.0) -- the real config
+# generator IS budget-aware, but this project's harness only supports
+# single-fidelity full evaluations, the same limitation already
+# documented for methods/sh_emoa.py's missing successive-halving half.
+#
+# Reference: chapters/v003/related_work/main.tex;
+# chapters/v003/problem_formulation/main.tex ("Multi fidelity
+# evaluation").
+
+method: mo_bohb
+params: {}
