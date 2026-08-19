@@ -35,6 +35,7 @@ from methods import (
     NSGANetV2,
     P3Absolute,
     P3Alone,
+    PrzewozniczekP3ELyMPuS,
     RandomSearch,
     mo_bohb_method,
     tpe_method,
@@ -196,6 +197,10 @@ def build_method(
         return tpe_method(search_space, validity, cache=cache, seed=seed, **params)
     if kind == "mo_bohb":
         return mo_bohb_method(search_space, validity, rng, cache=cache, seed=seed, **params)
+    if kind == "przewozniczek_p3elympus":
+        return PrzewozniczekP3ELyMPuS(
+            search_space=search_space, validity=validity, rng=rng, cache=cache, **params
+        )
     raise NotImplementedError(
         f"method {kind!r} is not runnable yet (configs/methods/{kind}.yaml is a "
         f"documented placeholder -- see its 'not_yet_implemented' note)"

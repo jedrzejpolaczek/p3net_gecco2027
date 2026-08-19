@@ -56,6 +56,7 @@ def test_run_single_p3net_respects_budget(fake_search_space_config):
         "sh_emoa",
         "mo_bohb",
         "tpe",
+        "przewozniczek_p3elympus",
     ],
 )
 def test_run_single_every_wired_method_completes(fake_search_space_config, kind):

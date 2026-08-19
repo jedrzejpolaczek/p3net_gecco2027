@@ -13,6 +13,67 @@ directory junctions back to the original so the NATS-Bench archive and vendored 
 disk; `results/` starts empty). Everything above this section is inherited history from that fork point;
 everything below is specific to this package (notes/plans/experiments-przewozniczek-plan.md).
 
+### Added (P3-eLyMPuS isolation experiment -- Fazy 0-4 of notes/plans/experiments-przewozniczek-plan.md, 2026-08-19)
+
+Direct diagnostic test of hypotheses (i)-(ii) from `conclusions/main.tex` ("Why the results are what they
+are"), the counterpart to the sibling `experiments-bartnik` package's own isolation experiment: reconstructs
+and, where the source paper leaves a genuine gap, generalises Przewoźniczek et al.'s eLyMPuS/OLyMPuS
+(`przewozniczek2026lympus`) -- never previously tested on NAS or on any non-binary domain -- run inside this
+harness against the SAME baseline set `p3net` itself is compared against, plus `p3net` as a direct
+engine-vs-engine reference point.
+
+**Faza 0 (literature check, done before any code)**: no published generalisation of eLyMPuS's binary
+partial-comparison mechanism / non-monotonicity check to k-ary categorical domains exists (WebSearch,
+cross-checked against `notes/design_space_mechanisms.md` and `notes/ga_landscape_2026.md`); the source paper's
+own Conclusions name this generalisation as unfinished future work. The closest methodological precedent
+(Munetomo's LINC-R, generalising the structurally analogous "flip has no single meaning" problem for
+continuous variables) supports Candidate B (rank/compare-against-current) over Candidate A
+(directed-transition, O(k^2)). Full writeup: `notes/lympus-nas-adaptation-literature.md`.
+
+**Faza 1-2 (design + synthetic validation, library)**: `p3net.surrogates.elympus.ELyMPuS` (Candidate B,
+pairwise comparison against the current value, k-1 comparisons per variable) and
+`p3net.problem.synthetic_kary.k_ary_trap_fitness` (k-ary generalisation of the source paper's `bim_ell`, known
+ground-truth dependency structure). Validated on 3 checks before any NAS-facing code: (1) correctness when
+`eG=G`, 0/2000 mismatches; (2) guaranteed missing-dependency discovery, 16/16 sound, but the complexity bound
+does not survive the generalisation unchanged (mean 9.0 vs. the binary bound of 8 at n=16 -- an honest,
+documented gap, not hidden); (3) real evaluation savings, 11-13% across scales, smaller than the source
+paper's own binary results (attributed to a stricter, TDD-corrected caching scheme -- only pairwise
+comparisons are cacheable across genotypes, not absolute fitness, a real bug caught and fixed during TDD, see
+`notes/lympus-nas-adaptation-validation.md`). Go decision, with all three caveats carried forward explicitly.
+13 new tests, `lib/tests/test_elympus.py` + `lib/tests/test_synthetic_kary.py`.
+
+**Faza 3 (library)**: `p3net.search_engines.p3.fihc_elympus` -- First-Improvement Hill Climber (same Algorithm
+4 shape as `canonical_pyramid.first_improvement_hill_climber`) driven by `ELyMPuS.partial_comparison` instead
+of direct fitness calls; composes with `canonical_pyramid.climb` via its existing `hill_climber` parameter
+(GOM sweeps and promotion checks unchanged, still driven by `climb`'s own `fitness_fn`). P3-eLyMPuS only
+(source paper's Table 5: second-best of six compared optimisers) -- not full OLyMPuS (plan's Faza 5: no
+PXrLL, no ILS-like perturbation, no circuit-based missing-linkage detection).
+
+**Faza 4**: `methods/przewozniczek_p3elympus.py::PrzewozniczekP3ELyMPuS` -- structurally mirrors the sibling
+`experiments-bartnik` package's `BartnikP3` (same `CanonicalPyramid`, same lambda-quantile acceptance gate,
+same ell-random warm-up), swapping the local-search step for FIHC-eLyMPuS. Documented architectural
+consequence, stated plainly in the module's own docstring: this harness's `Method` protocol gives no method
+direct substrate access, so -- exactly like `BartnikP3` -- both `climb`'s GOM/promotion loop and `ELyMPuS`'s
+own internal fitness calls are driven by an `AbsoluteRandomForestSurrogate` fit on real history, not the real
+substrate. This means the FFE savings Faza 2 measured for eLyMPuS translate, within this integration, into
+savings on *surrogate-predict* calls during a climb, not real NATS-Bench queries -- those only ever happen
+once per `propose()` call, on the single gated final candidate. Flagged explicitly rather than letting the
+source paper's "cheap comparisons instead of expensive evaluations" framing imply something this integration
+doesn't deliver. `configs/methods/przewozniczek_p3elympus.yaml` (`default_grid: false`); wired into
+`scripts/run_experiment.py::build_method`'s if-chain and its `parametrize`d wiring test
+(`tests/test_run_experiment.py`); new `scripts/run_przewozniczek_isolation.py`, mirroring
+`run_bartnik_isolation.py`'s smoke test -> full grid -> Wilcoxon+Holm+Cliff's-delta pipeline, scoped to
+`przewozniczek_p3elympus` vs. the nine-method baseline set above, R=30 seeds x {100, 350} budgets on
+`nas_bench_201`. 9 new tests, `tests/test_przewozniczek_p3elympus.py`.
+
+**Verification**: `uv run pytest` green in both `implementation/lib` (155 passed) and
+`implementation/experiments-przewozniczek` (239 passed, 2 skipped -- the usual opt-in-only live-JAHS-Bench-201
+skips, unrelated to this change) after this change.
+
+**Not run by this change (manual, per this project's own established convention)**: the full grid --
+`uv run python scripts/run_przewozniczek_isolation.py` from `implementation/experiments-przewozniczek` -- R=30
+seeds x {100, 350} budgets x 10 methods = 600 real NATS-Bench queries.
+
 ### Added (architecture-only NAS-Bench-201 isolation experiment -- Fazy 0-3 of glimmering-swimming-book.md, 2026-08-18)
 
 Built to directly test one hypothesis raised in `conclusions/main.tex` ("Why the results are what they
