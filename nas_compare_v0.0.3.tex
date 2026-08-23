@@ -15,6 +15,13 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
 
+% Reviewer request: no automatic word hyphenation at line breaks -- wrap
+% whole words instead, even at the cost of a more ragged right margin in
+% ACM's narrow two-column measure. `none` disables TeX's hyphenation
+% algorithm outright (distinct from \sloppy, which only relaxes
+% interword spacing and would still hyphenate).
+\usepackage[none]{hyphenat}
+
 % TODO before camera-ready: fill in the real conference dates/location and,
 % once assigned, the ISBN/DOI/price via \acmISBN{}/\acmDOI{}/\acmPrice{}.
 \acmConference[GECCO '27]{Genetic and Evolutionary Computation Conference}{2027}{TBD}

@@ -82,7 +82,7 @@ After collecting $t$ full evaluations we have the observation dataset
 \[
     \mathcal{H}_t = \bigl\{ (x^{(i)},\, \mathbf{f}(x^{(i)})) \bigr\}_{i=1}^{t}.
 \]
-Rather than regressing $f_1$ directly from an encoded genotype, as in NSGANetV2, the surrogate used by
+Rather than regressing $f_1$ directly from an encoded genotype, as in NSGANetV2~\citep{lu2020nsganetv2}, the surrogate used by
 P3Net is \emph{relative} and \emph{linkage aware}: for a parent $x \in \Lambda^*$ and a candidate $x'$
 differing from $x$ only on the coordinates of a linkage subset $F \subseteq [n]$ identified by the current
 dependency model (i.e.\ $x'_i = x_i$ for all $i \notin F$), the surrogate predicts the effect of that local
@@ -94,7 +94,7 @@ change relative to the parent,
 \]
 trained on pairwise fitness differences derived from $\mathcal{H}_t$.
 The primary cost of search is measured in calls to $f_1$ (full evaluations), not in calls to $\hat{\delta}_F$.
-This is what distinguishes P3Net from NSGANetV2 already at the level of problem formulation: P3Net scores
+This is what distinguishes P3Net from NSGANetV2~\citep{lu2020nsganetv2} already at the level of problem formulation: P3Net scores
 candidates relative to their parent using the structure discovered by P3, whereas NSGANetV2 scores each
 candidate in absolute terms from its encoding alone.
 The construction and update of $\hat{\delta}_F$, and its use within the P3Net search loop, are described in

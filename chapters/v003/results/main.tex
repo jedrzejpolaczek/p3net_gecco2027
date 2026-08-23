@@ -142,8 +142,11 @@ between predicted and true values as a function of $|\mathcal{H}_t|$.
 \paragraph{Statistical plan.} The comparison set is P3Net against each of the other ten arms (Baselines,
 above, including the two P3-alone population-size variants), per benchmark and per budget tier, not every
 pairwise combination among all arms. Paired Wilcoxon
-signed rank tests are run per comparison in this set, with Holm--Bonferroni correction applied across it,
-and an effect size (e.g.\ Cliff's delta) reported alongside every corrected $p$ value. This is stricter than the uncorrected comparisons in the closest prior
+signed rank tests are run per comparison in this set, with Holm--Bonferroni correction (a standard
+adjustment that tightens the significance threshold as more comparisons are run in parallel, so it stays
+trustworthy across all of them at once) applied across it, and an effect size (e.g.\ Cliff's delta, the
+probability that a random draw from one group beats a random draw from the other, minus the reverse
+probability) reported alongside every corrected $p$ value. This is stricter than the uncorrected comparisons in the closest prior
 work~\citep{bartnik2026evolutionary}, which report no effect size, and the difference is treated as a
 deliberate methodological improvement, not an oversight to reconcile.
 
@@ -230,8 +233,9 @@ matching-pair counts directly, left as the natural next step.
 
 This failure mode -- a point-estimate surrogate trusted without regard to its own reliability -- has an
 established remedy in the surrogate-assisted evolutionary computation literature: coupling model management
-with explicit uncertainty (MSE/EI/LCB/PoI-style infill criteria over models that report their own
-confidence) and trust-region or local-model restriction to avoid extrapolating far from training
+with explicit uncertainty -- infill criteria such as Expected Improvement or Lower Confidence Bound, which
+weigh a candidate's predicted value against how much the model trusts that prediction, rather than the point
+estimate alone -- and trust-region or local-model restriction to avoid extrapolating far from training
 data~\citep{jin2011surrogate}. The closest already-cited prior work facing the same class of problem,
 CS-GOMEA, addresses it by moving to a strictly more expressive model (a CNN, also trained on pairwise
 fitness differences, for the same evaluation-efficiency reason as $\hat\delta_F$) rather than regularising a
@@ -292,7 +296,8 @@ shading -- are real.
     \label{fig:convergence-nashpo-350}
 \end{figure}
 
-\paragraph{Pareto front and hypervolume comparisons.} Figures~\ref{fig:pareto-p3net-jahs-350}
+\paragraph{Pareto front and hypervolume comparisons.} One of those hidden gaps is the shape of the trade-off
+surface itself, which a single convergence curve cannot show at all. Figures~\ref{fig:pareto-p3net-jahs-350}
 and~\ref{fig:pareto-p3alone-jahs-350} show the Pareto front recovered by P3Net and by the surrogate-free
 P3-alone ablation, respectively, at 25/50/75/100\% of budget on JAHS-Bench-201 (CIFAR-10), budget 350 (axes
 are independently auto-scaled per plot, so absolute extents are not directly comparable at a glance). Both
@@ -774,7 +779,7 @@ external baselines' red cells increasingly are.
     \end{tabular}
 \end{table}
 
-\paragraph{Design decisions: a P3Net ablation round.} Five further design points left open by
+\paragraph{Design decisions: a P3Net ablation round.} Beyond the headline comparison above, five further design points left open by
 Section~\ref{sec:proposed-optimizer} -- whether to compute $f_2$ fresh via the substrate's analytic cost
 hook rather than inherit it from the ancestor, whether every pyramid level should stay live and sweep
 simultaneously (cascade) rather than only the newest, whether population truncation should use nondominated
@@ -841,7 +846,7 @@ correlation (Spearman, predicted vs.\ true $\delta$) is modestly positive everyw
 median across cells) but does not track the per-dataset outcome ranking (Fixed-budget summary, above):
 NAS-HPO-Bench-II has the \emph{highest} rank correlation of the four search spaces ($0.29$--$0.41$) despite
 the worst fixed-budget outcome, echoing the acceptance-gate-precision investigation's own conclusion that
-aggregate surrogate-quality metrics do not explain the per-dataset pattern (Design decisions, below).
+aggregate surrogate-quality metrics do not explain the per-dataset pattern (Design decisions, above).
 Separately, pooling this same completed sweep's diagnostics shows the mixing-driven (surrogate-guided)
 share of the budget is itself essentially invariant to $\kappa$ and threshold -- $6.0$--$7.1\%$ median at
 budget~350 in every one of the 12--16 cells per search space, matching the headline \texttt{p3net} arm's own
@@ -1050,11 +1055,11 @@ This also bears on how $\hat{\delta}_F$ compares to the two search-time, linkage
 positioned against in Related Work. Bartnik's absolute regressor is deliberately not restricted to a linear
 model: it is fit as one of several nonlinear-capable families (SVR, MLP, random forest, or gradient
 boosting)~\citep{bartnik2026evolutionary}, so an interaction between two genotype coordinates is
-representable there regardless of whether her linkage mechanism routes it explicitly. eLyMPuS does not face
+representable there regardless of whether her linkage mechanism routes it explicitly. eLyMPuS~\citep{przewozniczek2026lympus} does not face
 this specific failure mode either, but for a different, more structural reason: it is not a regression over
 a concatenated encoding at all, but a discrete better/worse/ambiguous comparison tied directly to its own
 recursive linkage discovery, under a monotonicity assumption P3Net's own adaptation explicitly declines to
-import (Related Work)~\citep{przewozniczek2026lympus}. $\hat{\delta}_F$'s specific combination -- linear, and
+import (Related Work). $\hat{\delta}_F$'s specific combination -- linear, and
 fit over the flat concatenated encoding rather than routed through the linkage tree's own subset structure
 -- is accordingly closer to what CS-GOMEA's authors already flag as an open problem in their own,
 differently-shaped surrogate: a model that does not exploit linkage tree information in its own
