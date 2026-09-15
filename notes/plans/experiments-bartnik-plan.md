@@ -49,11 +49,14 @@ wariant**, nie cała siatka:
   Uzasadnienie wyboru RF nad SVR/MLP/GBoost: brak strojenia kernela (SVR), brak niestabilności między
   przebiegami (MLP, udokumentowana w jej pracy jako problem), prostszy niż GBoost + quantile-loss dla wariantu
   probabilistycznego, gdyby był dodany później.
-- **Bramka akceptacji**: Pareto-dominance nad absolutnymi wartościami (nie relatywny $\hat\delta_F$) — zgodnie
-  z Algorithm 8 Dushatskiego, uproszczona do reguły "nie gorszy" (`Compare`), tak jak już robi istniejący
-  `P3Absolute` w tym projekcie (można podejrzeć jego strukturę `propose`/`update` jako wzorzec integracji z
-  resztą harnessu — ale **nie** jego silnik populacji, bo `P3Absolute` używa batch `Pyramid`, dokładnie tego,
-  co chcemy zastąpić).
+- **Bramka akceptacji**: $\lambda$-quantile próg na relatywnym $\hat\delta_F$ (przewidywana poprawa f1 nad
+  najlepszym realnym f1), zgodnie z Algorithm 7/8 Dushatskiego — **nie** Pareto-dominance nad wartościami
+  absolutnymi. (Ten punkt był tu wcześniej błędnie opisany jako "Pareto-dominance nad absolutnymi wartościami
+  (nie relatywny $\hat\delta_F$)" — sprzeczne z tym, co Faza 3 poniżej faktycznie specyfikuje i co
+  `bartnik_p3.py` implementuje; ta wersja jest poprawiona, żeby dokument nie zaprzeczał sam sobie. Wzorzec
+  `propose`/`update` z istniejącego `P3Absolute` w tym projekcie nadal jest użyteczny jako punkt odniesienia
+  integracji z harnessem — ale **nie** jego silnik populacji, bo `P3Absolute` używa batch `Pyramid`, dokładnie
+  tego, co chcemy zastąpić, ani jego bramka Pareto-dominance, bo to inny mechanizm akceptacji niż tu opisany.)
 
 **Explicit v1 scope**: MO-DSA-P3-GOMEA-class, deterministyczny, per-objective RF, bez online surrogate
 selection, bez probabilistycznej bramki. Online selection / probabilistyczna wersja = jawnie poza zakresem v1
