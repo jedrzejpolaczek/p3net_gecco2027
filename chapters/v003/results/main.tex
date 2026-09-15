@@ -1,1103 +1,206 @@
-\section{Results}
+\section{Experiments}
 \label{sec:results}
 
-This section reports surrogate quality, convergence under fixed evaluation budgets, Pareto front and
-hypervolume comparisons, and a fixed-budget summary table (median, IQR, corrected $p$~values, effect sizes),
-in that order. The experimental setup and protocol are detailed first.
+\subsection{Setup}
 
-\subsection*{Experimental Setup}
+\paragraph{Benchmarks.} JAHS-Bench-201~\citep{bansal2022jahsbench} on all three of its built-in datasets
+(CIFAR-10, Colorectal-Histology, Fashion-MNIST), and NAS-HPO-Bench-II~\citep{hirose2021nashpobenchii} within its
+exhaustively tabulated 12-epoch range. The three JAHS-Bench-201 datasets test robustness within one benchmark
+family, not generalisation beyond it.
 
-The protocol must not allow P3Net to be read as ``P3 plus Pareto filtering.'' It states explicitly which
-selection mechanics NSGA-II contributes to the baseline, what P3 replaces (the variation operator and the
-proposal distribution), and, separately from the choice of search engine, which surrogate variant is used
-(linkage aware $\hat{\delta}_F$ vs.\ an absolute regressor), so that gains can be attributed to the correct
-component rather than conflated.
-
-\paragraph{Benchmark and search space.} P3Net targets the joint architecture and hyperparameter search
-setting rather than an architecture only space. Rather than resolving the Category~1 vs.\ Category~2
-question by picking a single benchmark, both are reported side by side, deliberately. The primary
-benchmark is JAHS-Bench-201~\citep{bansal2022jahsbench}, a surrogate benchmark over a joint search space of
-ten dimensions (six categorical architecture edges plus four hyperparameters, including continuous learning
-rate and weight decay), fourteen when JAHS-Bench-201's four additional fidelity dimensions are counted
-alongside it, per the source's own ``14-dimensional search and fidelity space'' figure. It queries a learned
-surrogate over its full mixed categorical/continuous search space without live training, so no enumerable
-oracle front exists (see Metrics, below). Unlike the initial grid, which evaluated only JAHS-Bench-201's
-CIFAR-10 default with no recorded reason to prefer it over the benchmark's other two built-in datasets, the
-grid reported here runs the full comparison across all three of JAHS-Bench-201's own datasets: CIFAR-10 (the
-primary dataset, natural photographs), Colorectal-Histology (medical tissue imagery, a meaningfully
-different visual domain at the same $32\times32$ scale), and Fashion-MNIST (grayscale, clothing categories).
-This checks robustness across JAHS-Bench-201's own built-in dataset family -- the same shared cell-based
-architecture search space and small image scale throughout -- not generalisation beyond that family (see
-Limitations, Conclusions).
-NAS-HPO-Bench-II~\citep{hirose2021nashpobenchii}, a fixed grid lookup table over combinations of
-architecture and hyperparameters, is reported alongside it as the Category~1 counterpart: within its exhaustively tabulated range (up to 12 training epochs; Section~\ref{sec:related-work} confirms $r_K$ is fixed at this level, not the benchmark's separate 200-epoch surrogate extrapolation), an
-exact oracle front is enumerable, enabling the Inverted Generational Distance plus (IGD+) on this benchmark specifically. Any result that holds on
-NAS-HPO-Bench-II and consistently across all three JAHS-Bench-201 datasets is reported as the primary
-finding; a result confined to one JAHS-Bench-201 dataset, or that appears only on the surrogate-benchmark
-family and not on NAS-HPO-Bench-II's measured data, is reported as specific to that setting and not over
-generalised.
-
-\paragraph{Baselines.} NSGANetV2 (NSGA-II with an absolute regressor surrogate) as the primary baseline;
-NSGA-Net (NSGA-II with no surrogate, every candidate fully evaluated) as the engine-only ablation on the
-NSGA-II side, symmetric to the P3-only ablation below; P3 alone, without any surrogate, as the engine-only
-ablation on the P3 side; P3 with an absolute regressor surrogate (in the style of NSGANetV2) as an ablation
-isolating only the surrogate, separating the contribution of the linkage aware design from the contribution
-of the P3 engine itself; SH-EMOA (a multi objective evolutionary algorithm built on SMS-EMOA) and
-Multi-Objective Bayesian Optimization Hyperband (MO-BOHB), the baselines established for this exact joint
-setting on these same two benchmarks~\citep{guerreroviu2021bagofbaselines}, included because, unlike
-NSGANetV2, they were never imported from an architecture only setting and require no such extension; random
-search and the Tree-structured Parzen Estimator (TPE) as sanity baselines.
-This grid separates the engine and surrogate contributions as far as the design permits, not as a full
-orthogonal factorial: the relative, linkage aware surrogate $\hat{\delta}_F$ is defined only given a linkage
-tree, so an NSGA-II-plus-relative-surrogate cell is not constructible, and any gap attributed to ``the
-surrogate'' via the P3-only vs.\ P3Net comparison should be read against this asymmetry.
+\paragraph{Arms.} Table~\ref{tab:ablation-grid} organises the engine and surrogate ablations. NSGANetV2 is the
+primary baseline; NSGA-Net and P3-alone are the surrogate-free versions of each engine; P3+abs.\ regressor
+isolates the surrogate on P3Net's own engine. P3-alone originally used a population of 10 against 20 for every
+other population-based arm, so two further arms, P3-alone-pop20 and P3-alone-pop40, remove that confound. Outside
+the grid we compare against SH-EMOA~\citep{beume2007smsemoa} and MO-BOHB~\citep{falkner2018bohb}, established for
+this joint setting~\citep{guerreroviu2021bagofbaselines}, and against TPE~\citep{bergstra2011tpe} and uniform
+random search. The relative surrogate is defined only given a linkage tree, so an NSGA-II-plus-relative cell
+cannot be built; the grid separates engine and surrogate as far as that permits. The surrogate ablation is
+also not purely a change of formulation: P3Net's $\hat\delta_F$ uses ridge regression, while P3+abs.\ regressor
+and NSGANetV2 use unregularised linear regression.
 
 \begin{table}[t]
     \centering
-    \caption{The eight core baselines/ablations (Baselines, above), organised by search engine and surrogate
-    type. The NSGA-II/relative cell is not constructible, since $\hat{\delta}_F$ is defined only given a
-    linkage tree. Four further baselines, namely SH-EMOA, MO-BOHB,
-    random search, and TPE, sit outside this grid entirely and are not engine/surrogate ablations, and two
-    population-size variants of the P3-alone cell (below) add a tenth and eleventh arm.}
+    \caption{Engine/surrogate ablation grid. The NSGA-II/relative cell is not constructible. SH-EMOA, MO-BOHB,
+    TPE, random search, and the two P3-alone population variants complete the eleven arms.}
     \label{tab:ablation-grid}
     \begin{tabular}{@{}lccc@{}}
         \toprule
-         & \textbf{No surrogate} & \textbf{Absolute regressor} & \textbf{Relative} $\hat{\delta}_F$ \\
+         & \textbf{None} & \textbf{Absolute} & \textbf{Relative} $\hat{\delta}_F$ \\
         \midrule
         \textbf{NSGA-II} & NSGA-Net & NSGANetV2 & --- \\
-        \textbf{P3}      & P3 alone & P3 + absolute & P3Net (ours) \\
+        \textbf{P3}      & P3-alone & P3+abs.\ regressor & P3Net \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Without a surrogate, P3 alone follows the canonical optimal-mixing acceptance rule: every proposed
-modification within a sweep is gated by a \emph{real} evaluation of $f_1$, exactly as step~3 of the P3Net
-loop (Section~\ref{sec:proposed-optimizer}) would be if $\hat{\delta}_F$ were replaced by $f_1$ itself, and as in the original
-P3 algorithm's own hill-climbing and cross-level mixing steps~\citep{goldman2014parameterless}. Under the
-$\{50,\, 100,\, 200,\, 350\}$-evaluation budgets used here (Budgets, below), this is expected to exhaust most or
-all of the budget within a small number of sweeps: for a joint genotype with dozens of linkage subsets, a
-single parent's full sweep alone can approach the smallest tier. This is not a flaw in the ablation but its
-point: if P3 alone collapses under this budget, that result directly motivates pairing P3 with a cheap
-surrogate in the first place, which is what the central question (Section~\ref{sec:introduction}) actually compares. We
-report the number of full sweeps completed within budget for this ablation specifically, alongside its
-hypervolume, so a weak result reads as budget starvation rather than as a failure of the search engine
-itself.
+\paragraph{Fairness controls.} All arms share the genotype encoding, discretised hyperparameter grid, decoder,
+validity check, full-evaluation budget, seed list, and deduplication cache. Discretising $\Theta$ equalises
+resolution but is not neutral: it removes the real-valued crossover a native NSGANetV2 extension would use while
+costing P3 nothing. A control arm running NSGANetV2 on continuous $\Theta$ was not completed, so this asymmetry is
+acknowledged but not bounded. Budgets count full evaluations only; the surrogate arms additionally spend
+wall-clock time on refitting and, for the P3 engine, on rebuilding the linkage tree, which we do not equalise.
 
-P3-alone's own population size (10) is smaller than every other arm in the grid (NSGA-Net, NSGANetV2,
-SH-EMOA, and P3+absolute-regressor all use 20), an unexamined confound between ``no surrogate'' and
-``smaller population.'' Two further arms isolate it: P3-alone-pop20 (population size 20, matching every
-other baseline exactly) and P3-alone-pop40 (population size 40, double). Both are the same P3-alone class
-and acceptance rule, differing only in this one parameter, and both are compared against P3Net using the
-same statistical plan as every other arm (below).
+\paragraph{Budgets and seeds.} Four tiers of $\{50, 100, 200, 350\}$ full evaluations. The second matches
+JAHS-Bench-201's suggested protocol of about 100 evaluations~\citep{bansal2022jahsbench}; the largest matches the
+full-evaluation count NSGANetV2 reports~\citep{lu2020nsganetv2}. All tiers are below NAS-HPO-Bench-II's
+500-trial convention, deliberately, since the question concerns a limited budget. $R=30$ independent runs per
+arm, per cell, with a fixed published seed list.
 
-\paragraph{Surrogate error accumulation ($\kappa$ and acceptance threshold).} The main comparison above
-fixes $\kappa$ at its default value, eLyMPuS's own $2\lceil\log_2(n)\rceil$-step bound (Section~\ref{sec:proposed-optimizer}),
-and the step-3 acceptance rule at its default zero threshold ($\hat{\delta}_F \geq 0$). Both are swept
-jointly in the sensitivity analysis: $\kappa$ over a small grid (e.g.\ $\{1,\, \lceil\log_2(n)\rceil,\,
-2\lceil\log_2(n)\rceil,\, \infty\}$), and the acceptance threshold over a small margin grid (e.g.\ $\{0,\,
-\epsilon,\, 2\epsilon\}$ for a fixed $\epsilon > 0$), with P3Net otherwise unchanged, reporting fixed budget
-hypervolume and surrogate rank correlation as a function of both.
+\paragraph{Metrics.} On NAS-HPO-Bench-II we enumerate all 196608 configurations, of which 188496 are valid,
+and obtain the exact oracle Pareto front (25 points). We report IGD+ against it, with both objectives normalised
+to the oracle front's range; across that front the training-time objective spans 18.53 times the range of the
+error objective, so without normalisation it would dominate the distance. JAHS-Bench-201 admits no enumerable front, so we report hypervolume relative to a
+best-known front: the nondominated set of every point evaluated by any arm, any budget, and any seed, pooled per
+dataset. That front is computed once, persisted, and reused for every table, so adding an arm cannot retroactively
+change the denominator of existing results.
 
-\paragraph{Fairness controls.} Identical genotype encoding, decoding function $D$, validity handling,
-full evaluation budget, seed policy, stopping rule, and deduplication cache (Section~\ref{sec:proposed-optimizer}) across all
-compared methods, so that no method's apparent efficiency benefits from infrastructure the others lack. In
-particular, the discretisation of continuous hyperparameter coordinates (Section~\ref{sec:proposed-optimizer}) is applied
-identically to every baseline: NSGA-II/NSGANetV2 search the same discretised $\Theta$ as P3Net rather than
-the unconstrained real-valued encoding a joint-setting extension of NSGA-II/NSGANetV2 would otherwise use,
-so that any gain is attributable to the search engine and surrogate rather than to a difference in genotype
-resolution. This equalises resolution but is not necessarily neutral: discretisation removes the real-valued
-crossover on $\Theta$ that such an extension would otherwise use, while costing P3 nothing, since P3 operates
-on a categorical genotype regardless. A control baseline to bound this asymmetry empirically -- NSGANetV2 in
-its native, unconstrained real-valued encoding of $\Theta$ -- was planned but not completed for this grid
-(implementation status: \texttt{not\_yet\_implemented} in \texttt{configs/methods/nsganetv2\_continuous.yaml},
-skipped by \texttt{run\_grid.py}), so this asymmetry is acknowledged but not yet empirically bounded; running
-it is left as future work.
+\paragraph{Statistics.} P3Net is compared against each of the other ten arms, per (search space, budget) cell,
+with paired Wilcoxon signed-rank tests, Holm--Bonferroni correction within the cell, and Cliff's $\delta$
+reported for every comparison, following benchmarking practice for stochastic
+optimisers~\citep{BartzBeielstein2020Benchmarking,Hansen2016b}. We orient $\delta$ so that a positive value
+favours P3Net on both metrics.
 
-\paragraph{Budgets, seeds, stopping.} Four full evaluation budget tiers, $\{50,\, 100,\, 200,\, 350\}$ full
-evaluations, each roughly doubling the previous one so convergence trends read on a natural, geometric
-scale. Each tier is anchored to a figure actually used in the surrounding literature rather than chosen
-arbitrarily: the second tier matches JAHS-Bench-201's own suggested evaluation protocol of approximately 100
-full evaluations, with a minimum of 10 seeds~\citep{bansal2022jahsbench}; the top tier (350) matches exactly
-the full evaluation count NSGANetV2 itself uses to reach its reported results~\citep{lu2020nsganetv2}, so no
-tier exceeds the regime in which the primary baseline was originally shown to work well. This also keeps
-every tier below NAS-HPO-Bench-II's own convention of 500 trials for benchmarking search
-algorithms~\citep{hirose2021nashpobenchii}, a deliberate choice, not an oversight: the central question
-concerns a \emph{limited} budget (Section~\ref{sec:introduction}), so all four tiers stress-test a regime tighter than either
-benchmark's own default, on both benchmarks alike. The 350 tier was added after an initial $R=10$,
-$\{50,100,200\}$ pass showed several comparisons with a large effect size that did not reach significance, and every comparison at
-budget~50 was non-significant despite visibly tight convergence-plot clustering; both observations motivated
-checking whether gaps kept widening past budget~200 and whether more seeds would resolve the underpowered
-cases, respectively. $R = 30$ independent runs per method with a fixed, published
-seed list (up from the initial pass's $R=10$, still $\geq$ JAHS-Bench-201's recommended
-minimum~\citep{bansal2022jahsbench}); identical
-initialization scheme across methods; a stopping rule covering both the evaluation budget and, if the
-search space is small enough to converge prematurely, an exploration collapse criterion analogous to the
-one Bartnik~\citep{bartnik2026evolutionary} needed to add for spaces at the scale of NAS-Bench-201.
+\subsection{Headline comparison}
 
-\paragraph{Metrics.} Fixed budget hypervolume and, only if the search space admits an enumerable oracle
-front, IGD+; otherwise hypervolume relative to the best known front is used in its place, defined as the union of all points evaluated by any compared method across all runs and seeds (implemented in \texttt{p3net.metrics.hypervolume}). Surrogate quality
-is reported separately as rank correlation (or pairwise comparison accuracy, if the surrogate is relational)
-between predicted and true values as a function of $|\mathcal{H}_t|$.
+Tables~\ref{tab:heatmap-jahs}--\ref{tab:heatmap-nashpo} give Cliff's $\delta$ of P3Net against every other arm in
+every cell; the supplementary material lists medians, IQRs, and corrected $p$-values.
 
-\paragraph{Statistical plan.} The comparison set is P3Net against each of the other ten arms (Baselines,
-above, including the two P3-alone population-size variants), per benchmark and per budget tier, not every
-pairwise combination among all arms. Paired Wilcoxon
-signed rank tests are run per comparison in this set, with Holm--Bonferroni correction (a standard
-adjustment that tightens the significance threshold as more comparisons are run in parallel, so it stays
-trustworthy across all of them at once) applied across it, and an effect size (e.g.\ Cliff's delta, the
-probability that a random draw from one group beats a random draw from the other, minus the reverse
-probability) reported alongside every corrected $p$ value. This is stricter than the uncorrected comparisons in the closest prior
-work~\citep{bartnik2026evolutionary}, which report no effect size, and the difference is treated as a
-deliberate methodological improvement, not an oversight to reconcile.
+\input{chapters/v003/results/_generated_heatmaps}
 
-\paragraph{Diagnostics.} Genotype duplication rate and archive turnover over the course of the search,
-motivated directly by the genotype-to-phenotype redundancy documented in NSGA-Net (Section~\ref{sec:introduction})~\citep{lu2019nsganet},
-measured under the identical joint genotype encoding fixed for every compared method (Fairness controls),
-so that any difference in duplication rate reflects the search operator rather than a difference in
-encoding. The deduplication cache (Section~\ref{sec:proposed-optimizer}) is applied identically to every compared method as
-part of the shared evaluation harness (Fairness controls), so the measured duplication rate reflects what
-each search operator proposes, not an artifact of asymmetric caching. This rate is counted at proposal
-time, for every candidate a search operator generates, whether or not it is later intercepted by the cache,
-not at evaluation time, so it remains informative even though the cache itself suppresses re-evaluation of
-anything it counts. Convergence curves; Pareto front
-progression; stability across seeds.
+\input{chapters/v003/results/_generated_summary}
 
-\paragraph{Reproducibility.} Every cached evaluation is keyed by genotype, experiment type, and a protocol
-version string covering every setting that affects the recorded value, so that a change in any of them
-invalidates stale cache entries automatically, following the pattern used
-by~\citep{bartnik2026evolutionary}.
+All seven wins against a differently-engineered baseline are against MO-BOHB.
 
-\subsection*{Findings}
+\paragraph{No separation from random search.} P3Net does not reject $H_0$ against uniform random search in any of
+the sixteen cells (largest $|\delta|=0.336$). Repeating the identical protocol with random search as the
+reference arm (Table~\ref{tab:vs-random}), P3+abs.\ regressor also separates in none, MO-BOHB in one, and every
+other arm in at least six. The two arms that never separate are exactly the two that run P3Net's population
+pyramid. P3Net's margin against each baseline tracks that baseline's own margin against random search almost
+perfectly (Spearman $\rho=0.980$, $n=144$): across this grid, P3Net behaves as random search does.
 
-\paragraph{Surrogate quality.} Figure~\ref{fig:surrogate-quality} plots pairwise comparison accuracy
-(\texttt{metrics/surrogate\_quality.py}: whether $\hat{\delta}_F$'s predicted delta sign agreed with the true
-delta sign, once the scored modification was actually evaluated) against $|\mathcal{H}_t|$ at prediction
-time, pooled across every P3Net run in the grid via \texttt{p3net.methods.p3net.P3Net}'s live
-\texttt{surrogate\_quality\_log}. This metric needs a more precise reading than ``accuracy vs.\ chance''
-suggests: a modification only ever reaches this log once it has cleared the step-3 acceptance gate
-($\hat{\delta}_F$ predicting nonnegative improvement, Section~\ref{sec:proposed-optimizer}), so every logged
-prediction is, by construction, a predicted improvement -- there is no possibility of a logged ``predicted
-decline'' in this data, in either direction P3Net has ever been run. What the metric actually measures is
-therefore the \emph{precision of that acceptance gate}: of the modifications the surrogate let through, what
-fraction genuinely turned out to improve on their ancestor. Under the design finally adopted here (Design
-decisions, below), that precision is $0.497$ pooled across every P3Net run in the grid ($n=7510$ scored
-predictions, $|\mathcal{H}_t|$ from $2$ to $284$; across the six of ten equal-width history-size bins that
-contain data, precision ranges $0.451$--$0.542$) -- indistinguishable from a coin flip on whether an
-accepted modification actually helps. This is a real regression from what the pre-adoption default achieved
-on the same measure ($0.672$ pooled, matching the $0.62$--$0.75$ range an earlier pass of this project
-reported), and the Design decisions paragraph below reports what a dedicated investigation could and could
-not establish about why.
-
-\begin{figure}[t]
+\begin{table}[t]
     \centering
-    \includegraphics[width=\linewidth]{figures/surrogate_quality__p3net.png}
-    \caption{P3Net's $\hat{\delta}_F$: precision of the step-3 acceptance gate (predicted-vs-true delta sign
-    agreement, restricted by construction to predicted improvements) vs.\ $|\mathcal{H}_t|$ at prediction
-    time, pooled across every P3Net run in the grid. Dashed line: the $0.5$ level a coin flip would reach on
-    this same restricted-to-predicted-improvements measure.}
-    \label{fig:surrogate-quality}
-\end{figure}
-
-\paragraph{Surrogate quality: magnitude calibration.} Figure~\ref{fig:surrogate-calibration} reports a
-second, independent read on $\hat{\delta}_F$'s quality: not whether the predicted delta's \emph{sign}
-agrees with the true delta's sign (above), but whether its \emph{magnitude} means anything, via
-$R^2$ between predicted and true delta (\texttt{metrics.surrogate\_quality.calibration\_r2}). It is
-dramatically negative in every search space -- $-51.34$ (CIFAR-10), $-30.71$ (Fashion-MNIST), $-12.88$
-(Colorectal-Histology), $-1.64$ (NAS-HPO-Bench-II) -- markedly worse than trivially predicting the mean true
-delta throughout, and notably \emph{not} in the same order as the epistasis measure that tracks the
-ablation-family win pattern (Diagnostics: surrogate representational capacity, above): magnitude
-calibration is worst on the search space where that pattern is weakest, not strongest. Binned by
-$|\mathcal{H}_t|$ (the same binning as Figure~\ref{fig:surrogate-quality}), the badness is concentrated, not
-uniform: early predictions ($|\mathcal{H}_t|=2$--$30$) are reasonably calibrated ($R^2$ up to $+0.17$), a
-narrow window ($|\mathcal{H}_t|\approx30$--$58$) is catastrophic (as low as $-227$), with the single worst
-prediction in \emph{every} search space landing at $|\mathcal{H}_t|=35$--$40$, and later bins recover to
-merely poor. A follow-up check against telescoping chain depth (\texttt{p3net.surrogates.telescoping}: each
-accepted chain step sums one more $\hat\delta_F$ call into the final estimate), on five fresh seeds against
-the real NAS-HPO-Bench-II substrate, confirms this accumulation mechanism is real: squared error grows
-monotonically with chain depth (median $12.96$ at depth~1 to $744.80$ at depth~5), and every one of the ten
-single worst logged predictions has chain depth $\geq3$. Chain depth alone does not fully explain the
-$|\mathcal{H}_t|\approx30$--$58$ window specifically, though: it is only mildly elevated there relative to
-elsewhere (median $4.5$ vs.\ $4.0$).
-
-A further check isolates the window to one specific pyramid level, not a general property of $|\mathcal{H}_t|$
-or chain depth: pooling squared error by the sweeping level's own target size (same five seeds), levels of
-size 2/4/8 sit at a median $67.8$--$117.6$, size 32/64/128 at $130.5$--$220.2$, but \textbf{size 16 alone
-reaches a median of $1307.29$} -- $6$--$19\times$ every other size -- and is the level whose first
-sweep-based predictions land at $|\mathcal{H}_t|\approx33$--$36$ in all five seeds, matching the window
-above exactly; $9$ of the $10$ single worst logged predictions occur at this level size. A plausible but
-unconfirmed mechanism: this level's linkage tree is built from its own population, freshly and
-purely-randomly bootstrapped the moment this sweep phase begins, and if it proposes subsets not yet well
-represented among the still-few ($\approx30$) matching pairs available for the one shared linear model to
-fit, extrapolation for those coordinates follows directly -- not confirmed by measuring per-subset
-matching-pair counts directly, left as the natural next step.
-
-This failure mode -- a point-estimate surrogate trusted without regard to its own reliability -- has an
-established remedy in the surrogate-assisted evolutionary computation literature: coupling model management
-with explicit uncertainty -- infill criteria such as Expected Improvement or Lower Confidence Bound, which
-weigh a candidate's predicted value against how much the model trusts that prediction, rather than the point
-estimate alone -- and trust-region or local-model restriction to avoid extrapolating far from training
-data~\citep{jin2011surrogate}. The closest already-cited prior work facing the same class of problem,
-CS-GOMEA, addresses it by moving to a strictly more expressive model (a CNN, also trained on pairwise
-fitness differences, for the same evaluation-efficiency reason as $\hat\delta_F$) rather than regularising a
-linear one~\citep{dushatskiy2019csgomea}. Ridge regression~\citep{hoerl1970ridge} is the standard, cheaper
-first-line defence specifically for a small-sample, unstable, high-variance linear fit -- it targets the
-symptom (extreme coefficient and prediction magnitude) directly, independent of whether the mechanism just
-proposed is fully right, and is orthogonal to $\hat\delta_F$'s additive-only representational capacity
-(Diagnostics: surrogate representational capacity, above): a different axis, not a substitute for that
-finding's own candidate fix. Conclusions adopts it alongside the pyramid-transition redesign proposed there,
-since both concern the same moment -- a level's first sweep pass immediately after its own bootstrap.
-
-With \texttt{RidgeCV} adopted as \texttt{p3net}'s \texttt{model\_factory}, recomputed \texttt{calibration\_r2}
-by pyramid level size at budget~350, pooled across all four search spaces, shows the pathology essentially
-unchanged: level~16 remains by far the worst-calibrated level ($R^2=-4.71$, MSE $766.7$, $n=970$ predictions)
-against every other level (best: level~2, $R^2=+0.55$, MSE $85.2$; every level from 8 upward is
-calibration-negative). The level-16-to-best MSE ratio ($\approx9\times$) lands squarely inside the
-$6$--$19\times$ range documented above -- regularisation, the textbook remedy for unstable small-sample
-linear fits, does not visibly narrow this specific gap on real data, suggesting the mechanism proposed above
-(sparse per-subset training pairs for a freshly-bootstrapped level, not merely unstable coefficients) may be
-closer to the real cause. Left as an open point for follow-up surrogate diagnostics (Conclusions).
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/surrogate_calibration__p3net.png}
-    \caption{P3Net's $\hat{\delta}_F$: $R^2$ between predicted and true delta, one bar per search space,
-    pooled across every P3Net run in the grid. The dashed line at $0$ marks the ``always predict the mean
-    true delta'' baseline -- every search space falls well below it.}
-    \label{fig:surrogate-calibration}
-\end{figure}
-
-\paragraph{Convergence.} Figures~\ref{fig:convergence-jahs-350} and~\ref{fig:convergence-nashpo-350} plot
-median best-so-far hypervolume against the number of full evaluations at the largest budget tier (350), one
-line per method, on JAHS-Bench-201's CIFAR-10 dataset and on NAS-HPO-Bench-II; the twelve remaining
-convergence plots (budgets 50, 100, and 200 on all four search spaces, and all four budgets on
-Colorectal-Histology and Fashion-MNIST) show the same qualitative shape. On every search space and at every
-budget, all eleven arms rise sharply over roughly the first 5--10\% of the budget and then sit on what looks,
-by eye, like an effectively shared plateau for the remainder: by evaluation~35 of 350, the eleven median
-traces in Figure~\ref{fig:convergence-jahs-350} are visually close to indistinguishable. This visual
-similarity is exactly why the significance results below matter: the fixed-budget summary finds 61 of 160
-comparisons significant across the four search spaces, most of them at budget $\geq 100$. The gaps a
-convergence plot cannot show by eye -- small, consistent differences hidden inside the wide seed-to-seed
-shading -- are real.
+    \footnotesize
+    \caption{Cells (of 16) in which each arm separates from uniform random search, same metric and per-cell
+    correction as the headline comparison.}
+    \label{tab:vs-random}
+    \begin{tabular}{@{}lr@{\hspace{2em}}lr@{}}
+        \toprule
+        \textbf{Arm} & \textbf{Cells} & \textbf{Arm} & \textbf{Cells} \\
+        \midrule
+        SH-EMOA        & 13 & P3-alone-pop40      & 6 \\
+        P3-alone       & 10 & TPE                 & 6 \\
+        NSGANetV2      & 9  & MO-BOHB             & 1 \\
+        NSGA-Net       & 8  & P3+abs.\ regressor  & 0 \\
+        P3-alone-pop20 & 7  & \textbf{P3Net}      & \textbf{0} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/convergence__jahs_bench_201__budget350.png}
-    \caption{Median best-so-far hypervolume vs.\ full evaluations, all eleven arms, JAHS-Bench-201
-    (CIFAR-10), budget 350. Traces look close to a shared plateau by roughly evaluation~35; the fixed-budget
-    summary below finds real, statistically confirmed separation within it.}
+    \caption{Median best-so-far relative hypervolume vs.\ full evaluations, all eleven arms, JAHS-Bench-201
+    (CIFAR-10), budget~350. All arms reach a shared plateau within roughly the first tenth of the budget.}
     \label{fig:convergence-jahs-350}
 \end{figure}
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/convergence__nas_hpo_bench_ii__budget350.png}
-    \caption{Median best-so-far hypervolume vs.\ full evaluations, all eleven arms, NAS-HPO-Bench-II, budget
-    350.}
-    \label{fig:convergence-nashpo-350}
-\end{figure}
+\subsection{Diagnosis}
 
-\paragraph{Pareto front and hypervolume comparisons.} One of those hidden gaps is the shape of the trade-off
-surface itself, which a single convergence curve cannot show at all. Figures~\ref{fig:pareto-p3net-jahs-350}
-and~\ref{fig:pareto-p3alone-jahs-350} show the Pareto front recovered by P3Net and by the surrogate-free
-P3-alone ablation, respectively, at 25/50/75/100\% of budget on JAHS-Bench-201 (CIFAR-10), budget 350 (axes
-are independently auto-scaled per plot, so absolute extents are not directly comparable at a glance). Both
-show the same qualitative knee shape, and both have their non-tail portion ($f_1 \lesssim 20$) settled well
-before the 100\%-of-budget checkpoint. The visible difference is the flat tail: P3-alone's front extends to
-$f_1 \approx 73$ (two points near $f_2 \approx 0.04$--$0.05$, both appearing only at the 100\%-of-budget
-checkpoint), while P3Net's longest-$f_1$ point sits at $f_1 \approx 49$, also 100\%-of-budget-only.
-P3-alone explores further into this high-$f_1$/low-$f_2$ corner of the space late in the budget than P3Net
-does, even though P3Net's fixed-budget hypervolume is higher overall (Table~\ref{tab:fixed-budget-jahs}) --
-a reminder that a single scalar hypervolume number can mask which parts of the trade-off surface a method
-actually covers.
+\paragraph{The population pyramid spends the budget on random bootstrap.} Figure~\ref{fig:convergence-jahs-350}
+shows every arm reaching a common plateau early, so the differences that matter are small and late. We therefore
+measured what share of P3Net's proposals come from uniform-random level bootstrap rather than from
+surrogate-guided mixing. Because level sizes grow geometrically, each new level is larger than all previous
+levels combined, and filling it dominates the budget. The redesign described in
+Section~\ref{sec:proposed-optimizer} -- warm-starting each new level from the current front and growing on a
+hypervolume-contribution criterion rather than strict dominance -- was introduced in response to this, and all
+reported numbers are from the grid re-run with it. Even so, the bootstrap share rises with budget on every search
+space; on NAS-HPO-Bench-II it is 67.3\%, 77.6\%, 84.6\%, and 90.5\% at the four budgets, and at budget~350 it is
+89.7\% (CIFAR-10), 91.7\% (Colorectal-Histology), 92.4\% (Fashion-MNIST), and 90.5\% (NAS-HPO-Bench-II). The
+warm start does not change the growth rule itself, which is what forces the trend. This accounts directly for
+the random-search-like behaviour above and for the pattern of losses widening with budget.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/pareto_progression__p3net__jahs_bench_201__budget350.png}
-    \caption{Pareto front progression, P3Net, JAHS-Bench-201 (CIFAR-10), budget 350, pooled across seeds at
-    25/50/75/100\% of budget.}
-    \label{fig:pareto-p3net-jahs-350}
-\end{figure}
+The evidence that this travels with the engine rather than with either surrogate is P3+abs.\ regressor. In an
+earlier pass it ran on a flat, fixed-size population, and there it separated from random search in most cells.
+Once rewritten to share P3Net's pyramid, it separates in none, and against P3Net itself it is indistinguishable
+in all sixteen cells. With the engine confound removed, this grid shows no measurable advantage of the relative
+surrogate over the absolute one. Conversely, the P3-alone arms use a fixed population and fail differently: they
+stagnate on a small, repeatedly revisited set. Their median sweep count is 7--9 at budget~50 but 1508.5--2388.5
+at budget~350, several times the budget itself, because most sweeps are served from the deduplication cache.
+P3Net's wins over them are therefore at least partly broad random exploration beating a stalled narrow one, and
+are not by themselves evidence for the relative surrogate.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/pareto_progression__p3_alone__jahs_bench_201__budget350.png}
-    \caption{Pareto front progression, P3-alone (no surrogate), JAHS-Bench-201 (CIFAR-10), budget 350, same
-    checkpoints as Figure~\ref{fig:pareto-p3net-jahs-350}. Reaches $f_1 \approx 73$, further than P3Net's
-    $f_1 \approx 49$, only at the 100\%-of-budget checkpoint.}
-    \label{fig:pareto-p3alone-jahs-350}
-\end{figure}
+\paragraph{The surrogate is additive and poorly calibrated.} The acceptance gate's precision -- the fraction of
+surrogate-accepted modifications that turned out to improve -- is 0.498 over 14562 logged predictions:
+indistinguishable from chance. It is highest while $|\mathcal{H}_t| \leq 30$ (0.551) and lower thereafter.
+Magnitudes are worse than predicting the mean: $R^2$ between predicted and true $\delta$ is $-1.46$ (CIFAR-10),
+$-2.08$ (Colorectal-Histology), $-3.28$ (Fashion-MNIST), and $-1.76$ (NAS-HPO-Bench-II). The error concentrates
+at one pyramid level. At budget~350, predictions made while sweeping the level of size 16 have
+$R^2=-4.71$ (MSE 766.7) against $R^2=+0.55$ (MSE 85.2) at size 2, roughly 9 times the error. That level is the
+first whose sweep begins after a large, freshly bootstrapped population, when the linkage tree proposes subsets
+for which few training pairs exist; this mechanism is plausible but not directly confirmed. Telescoping
+accumulates error over the first steps of a chain (median squared error 26.5 at depth~1, 106.2 at depth~5) but
+not monotonically beyond that.
 
-Across the full grid of eleven methods, four search spaces, and four budgets, P3Net's rank by median
-hypervolume-relative-to-best-known-front is budget-dependent and, markedly, dataset-dependent -- not
-uniformly high or low, and not consistent even across JAHS-Bench-201's own three datasets. On
-Fashion-MNIST P3Net ranks 2nd-highest of eleven at budgets~50 and~100, then 4th and 5th at budgets~200
-and~350 -- consistently upper-half, its strongest showing anywhere in the grid. On CIFAR-10 it opens
-3rd-highest at budget~50 and settles to 6th--7th (squarely mid-pack) from budget~100 onward. On
-Colorectal-Histology and NAS-HPO-Bench-II the pattern reverses: both open mid-pack at budget~50 (9th and
-4th respectively) and drift toward the \emph{bottom} of the field as budget grows -- Colorectal-Histology to
-10th-lowest of eleven at budget~350, NAS-HPO-Bench-II to 10th-lowest at budget~350 as well, having been
-7th-lowest at budget~100. On none of the four search spaces does more budget translate into a stronger
-relative position for P3Net. As the statistical test below shows, this is not uniformly inconclusive: 61 of
-160 comparisons in this grid are statistically confirmed, and which comparisons those are tracks this same
-per-dataset split closely -- P3Net's own surrogate-ablation family wins concentrate on Fashion-MNIST and
-CIFAR-10, its losses to differently-engineered baselines concentrate everywhere, but its losses to its
-\emph{own} ablation family concentrate on Colorectal-Histology and NAS-HPO-Bench-II. The raw ranking above
-is reported plainly because it previews which comparisons those turn out to be.
+Because $\hat\delta_F$ is linear in one-hot features, it cannot represent the joint effect of the coordinates
+that linkage-guided crossover changes together, which is in tension with the premise of the crossover itself. As a
+proxy for how much this matters per search space, we measure the out-of-sample $R^2$ gained by adding second-order
+interaction terms touching at least one architecture edge to a main-effects model of $f_1$: $+0.016$ on
+Fashion-MNIST, $+0.055$ on CIFAR-10, $+0.109$ on Colorectal-Histology, and $+0.259$ on NAS-HPO-Bench-II. This is
+exactly the order in which P3Net's wins over its surrogate-free ablations weaken, from most complete on
+Fashion-MNIST to none on NAS-HPO-Bench-II. The correspondence is observational; we did not intervene on it alone.
+An arm that augments $\hat\delta_F$ with pairwise ``changed together'' interaction features, which fits a
+constructed non-additive pattern that the plain model cannot represent, reaches significance against P3Net in 1
+of 16 cells, in P3Net's favour. Added capacity did not translate into search performance.
 
-\paragraph{Fixed-budget summary.} Table~\ref{tab:fixed-budget-jahs}, Table~\ref{tab:fixed-budget-colorectal},
-Table~\ref{tab:fixed-budget-fashion}, and Table~\ref{tab:fixed-budget-nashpo} report median and IQR of the
-primary metric, plus the Holm--Bonferroni-corrected Wilcoxon $p$-value and Cliff's $\delta$ for each of the
-ten P3Net-vs.-baseline comparisons (Statistical plan, above -- including the two P3-alone population-size
-variants), at each of the four budget tiers, on JAHS-Bench-201's three datasets and on NAS-HPO-Bench-II
-(160 comparisons total across the sixteen search-space/budget cells, $R=30$ seeds each). Both still report
-hypervolume-relative-to-pooled-best-known-front rather than the planned IGD+ for NAS-HPO-Bench-II (Metrics,
-above); wiring in the oracle front remains open.
+\paragraph{Duplicate proposals are not what distinguishes P3Net.} Our initial hypothesis was that
+dependency-aware variation would propose fewer duplicate genotypes. Mean proposal-time duplication is high for
+the fixed-population P3 arms (P3-alone 0.734, P3-alone-pop20 0.448, P3-alone-pop40 0.187) and for SH-EMOA
+(0.234), but P3Net (0.076) is not the lowest of the P3- and NSGA-II-engine arms: P3+abs.\ regressor (0.044),
+NSGANetV2 (0.046), and NSGA-Net (0.038) all duplicate less. Whatever suppresses duplicates on the pyramid is not
+specific to the relative surrogate.
 
-\textbf{61 of the 160 comparisons reject the null hypothesis} at $\alpha=0.05$. Thirty-seven favour the
-baseline over P3Net; twenty-four favour P3Net. The composition of each side matters more than the raw count.
-Of the 24 P3Net-favouring rejections, 23 are internal to the P3 engine's own surrogate-type/population
-comparisons (P3-alone, P3-alone-pop20, P3-alone-pop40, or P3+absolute-regressor) -- exactly the family the
-central question (Section~\ref{sec:introduction}) is staked on -- and only one is a win against a
-differently-engineered baseline anywhere in the entire grid (MO-BOHB, Colorectal-Histology, budget~350,
-$\delta=+0.322$, $p=0.038$). Of the 37 baseline-favouring rejections, 28 are losses to a differently-engineered
-method (SH-EMOA, TPE, NSGA-Net, or NSGANetV2) and 9 are losses \emph{within} the P3-engine family itself --
-cases where plain P3-alone, P3-alone-pop40, or the absolute-regressor variant beats P3Net's own relative
-surrogate outright, concentrated on Colorectal-Histology and NAS-HPO-Bench-II (P3-alone-pop40 vs.\ P3Net,
-Colorectal-Histology budget~350, $\delta=-0.529$, $p=0.005$; P3-alone vs.\ P3Net and P3-alone-pop40 vs.\
-P3Net, both NAS-HPO-Bench-II budget~350, $\delta=-0.587$ and $-0.564$).
+\subsection{Isolation experiments}
 
-The core-mechanism comparison holds most cleanly on Fashion-MNIST: P3Net significantly beats plain P3-alone
-and the population-matched P3-alone-pop20 at every one of the four budget tiers ($\delta$ from $+0.449$ to
-$+0.791$), and additionally beats P3-alone-pop40 at three of four and the absolute-regressor variant at
-three of four ($\delta$ up to $+0.676$) -- the largest and most consistent surrogate-vs.-no-surrogate margin
-anywhere in the grid, and the only search space where P3Net also significantly outperforms
-P3+absolute-regressor, isolating the relative surrogate's own contribution from the P3 engine's. On CIFAR-10
-the same ablation wins hold but less completely: P3Net beats plain P3-alone at all four budgets and
-P3-alone-pop20 at two (budgets~200 and~350), with no comparison against P3-alone-pop40 or
-P3+absolute-regressor reaching significance in P3Net's favour anywhere, and P3+absolute-regressor actually
-beating P3Net at budget~350 ($\delta=-0.491$). On Colorectal-Histology the win narrows further: P3Net beats
-plain P3-alone at three of four budgets (not~350) and never beats either population-matched variant, while
-P3-alone-pop40 beats \emph{it} at budget~350. On NAS-HPO-Bench-II the core-mechanism win disappears
-entirely and inverts at the highest budget: no ablation comparison favours P3Net anywhere on this benchmark,
-and at budget~350 both plain P3-alone and P3-alone-pop40 significantly beat it.
-
-Put together: the mechanism the paper is actually about -- pairing P3 with the relative, linkage-aware
-surrogate instead of running P3 with no surrogate at all, or with an absolute regressor -- has real,
-statistically confirmed support that is strongest and most complete on Fashion-MNIST, still real but partial
-on CIFAR-10, weaker on Colorectal-Histology, and absent (inverting at the largest budget) on
-NAS-HPO-Bench-II, the one benchmark built from measured rather than surrogate-modelled data. That same
-P3Net loses, consistently and with comparable or larger effect sizes, to several methods built on an
-entirely different search engine (SH-EMOA, TPE, NSGA-Net, NSGANetV2) once the budget exceeds 50 evaluations,
-on every search space. The central question's comparison against NSGANetV2 specifically -- P3's
-dependency-aware search plus a relative surrogate vs.\ NSGA-II's crowding distance plus an absolute
-regressor -- resolves against P3Net at budget~200 on three of four search spaces ($\delta=-0.444$ CIFAR-10,
-$-0.818$ Colorectal-Histology, $-0.760$ NAS-HPO-Bench-II; not significant on Fashion-MNIST) and at
-budget~350 on all four ($\delta=-0.413$, $-0.831$, $+0.320$ (not significant), $-0.940$ respectively --
-Fashion-MNIST is the only search space where this comparison is not significant at the largest budget).
-
-This attribution is complicated by a mechanism identified in a later pass (Diagnostics: population-pyramid
-bootstrap share, below): P3Net is not statistically distinguishable from \texttt{random\_search} in any of
-the sixteen search-space/budget cells, and its margin against every differently-engineered baseline tracks
-that baseline's own margin against \texttt{random\_search} almost exactly. The losses to SH-EMOA, TPE,
-NSGA-Net, and NSGANetV2 reported just above are real and correctly measured, but a substantial part of why
-they widen with budget, and differ in size by dataset, is attributable to how much budget P3Net's own
-population-pyramid growth rule spends on uniform-random bootstrap rather than to a comparative weakness of
-the relative surrogate specifically -- see Diagnostics, below, for the full account and a proposed,
-not-yet-implemented fix (Conclusions).
+The remaining candidate explanations are the joint genotype and the benchmark family. Both experiments below use
+architecture-only NAS-Bench-201 through NATS-Bench~\citep{dong2021natsbench} ($n=6$ edge coordinates, no
+$\Theta$), budgets 100 and 350, $R=30$, and the same statistical protocol; the best-known front is pooled within
+this grid. Two deviations are forced by the benchmark interface: $f_2$ is FLOPs, as measured GPU
+energy~\citep{bartnik2026evolutionary} is not a queryable field, and $f_1$ is test error. Because every arm is
+scored identically, these deviations affect absolute values but not the comparison.
 
 \begin{table}[t]
     \centering
     \footnotesize
-    \caption{Fixed-budget summary, JAHS-Bench-201 (CIFAR-10): median/IQR of hypervolume-relative-to-best-known-front, and the Holm--Bonferroni-corrected Wilcoxon $p$ and Cliff's $\delta$ of each method vs.\ P3Net, corrected per (search space, budget) cell. $n=30$ seeds per row; $^{*}$ rejects $H_0$ at $\alpha=0.05$.}
-    \label{tab:fixed-budget-jahs}
-    \begin{tabular}{@{}lrrrr@{}}
+    \caption{Architecture-only NAS-Bench-201. Relative hypervolume medians; Holm-corrected $p$ and Cliff's
+    $\delta$ of the first arm against the second. No comparison rejects $H_0$.}
+    \label{tab:isolation}
+    \begin{tabular}{@{}llrrrr@{}}
         \toprule
-        \textbf{Method} & \textbf{Median} & \textbf{IQR} & \textbf{Adj.\ $p$} & \textbf{Cliff's $\delta$} \\
+        \textbf{Arm} & \textbf{vs.} & \textbf{Budget} & \textbf{Median} & \textbf{Adj.\ $p$} & \textbf{$\delta$} \\
         \midrule
-        \multicolumn{5}{l}{\emph{Budget = 50}} \\
-        MO-BOHB & 0.9592 & 0.0121 & 1.000 & -0.120 \\
-        NSGA-Net & 0.9542 & 0.0109 & 0.616 & +0.309 \\
-        NSGANetV2 & 0.9566 & 0.0116 & 1.000 & +0.069 \\
-        P3+abs.\ regressor & 0.9561 & 0.0110 & 1.000 & +0.091 \\
-        P3-alone & 0.9434 & 0.0182 & \textbf{0.011$^{*}$} & +0.527 \\
-        P3-alone-pop20 & 0.9517 & 0.0122 & 0.167 & +0.358 \\
-        P3-alone-pop40 & 0.9571 & 0.0124 & 1.000 & +0.053 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9577} & \textbf{0.0099} & -- & -- \\
-        Random search & 0.9559 & 0.0099 & 1.000 & +0.053 \\
-        SH-EMOA & 0.9608 & 0.0159 & 1.000 & -0.167 \\
-        TPE & 0.9619 & 0.0113 & 0.398 & -0.298 \\
+        P3Net      & random search & 100 & 0.9851 & 0.9515 & $+0.016$ \\
+        P3Net      & random search & 350 & 0.9923 & 0.7415 & $+0.118$ \\
         \midrule
-        \multicolumn{5}{l}{\emph{Budget = 100}} \\
-        MO-BOHB & 0.9650 & 0.0078 & 0.196 & +0.347 \\
-        NSGA-Net & 0.9649 & 0.0065 & 0.539 & +0.287 \\
-        NSGANetV2 & 0.9678 & 0.0064 & 0.919 & -0.018 \\
-        P3+abs.\ regressor & 0.9676 & 0.0067 & 0.786 & +0.136 \\
-        P3-alone & 0.9537 & 0.0173 & \textbf{0.000$^{*}$} & +0.767 \\
-        P3-alone-pop20 & 0.9613 & 0.0126 & \textbf{0.004$^{*}$} & +0.551 \\
-        P3-alone-pop40 & 0.9635 & 0.0096 & \textbf{0.003$^{*}$} & +0.460 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9673} & \textbf{0.0063} & -- & -- \\
-        Random search & 0.9677 & 0.0052 & 0.786 & +0.122 \\
-        SH-EMOA & 0.9721 & 0.0087 & \textbf{0.035$^{*}$} & -0.487 \\
-        TPE & 0.9691 & 0.0086 & 0.236 & -0.282 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 200}} \\
-        MO-BOHB & 0.9692 & 0.0042 & \textbf{0.009$^{*}$} & +0.456 \\
-        NSGA-Net & 0.9752 & 0.0052 & 0.058 & -0.376 \\
-        NSGANetV2 & 0.9745 & 0.0059 & 0.388 & -0.260 \\
-        P3+abs.\ regressor & 0.9715 & 0.0044 & 0.388 & +0.162 \\
-        P3-alone & 0.9636 & 0.0122 & \textbf{0.000$^{*}$} & +0.798 \\
-        P3-alone-pop20 & 0.9666 & 0.0074 & \textbf{0.000$^{*}$} & +0.593 \\
-        P3-alone-pop40 & 0.9696 & 0.0057 & \textbf{0.046$^{*}$} & +0.358 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9713} & \textbf{0.0043} & -- & -- \\
-        Random search & 0.9719 & 0.0039 & 0.388 & +0.169 \\
-        SH-EMOA & 0.9799 & 0.0054 & \textbf{0.000$^{*}$} & -0.876 \\
-        TPE & 0.9779 & 0.0040 & \textbf{0.000$^{*}$} & -0.696 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 350}} \\
-        MO-BOHB & 0.9741 & 0.0031 & 0.191 & +0.278 \\
-        NSGA-Net & 0.9821 & 0.0041 & \textbf{0.000$^{*}$} & -0.887 \\
-        NSGANetV2 & 0.9771 & 0.0049 & 0.117 & -0.391 \\
-        P3+abs.\ regressor & 0.9745 & 0.0030 & 0.308 & +0.173 \\
-        P3-alone & 0.9726 & 0.0038 & \textbf{0.004$^{*}$} & +0.489 \\
-        P3-alone-pop20 & 0.9699 & 0.0065 & \textbf{0.000$^{*}$} & +0.578 \\
-        P3-alone-pop40 & 0.9747 & 0.0065 & 0.180 & +0.213 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9752} & \textbf{0.0039} & -- & -- \\
-        Random search & 0.9741 & 0.0043 & 0.191 & +0.249 \\
-        SH-EMOA & 0.9840 & 0.0040 & \textbf{0.000$^{*}$} & -0.964 \\
-        TPE & 0.9812 & 0.0036 & \textbf{0.000$^{*}$} & -0.816 \\
+        bartnik\_p3 & random search & 100 & 0.9856 & 1.0000 & $+0.113$ \\
+        bartnik\_p3 & random search & 350 & 0.9935 & 0.5333 & $+0.273$ \\
+        bartnik\_p3 & P3Net        & 100 & 0.9856 & 1.0000 & $+0.124$ \\
+        bartnik\_p3 & P3Net        & 350 & 0.9935 & 0.9820 & $+0.222$ \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{Fixed-budget summary, JAHS-Bench-201 (Colorectal-Histology): same metric, columns, and
-    per-cell correction as Table~\ref{tab:fixed-budget-jahs}. $n=30$ seeds per row; $^{*}$ rejects $H_0$
-    at $\alpha=0.05$.}
-    \label{tab:fixed-budget-colorectal}
-    \begin{tabular}{@{}lrrrr@{}}
-        \toprule
-        \textbf{Method} & \textbf{Median} & \textbf{IQR} & \textbf{Adj.\ $p$} & \textbf{Cliff's $\delta$} \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 50}} \\
-        MO-BOHB & 0.9817 & 0.0056 & 1.000 & +0.284 \\
-        NSGA-Net & 0.9837 & 0.0054 & 1.000 & +0.149 \\
-        NSGANetV2 & 0.9832 & 0.0073 & 1.000 & +0.080 \\
-        P3+abs.\ regressor & 0.9812 & 0.0140 & 0.418 & +0.271 \\
-        P3-alone & 0.9727 & 0.0146 & \textbf{0.000$^{*}$} & +0.669 \\
-        P3-alone-pop20 & 0.9767 & 0.0171 & \textbf{0.009$^{*}$} & +0.438 \\
-        P3-alone-pop40 & 0.9838 & 0.0066 & 1.000 & +0.064 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9846} & \textbf{0.0070} & -- & -- \\
-        Random search & 0.9839 & 0.0074 & 1.000 & +0.033 \\
-        SH-EMOA & 0.9831 & 0.0068 & 1.000 & -0.091 \\
-        TPE & 0.9853 & 0.0036 & 1.000 & -0.196 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 100}} \\
-        MO-BOHB & 0.9856 & 0.0043 & 0.445 & +0.329 \\
-        NSGA-Net & 0.9875 & 0.0043 & 0.871 & -0.069 \\
-        NSGANetV2 & 0.9901 & 0.0035 & \textbf{0.025$^{*}$} & -0.480 \\
-        P3+abs.\ regressor & 0.9873 & 0.0055 & 0.856 & +0.082 \\
-        P3-alone & 0.9782 & 0.0170 & \textbf{0.000$^{*}$} & +0.611 \\
-        P3-alone-pop20 & 0.9842 & 0.0077 & 0.080 & +0.324 \\
-        P3-alone-pop40 & 0.9878 & 0.0052 & 0.709 & +0.000 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9875} & \textbf{0.0033} & -- & -- \\
-        Random search & 0.9859 & 0.0038 & 0.701 & +0.204 \\
-        SH-EMOA & 0.9903 & 0.0061 & 0.602 & -0.284 \\
-        TPE & 0.9880 & 0.0030 & 0.710 & -0.227 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 200}} \\
-        MO-BOHB & 0.9872 & 0.0036 & \textbf{0.014$^{*}$} & +0.491 \\
-        NSGA-Net & 0.9912 & 0.0032 & \textbf{0.023$^{*}$} & -0.387 \\
-        NSGANetV2 & 0.9941 & 0.0019 & \textbf{0.000$^{*}$} & -0.827 \\
-        P3+abs.\ regressor & 0.9897 & 0.0029 & 1.000 & -0.116 \\
-        P3-alone & 0.9851 & 0.0147 & \textbf{0.008$^{*}$} & +0.442 \\
-        P3-alone-pop20 & 0.9909 & 0.0061 & 1.000 & -0.136 \\
-        P3-alone-pop40 & 0.9909 & 0.0041 & 0.293 & -0.296 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9894} & \textbf{0.0029} & -- & -- \\
-        Random search & 0.9892 & 0.0031 & 0.710 & +0.149 \\
-        SH-EMOA & 0.9938 & 0.0024 & \textbf{0.000$^{*}$} & -0.804 \\
-        TPE & 0.9919 & 0.0036 & \textbf{0.021$^{*}$} & -0.436 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 350}} \\
-        MO-BOHB & 0.9891 & 0.0034 & \textbf{0.009$^{*}$} & +0.511 \\
-        NSGA-Net & 0.9949 & 0.0020 & \textbf{0.000$^{*}$} & -0.822 \\
-        NSGANetV2 & 0.9956 & 0.0022 & \textbf{0.000$^{*}$} & -0.807 \\
-        P3+abs.\ regressor & 0.9916 & 0.0022 & 0.947 & -0.193 \\
-        P3-alone & 0.9909 & 0.0037 & 1.000 & -0.038 \\
-        P3-alone-pop20 & 0.9921 & 0.0044 & 1.000 & -0.176 \\
-        P3-alone-pop40 & 0.9930 & 0.0023 & \textbf{0.015$^{*}$} & -0.536 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9911} & \textbf{0.0026} & -- & -- \\
-        Random search & 0.9909 & 0.0024 & 1.000 & +0.076 \\
-        SH-EMOA & 0.9948 & 0.0018 & \textbf{0.000$^{*}$} & -0.778 \\
-        TPE & 0.9929 & 0.0027 & \textbf{0.009$^{*}$} & -0.451 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+\paragraph{Removing the hyperparameter dimension.} Discretised hyperparameters enlarge $n$, and with it $\kappa$
+and the space of linkage subsets, while plausibly carrying less combinatorial interaction than architecture edges.
+If that diluted the linkage tree, removing $\Theta$ should help. It does not: P3Net still does not separate from
+random search at either budget (Table~\ref{tab:isolation}), with both medians above 0.985.
 
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{Fixed-budget summary, JAHS-Bench-201 (Fashion-MNIST): same metric, columns, and per-cell
-    correction as Table~\ref{tab:fixed-budget-jahs}. $n=30$ seeds per row; $^{*}$ rejects $H_0$ at
-    $\alpha=0.05$.}
-    \label{tab:fixed-budget-fashion}
-    \begin{tabular}{@{}lrrrr@{}}
-        \toprule
-        \textbf{Method} & \textbf{Median} & \textbf{IQR} & \textbf{Adj.\ $p$} & \textbf{Cliff's $\delta$} \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 50}} \\
-        MO-BOHB & 0.9234 & 0.0322 & 0.116 & +0.387 \\
-        NSGA-Net & 0.9380 & 0.0332 & 1.000 & +0.098 \\
-        NSGANetV2 & 0.9329 & 0.0273 & 0.766 & +0.264 \\
-        P3+abs.\ regressor & 0.9544 & 0.0379 & 1.000 & -0.064 \\
-        P3-alone & 0.9160 & 0.0230 & \textbf{0.003$^{*}$} & +0.604 \\
-        P3-alone-pop20 & 0.9256 & 0.0210 & \textbf{0.045$^{*}$} & +0.440 \\
-        P3-alone-pop40 & 0.9353 & 0.0264 & 1.000 & +0.222 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9457} & \textbf{0.0357} & -- & -- \\
-        Random search & 0.9456 & 0.0320 & 1.000 & +0.140 \\
-        SH-EMOA & 0.9433 & 0.0264 & 1.000 & -0.016 \\
-        TPE & 0.9480 & 0.0440 & 1.000 & -0.033 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 100}} \\
-        MO-BOHB & 0.9425 & 0.0367 & \textbf{0.046$^{*}$} & +0.384 \\
-        NSGA-Net & 0.9583 & 0.0342 & 1.000 & +0.120 \\
-        NSGANetV2 & 0.9544 & 0.0286 & 0.207 & +0.336 \\
-        P3+abs.\ regressor & 0.9620 & 0.0225 & 0.914 & +0.193 \\
-        P3-alone & 0.9219 & 0.0345 & \textbf{0.000$^{*}$} & +0.782 \\
-        P3-alone-pop20 & 0.9382 & 0.0243 & \textbf{0.001$^{*}$} & +0.624 \\
-        P3-alone-pop40 & 0.9443 & 0.0283 & \textbf{0.030$^{*}$} & +0.471 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9673} & \textbf{0.0179} & -- & -- \\
-        Random search & 0.9606 & 0.0277 & 1.000 & +0.227 \\
-        SH-EMOA & 0.9722 & 0.0241 & 0.571 & -0.227 \\
-        TPE & 0.9624 & 0.0291 & 1.000 & +0.060 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 200}} \\
-        MO-BOHB & 0.9687 & 0.0235 & 0.096 & +0.296 \\
-        NSGA-Net & 0.9751 & 0.0249 & 1.000 & -0.049 \\
-        NSGANetV2 & 0.9671 & 0.0200 & 0.111 & +0.320 \\
-        P3+abs.\ regressor & 0.9680 & 0.0142 & 0.674 & +0.264 \\
-        P3-alone & 0.9353 & 0.0381 & \textbf{0.000$^{*}$} & +0.813 \\
-        P3-alone-pop20 & 0.9498 & 0.0221 & \textbf{0.000$^{*}$} & +0.742 \\
-        P3-alone-pop40 & 0.9487 & 0.0181 & \textbf{0.000$^{*}$} & +0.624 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9730} & \textbf{0.0149} & -- & -- \\
-        Random search & 0.9685 & 0.0169 & 0.674 & +0.218 \\
-        SH-EMOA & 0.9796 & 0.0146 & 0.674 & -0.229 \\
-        TPE & 0.9754 & 0.0219 & 1.000 & -0.064 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 350}} \\
-        MO-BOHB & 0.9727 & 0.0122 & 0.117 & +0.313 \\
-        NSGA-Net & 0.9876 & 0.0189 & 0.280 & -0.356 \\
-        NSGANetV2 & 0.9699 & 0.0199 & 0.105 & +0.353 \\
-        P3+abs.\ regressor & 0.9742 & 0.0148 & 0.280 & +0.269 \\
-        P3-alone & 0.9534 & 0.0419 & \textbf{0.000$^{*}$} & +0.720 \\
-        P3-alone-pop20 & 0.9515 & 0.0242 & \textbf{0.000$^{*}$} & +0.773 \\
-        P3-alone-pop40 & 0.9548 & 0.0243 & \textbf{0.000$^{*}$} & +0.618 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9801} & \textbf{0.0131} & -- & -- \\
-        Random search & 0.9780 & 0.0154 & 0.809 & +0.144 \\
-        SH-EMOA & 0.9883 & 0.0139 & \textbf{0.014$^{*}$} & -0.502 \\
-        TPE & 0.9780 & 0.0204 & 0.809 & +0.062 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{Fixed-budget summary, NAS-HPO-Bench-II: same metric, columns, and per-cell correction as
-    Table~\ref{tab:fixed-budget-jahs}. IGD+ was planned for this benchmark (Metrics, above) but not
-    computed in this run (Fixed-budget summary, above); the metric shown is
-    hypervolume-relative-to-best-known-front, as in Table~\ref{tab:fixed-budget-jahs}. $n=30$ seeds per row;
-    $^{*}$ rejects $H_0$ at $\alpha=0.05$.}
-    \label{tab:fixed-budget-nashpo}
-    \begin{tabular}{@{}lrrrr@{}}
-        \toprule
-        \textbf{Method} & \textbf{Median} & \textbf{IQR} & \textbf{Adj.\ $p$} & \textbf{Cliff's $\delta$} \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 50}} \\
-        MO-BOHB & 0.9521 & 0.0242 & 1.000 & +0.073 \\
-        NSGA-Net & 0.9519 & 0.0305 & 1.000 & +0.067 \\
-        NSGANetV2 & 0.9638 & 0.0180 & 0.364 & -0.224 \\
-        P3+abs.\ regressor & 0.9563 & 0.0238 & 1.000 & +0.018 \\
-        P3-alone & 0.9585 & 0.0316 & 1.000 & +0.033 \\
-        P3-alone-pop20 & 0.9554 & 0.0315 & 1.000 & +0.076 \\
-        P3-alone-pop40 & 0.9526 & 0.0315 & 1.000 & +0.182 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9534} & \textbf{0.0308} & -- & -- \\
-        Random search & 0.9488 & 0.0301 & 1.000 & +0.160 \\
-        SH-EMOA & 0.9555 & 0.0234 & 1.000 & -0.078 \\
-        TPE & 0.9500 & 0.0333 & 1.000 & +0.038 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 100}} \\
-        MO-BOHB & 0.9657 & 0.0189 & 1.000 & +0.196 \\
-        NSGA-Net & 0.9725 & 0.0166 & 1.000 & -0.127 \\
-        NSGANetV2 & 0.9767 & 0.0062 & \textbf{0.016$^{*}$} & -0.542 \\
-        P3+abs.\ regressor & 0.9714 & 0.0123 & 1.000 & -0.142 \\
-        P3-alone & 0.9684 & 0.0139 & 1.000 & -0.093 \\
-        P3-alone-pop20 & 0.9700 & 0.0130 & 1.000 & -0.020 \\
-        P3-alone-pop40 & 0.9690 & 0.0088 & 1.000 & +0.011 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9705} & \textbf{0.0147} & -- & -- \\
-        Random search & 0.9664 & 0.0194 & 1.000 & +0.167 \\
-        SH-EMOA & 0.9759 & 0.0175 & 1.000 & -0.322 \\
-        TPE & 0.9703 & 0.0192 & 1.000 & -0.073 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 200}} \\
-        MO-BOHB & 0.9748 & 0.0099 & 0.990 & +0.242 \\
-        NSGA-Net & 0.9795 & 0.0055 & \textbf{0.021$^{*}$} & -0.420 \\
-        NSGANetV2 & 0.9839 & 0.0065 & \textbf{0.000$^{*}$} & -0.793 \\
-        P3+abs.\ regressor & 0.9764 & 0.0066 & 0.990 & -0.002 \\
-        P3-alone & 0.9796 & 0.0110 & 0.715 & -0.298 \\
-        P3-alone-pop20 & 0.9785 & 0.0062 & 0.990 & -0.247 \\
-        P3-alone-pop40 & 0.9773 & 0.0092 & 0.990 & -0.104 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9760} & \textbf{0.0066} & -- & -- \\
-        Random search & 0.9738 & 0.0078 & 0.990 & +0.187 \\
-        SH-EMOA & 0.9824 & 0.0093 & \textbf{0.003$^{*}$} & -0.571 \\
-        TPE & 0.9788 & 0.0089 & 0.164 & -0.351 \\
-        \midrule
-        \multicolumn{5}{l}{\emph{Budget = 350}} \\
-        MO-BOHB & 0.9769 & 0.0085 & 0.293 & +0.247 \\
-        NSGA-Net & 0.9858 & 0.0061 & \textbf{0.000$^{*}$} & -0.744 \\
-        NSGANetV2 & 0.9908 & 0.0058 & \textbf{0.000$^{*}$} & -0.938 \\
-        P3+abs.\ regressor & 0.9795 & 0.0054 & 1.000 & -0.122 \\
-        P3-alone & 0.9864 & 0.0093 & \textbf{0.002$^{*}$} & -0.631 \\
-        P3-alone-pop20 & 0.9833 & 0.0085 & 0.760 & -0.327 \\
-        P3-alone-pop40 & 0.9840 & 0.0074 & \textbf{0.002$^{*}$} & -0.598 \\
-        \textbf{P3Net (ref.)} & \textbf{0.9790} & \textbf{0.0061} & -- & -- \\
-        Random search & 0.9783 & 0.0046 & 1.000 & +0.080 \\
-        SH-EMOA & 0.9874 & 0.0088 & \textbf{0.000$^{*}$} & -0.718 \\
-        TPE & 0.9826 & 0.0065 & 0.073 & -0.391 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\paragraph{Visual summary: effect-size heatmaps.} Tables~\ref{tab:heatmap-jahs}--\ref{tab:heatmap-nashpo}
-render the same sixteen-cell, ten-baseline comparison as
-Tables~\ref{tab:fixed-budget-jahs}--\ref{tab:fixed-budget-nashpo} above as a colour matrix, one panel per
-search space, grouping baselines by which engine they share with P3Net (P3-engine baselines, then
-NSGA-II-engine baselines, then the fully external baselines) so a reader can scan for exactly the pattern the
-Diagnostics paragraphs below document: P3-engine baselines (which also run \texttt{Pyramid}, except
-P3-alone's fixed-population variants) cluster blue (P3Net ahead) far more than the NSGA-II-engine or external
-rows do, and almost none of P3Net's blue cells are boxed (significant) at the largest budgets, where the
-external baselines' red cells increasingly are.
-
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{Effect-size heatmap, JAHS-Bench-201 (CIFAR-10): Cliff's $\delta$ of P3Net vs.\ each baseline (blue = favours P3Net, red = favours the baseline; darker = larger $|\delta|$), same data as Table~\ref{tab:fixed-budget-jahs}. Boxed cells reject $H_0$ at $\alpha=0.05$ (Holm--Bonferroni-corrected within the cell).}
-    \label{tab:heatmap-jahs}
-    \begin{tabular}{@{}lcccc@{}}
-        \toprule
-        \textbf{Method} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{350} \\
-        \midrule
-        P3-alone & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.53}}}} & \fcolorbox[HTML]{000000}{184F95}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.77}}}} & \fcolorbox[HTML]{000000}{184F95}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.80}}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.49}}}} \\
-        P3-alone-pop20 & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.36}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.55}}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.59}}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.58}}}} \\
-        P3-alone-pop40 & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.05}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.46}}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.36}}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.21}}} \\
-        P3+abs.\ regressor & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.09}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.14}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.16}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.17}}} \\
-        \midrule
-        NSGA-Net & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.31}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.29}}} & \colorbox[HTML]{F2A3A2}{\makebox[2.4em]{\textcolor{black}{-0.38}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.89}}}} \\
-        NSGANetV2 & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.07}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.02}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.26}}} & \colorbox[HTML]{F2A3A2}{\makebox[2.4em]{\textcolor{black}{-0.39}}} \\
-        \midrule
-        MO-BOHB & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.12}}} & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.35}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.46}}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.28}}} \\
-        Random search & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.05}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.12}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.17}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.25}}} \\
-        SH-EMOA & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.17}}} & \fcolorbox[HTML]{000000}{F2A3A2}{\makebox[2.4em]{\textcolor{black}{\textbf{-0.49}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.88}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.96}}}} \\
-        TPE & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.30}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.28}}} & \fcolorbox[HTML]{000000}{E34948}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.70}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.82}}}} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{Effect-size heatmap, JAHS-Bench-201 (Colorectal-Histology): Cliff's $\delta$ of P3Net vs.\ each baseline (blue = favours P3Net, red = favours the baseline; darker = larger $|\delta|$), same data as Table~\ref{tab:fixed-budget-colorectal}. Boxed cells reject $H_0$ at $\alpha=0.05$ (Holm--Bonferroni-corrected within the cell).}
-    \label{tab:heatmap-colorectal}
-    \begin{tabular}{@{}lcccc@{}}
-        \toprule
-        \textbf{Method} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{350} \\
-        \midrule
-        P3-alone & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.67}}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.61}}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.44}}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.04}}} \\
-        P3-alone-pop20 & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.44}}}} & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.32}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.14}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.18}}} \\
-        P3-alone-pop40 & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.06}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{+0.00}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.30}}} & \fcolorbox[HTML]{000000}{E34948}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.54}}}} \\
-        P3+abs.\ regressor & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.27}}} & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.08}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.12}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.19}}} \\
-        \midrule
-        NSGA-Net & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.15}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.07}}} & \fcolorbox[HTML]{000000}{F2A3A2}{\makebox[2.4em]{\textcolor{black}{\textbf{-0.39}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.82}}}} \\
-        NSGANetV2 & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.08}}} & \fcolorbox[HTML]{000000}{F2A3A2}{\makebox[2.4em]{\textcolor{black}{\textbf{-0.48}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.83}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.81}}}} \\
-        \midrule
-        MO-BOHB & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.28}}} & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.33}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.49}}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.51}}}} \\
-        Random search & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.03}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.20}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.15}}} & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.08}}} \\
-        SH-EMOA & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.09}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.28}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.80}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.78}}}} \\
-        TPE & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.20}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.23}}} & \fcolorbox[HTML]{000000}{F2A3A2}{\makebox[2.4em]{\textcolor{black}{\textbf{-0.44}}}} & \fcolorbox[HTML]{000000}{F2A3A2}{\makebox[2.4em]{\textcolor{black}{\textbf{-0.45}}}} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{Effect-size heatmap, JAHS-Bench-201 (Fashion-MNIST): Cliff's $\delta$ of P3Net vs.\ each baseline (blue = favours P3Net, red = favours the baseline; darker = larger $|\delta|$), same data as Table~\ref{tab:fixed-budget-fashion}. Boxed cells reject $H_0$ at $\alpha=0.05$ (Holm--Bonferroni-corrected within the cell).}
-    \label{tab:heatmap-fashion}
-    \begin{tabular}{@{}lcccc@{}}
-        \toprule
-        \textbf{Method} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{350} \\
-        \midrule
-        P3-alone & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.60}}}} & \fcolorbox[HTML]{000000}{184F95}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.78}}}} & \fcolorbox[HTML]{000000}{184F95}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.81}}}} & \fcolorbox[HTML]{000000}{184F95}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.72}}}} \\
-        P3-alone-pop20 & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.44}}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.62}}}} & \fcolorbox[HTML]{000000}{184F95}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.74}}}} & \fcolorbox[HTML]{000000}{184F95}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.77}}}} \\
-        P3-alone-pop40 & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.22}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.47}}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.62}}}} & \fcolorbox[HTML]{000000}{3987E5}{\makebox[2.4em]{\textcolor{white}{\textbf{+0.62}}}} \\
-        P3+abs.\ regressor & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.06}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.19}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.26}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.27}}} \\
-        \midrule
-        NSGA-Net & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.10}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.12}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.05}}} & \colorbox[HTML]{F2A3A2}{\makebox[2.4em]{\textcolor{black}{-0.36}}} \\
-        NSGANetV2 & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.26}}} & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.34}}} & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.32}}} & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.35}}} \\
-        \midrule
-        MO-BOHB & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.39}}} & \fcolorbox[HTML]{000000}{86B6EF}{\makebox[2.4em]{\textcolor{black}{\textbf{+0.38}}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.30}}} & \colorbox[HTML]{86B6EF}{\makebox[2.4em]{\textcolor{black}{+0.31}}} \\
-        Random search & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.14}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.23}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.22}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.14}}} \\
-        SH-EMOA & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.02}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.23}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.23}}} & \fcolorbox[HTML]{000000}{E34948}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.50}}}} \\
-        TPE & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.03}}} & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.06}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.06}}} & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.06}}} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{Effect-size heatmap, NAS-HPO-Bench-II: Cliff's $\delta$ of P3Net vs.\ each baseline (blue = favours P3Net, red = favours the baseline; darker = larger $|\delta|$), same data as Table~\ref{tab:fixed-budget-nashpo}. Boxed cells reject $H_0$ at $\alpha=0.05$ (Holm--Bonferroni-corrected within the cell).}
-    \label{tab:heatmap-nashpo}
-    \begin{tabular}{@{}lcccc@{}}
-        \toprule
-        \textbf{Method} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{350} \\
-        \midrule
-        P3-alone & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.03}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.09}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.30}}} & \fcolorbox[HTML]{000000}{E34948}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.63}}}} \\
-        P3-alone-pop20 & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.08}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.02}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.25}}} & \colorbox[HTML]{F2A3A2}{\makebox[2.4em]{\textcolor{black}{-0.33}}} \\
-        P3-alone-pop40 & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.18}}} & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.01}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.10}}} & \fcolorbox[HTML]{000000}{E34948}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.60}}}} \\
-        P3+abs.\ regressor & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.02}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.14}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.00}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.12}}} \\
-        \midrule
-        NSGA-Net & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.07}}} & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.13}}} & \fcolorbox[HTML]{000000}{F2A3A2}{\makebox[2.4em]{\textcolor{black}{\textbf{-0.42}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.74}}}} \\
-        NSGANetV2 & \colorbox[HTML]{FBDCDB}{\makebox[2.4em]{\textcolor{black}{-0.22}}} & \fcolorbox[HTML]{000000}{E34948}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.54}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.79}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.94}}}} \\
-        \midrule
-        MO-BOHB & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.07}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.20}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.24}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.25}}} \\
-        Random search & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.16}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.17}}} & \colorbox[HTML]{CDE2FB}{\makebox[2.4em]{\textcolor{black}{+0.19}}} & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.08}}} \\
-        SH-EMOA & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.08}}} & \colorbox[HTML]{F2A3A2}{\makebox[2.4em]{\textcolor{black}{-0.32}}} & \fcolorbox[HTML]{000000}{E34948}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.57}}}} & \fcolorbox[HTML]{000000}{941F1F}{\makebox[2.4em]{\textcolor{white}{\textbf{-0.72}}}} \\
-        TPE & \colorbox[HTML]{EAF2FC}{\makebox[2.4em]{\textcolor{black}{+0.04}}} & \colorbox[HTML]{FDEEED}{\makebox[2.4em]{\textcolor{black}{-0.07}}} & \colorbox[HTML]{F2A3A2}{\makebox[2.4em]{\textcolor{black}{-0.35}}} & \colorbox[HTML]{F2A3A2}{\makebox[2.4em]{\textcolor{black}{-0.39}}} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\paragraph{Design decisions: a P3Net ablation round.} Beyond the headline comparison above, five further design points left open by
-Section~\ref{sec:proposed-optimizer} -- whether to compute $f_2$ fresh via the substrate's analytic cost
-hook rather than inherit it from the ancestor, whether every pyramid level should stay live and sweep
-simultaneously (cascade) rather than only the newest, whether population truncation should use nondominated
-sort rather than a single-objective sort on $f_1$, whether stall recovery should force pyramid growth rather
-than reinject random diversity, and whether the optimal-mixing donor pool should admit transient,
-not-yet-evaluated individuals from the same iteration -- plus two of the algorithm's existing heuristic
-defaults, $\kappa$ and the step-3 acceptance threshold (Chain depth ($\kappa$),
-Section~\ref{sec:proposed-optimizer}), spot-checked at half/double $\kappa$ and a permissive/strict
-threshold -- were each implemented as a single-axis variant of \texttt{p3net.yaml} and measured against it
-across the same $R=30$, four-dataset, four-budget grid (nine variants, 144 comparisons total,
-Holm--Bonferroni corrected per cell, per variant). Of these, one showed a consistent, partly-significant
-improvement (analytic cost: favourable direction in 15 of 16 search-space/budget cells, significant on
-Fashion-MNIST at budget~200, $p=0.0012$, and budget~350, $p=0.0034$, with a strengthening effect size and
-tighter variance as budget grows, at no extra evaluation cost), and was adopted as the only behaviour --
-\texttt{use\_analytic\_cost} is no longer a config flag; \texttt{build\_method} wires the substrate's own
-\texttt{analytic\_cost\_objectives} into every \texttt{p3net} config unconditionally. Cascade showed one
-significant win (Colorectal-Histology, budget~200, $p=0.0168$), a favourable direction on
-Colorectal-Histology and NAS-HPO-Bench-II overall, but a neutral-to-negative direction on CIFAR-10 and a
-non-significantly worse result on Fashion-MNIST at budget~50 -- combined with cascade's real per-iteration
-compute cost (the surrogate is refit and the linkage tree rebuilt once per active level rather than once
-total), this mixed, dataset-dependent evidence did not warrant adoption; it is left as a candidate for a
-dedicated, better-powered follow-up (Conclusions). The remaining seven -- population truncation, stall
-recovery, donor provenance, and all four $\kappa$/threshold spot-checks -- showed no significant difference
-anywhere in the 112 comparisons across them, and were kept exactly as designed: nondominated-sort truncation,
-reinjection-based stall recovery, $\mathcal{H}_t$-only donor provenance, and the original
-$\kappa=2\lceil\log_2(n)\rceil$/zero-threshold defaults. The $\kappa$/threshold spot-checks are single-axis
-snapshots, not the full joint grid; the dedicated joint sweep is reported separately, below.
-
-Adopting analytic cost is not free of a cost of its own, however, and reporting it without this second
-finding would be misleading by omission. Section~\ref{sec:results}'s Surrogate quality paragraph reports
-that acceptance-gate precision collapsed from $0.672$ under the pre-adoption default to $0.497$ under the
-now-adopted one -- a real regression on that specific measure, not a rounding artefact. A follow-up
-investigation traced this directly, on matched seeds, rather than inferring it from aggregate statistics
-alone, and ruled out four candidate explanations in turn: it is not a logging or selection artefact (the
-telescoped $f_1$ estimate for a given candidate is byte-identical whether or not analytic cost is enabled,
-confirmed by direct trace -- analytic cost only ever touches $f_2$); it is not accumulated telescoping error
-from longer surrogate-only chains (mean accepted chain length is, if anything, shorter under the new default
-across five matched seeds, $4.05$ vs.\ $4.65$, and the degradation is present at every chain length, not
-concentrated in long chains); it is not a worse-fitting surrogate (in-sample $R^2$ on the model's own
-training pairs is essentially unchanged, $0.85$--$0.99$ either way, with zero negative-$R^2$ iterations in
-either condition); and it is not that promoted candidates sit farther from the training distribution
-(distance to the training centroid and to the nearest training pair are both statistically indistinguishable
-between the two defaults, and the degradation is uniform across near and far candidates alike). What does
-explain it: because $C^*$ selection is nondomination in $(\hat{f}_1, f_2)$ (Deduplication,
-Section~\ref{sec:proposed-optimizer}), and every logged prediction is by construction a predicted
-improvement (a modification only reaches the log once accepted, Surrogate quality above), the quantity this
-metric actually reports is the acceptance gate's precision -- and once $f_2$ genuinely varies per candidate
-rather than being inherited as a near-constant, the gate starts promoting candidates on the strength of a
-good $f_2$ as often as a confident $f_1$ prediction, which a direct sweep-by-sweep trace confirms: the two
-defaults' evaluated-genotype sequences, identical through the bootstrap phase, diverge as early as the
-fourth sweep-based decision on a matched seed. Fixed-budget hypervolume, the metric this decision was
-actually made on, still favours analytic cost despite this (Fixed-budget summary, above) -- the two
-outcomes are real and simultaneously true, and the full account of why a lower-precision gate coexists with
-a better downstream result is left as an open point (Conclusions).
-
-\paragraph{Surrogate error accumulation ($\kappa$ and acceptance threshold) sensitivity.} The joint
-$\kappa \times$ acceptance-threshold grid (\texttt{configs/experiment/kappa\_threshold\_sweep.yaml}: $\kappa
-\in \{1, \lceil\log_2 n\rceil, 2\lceil\log_2 n\rceil, \infty\}$, threshold $\in \{0, \epsilon, 2\epsilon\}$,
-$\epsilon = 0.01$, full cross product, $R=30$) has since completed across all four search spaces and budget
-tiers via \texttt{scripts/run\_kappa\_sensitivity.py}. Two results, neither favourable to retuning either
-knob as a lever: fixed-budget hypervolume (own-run reference point) varies by only $0.08$--$0.68\%$ relative
-spread across the full 12-cell grid per search space at budget~350 -- effectively flat -- and surrogate rank
-correlation (Spearman, predicted vs.\ true $\delta$) is modestly positive everywhere ($0.14$--$0.41$
-median across cells) but does not track the per-dataset outcome ranking (Fixed-budget summary, above):
-NAS-HPO-Bench-II has the \emph{highest} rank correlation of the four search spaces ($0.29$--$0.41$) despite
-the worst fixed-budget outcome, echoing the acceptance-gate-precision investigation's own conclusion that
-aggregate surrogate-quality metrics do not explain the per-dataset pattern (Design decisions, above).
-Separately, pooling this same completed sweep's diagnostics shows the mixing-driven (surrogate-guided)
-share of the budget is itself essentially invariant to $\kappa$ and threshold -- $6.0$--$7.1\%$ median at
-budget~350 in every one of the 12--16 cells per search space, matching the headline \texttt{p3net} arm's own
-default-configuration share almost exactly (Diagnostics: population-pyramid bootstrap share, below) -- so
-neither knob is an available fix for that finding either.
-
-\paragraph{Diagnostics: genotype duplication.} Figure~\ref{fig:duplication-rate} shows mean proposal-time
-duplication rate per method, pooled across all four search spaces, all four budgets, and all seeds. The
-result still complicates rather than confirms the hypothesis Introduction and Related Work raise, that a
-dependency-aware search operator should propose fewer duplicate genotypes than one blind to variable
-structure: P3-alone ($0.734$) and P3+absolute-regressor ($0.409$) remain the two highest-duplication methods
-in the grid, both P3-engine arms without the relative surrogate, while NSGA-Net ($0.038$), NSGANetV2
-($0.046$), MO-BOHB ($0.0005$), random search ($0.0001$), and TPE ($0.087$) all sit at or near zero and
-SH-EMOA sits at $0.234$. P3-alone-pop20 ($0.448$) barely improves on plain P3-alone despite doubling its
-population to match every other baseline -- population size alone is a weak lever on duplication here.
-P3-alone-pop40 ($0.187$), at four times the original population, does substantially better, but is still
-roughly nine times P3Net's own rate ($0.021$, still the lowest or tied-lowest in the grid among the
-P3-engine and NSGA-II-engine arms). Population size measurably helps, but even a fourfold increase does not
-close the gap to what the relative, linkage-aware surrogate achieves on top of the \emph{original},
-unenlarged population -- reinforcing, on a second and independent axis from hypervolume, that suppressing
-duplicate proposals here is substantially a surrogate effect rather than a population-size effect the
-original \texttt{p3\_alone.yaml}'s smaller population happened to obscure. Read together with the
-fixed-budget summary above, where P3Net significantly beats plain P3-alone on three of four search spaces,
-the duplication-rate gap is a plausible part of that mechanism on those search spaces: a duplicate proposal
-wastes a sweep step without changing the population, so suppressing far more of them, as P3Net does, should
-help regardless of channel -- though NAS-HPO-Bench-II, where the ablation win disappears and inverts at the
-highest budget (Fixed-budget summary, above), is a reminder that a lower duplication rate does not by itself
-guarantee a better fixed-budget outcome.
-
-\paragraph{Diagnostics: population-pyramid bootstrap share.} A follow-up investigation, prompted by neither
-the variance/IQR nor the acceptance-gate-precision account above cleanly explaining the per-dataset ranking
-pattern, measured what fraction of \texttt{p3net}'s own evaluation budget is spent on genuinely
-surrogate-guided optimal-mixing proposals versus uniform-random population bootstrap. \texttt{Pyramid}
-(\texttt{search\_engines.p3.pyramid}) grows levels geometrically ($\text{size} = \text{growth\_factor}^{k}$,
-i.e.\ $2, 4, 8, \dots, 256$ at the default \texttt{growth\_factor}$=2$); in its originally-diagnosed form it
-started every new level from an \emph{empty} population filled only by uniform random sampling, and grew a
-new level as soon as the current one failed once to strictly Pareto-dominate its own incumbent -- a
-documented simplification (only the newest level is ever swept; Section~\ref{sec:proposed-optimizer}).
-Because geometric growth makes each new level larger than the sum of every level before it, this
-structurally forced the uniform-random-bootstrap share of the total budget to \emph{rise}, not fall, as the
-budget grew, in the originally-diagnosed version: instrumented replay on NAS-HPO-Bench-II measured
-$81.6\%\to93.0\%$ bootstrap share from budget~50 to~350. A redesign was implemented in response -- newly
-grown levels are now warm-started from $\mathcal{H}_t$'s current nondominated front rather than starting
-empty, and the strict-Pareto-dominance stall trigger is replaced by a hypervolume-contribution criterion
-(Conclusions) -- and the numbers below, and every table in this section, reflect the full $R=30$ grid
-re-run under that fix (2026-08-18), not the originally-diagnosed pre-fix behaviour.
-
-Under the fix, the same NAS-HPO-Bench-II budget sweep now reads $68.6\%\to77.4\%\to85.6\%\to91.0\%$
-(budgets $50,100,200,350$) -- still rising with budget, since the fix does not change the geometric growth
-rule itself, but consistently lower at every tier than the pre-fix curve. Cross-checked at budget~350 across
-all four search spaces: $90.3\%$ (JAHS-Bench-201/CIFAR-10), $91.7\%$ (Colorectal-Histology), $92.4\%$
-(Fashion-MNIST), $91.0\%$ (NAS-HPO-Bench-II) -- down from the pre-fix $93$--$94\%$ uniformly, a real,
-consistent, but modest reduction. The behavioural consequence, even under the fix:
-\textbf{P3Net is still not statistically distinguishable from \texttt{random\_search} in any of the sixteen
-(search-space, budget) cells} in the Fixed-budget summary above (every \texttt{random\_search} row already
-shows \texttt{reject\_null=no}; Cliff's $\delta$ against \texttt{random\_search} is $\leq 0.25$ in magnitude
-everywhere). Consequently P3Net's own margin against each of its ten baselines still tracks that baseline's
-own margin against \texttt{random\_search} almost exactly (Spearman $\rho=0.945$, $n=144$, $p=4.7\times
-10^{-71}$, across every search-space $\times$ budget $\times$ baseline combination) -- essentially unchanged
-from the pre-fix $\rho=0.962$, since the mechanism (geometric growth outpacing any fixed-size fix to the
-transition rule) is untouched by the redesign, only its severity is. This also reframes the ablation-family
-wins reported above (Fixed-budget summary; Design decisions, below): \texttt{p3\_alone} and its
-population-size variants use a \emph{fixed}, not growing, population and fail differently -- by stagnating
-in a small, repeatedly-revisited population rather than by defaulting to broad random sampling (P3-alone
-sweep-completion diagnostic, below) -- so P3Net's measured advantage over them is not sufficient evidence,
-on its own, that the relative surrogate is what drives it; it is at least partly consistent with broad,
-unguided exploration beating a stalled, narrow one. A joint $\kappa$/acceptance-threshold sensitivity sweep (Surrogate error accumulation, above), run against the
-pre-fix pyramid, ruled out retuning either knob as an available fix. A further, literature-grounded
-strengthening attempt was tried, reverted after a severe regression, and is left as the natural next
-candidate (Conclusions).
-
-A broader check across the full grid puts P3Net's own record in context. Repeating the identical
-per-cell Holm-corrected comparison, but against \texttt{random\_search} as the reference arm instead of
-P3Net (160 method $\times$ search-space $\times$ budget cells, the ten non-\texttt{random\_search} arms
-corrected against it within each cell exactly as P3Net is corrected against its ten baselines elsewhere in
-this section), $54$ of $160$ ($34\%$) reject the null under the fixed pyramid -- down from the pre-fix
-$67/160$ ($42\%$), and failing to separate from random search in \emph{some} cells remains common across
-this grid, not unique to P3Net. Per arm, the counts now range from SH-EMOA (12 of 16 cells) and P3-alone (11
-of 16) down through NSGANetV2 (8), P3-alone-pop20 (7), NSGA-Net and P3-alone-pop40 (6 each), and TPE (3, down
-from the pre-fix 5), to MO-BOHB (1 of 16, consistent with its own weak-separation account above), and
-\textbf{P3+absolute-regressor and P3Net (0 of 16 each)}. The P3+absolute-regressor count is the single
-largest mover in this table: it stood at 10 of 16 under its pre-fix, flat-population engine (Diagnostics:
-surrogate representational capacity, above), and collapses to 0 of 16 once it shares P3Net's own
-bootstrap-dominated \texttt{Pyramid} engine -- direct, mechanistic evidence that its apparent pre-fix
-strength against random search was substantially an artefact of its \emph{different, non-Pyramid} population
-management, not of the absolute-regressor surrogate it actually tests. Failing to separate from random
-search in \emph{every} cell tested is now shared by P3Net and P3+absolute-regressor -- the two arms that run
-\texttt{Pyramid} -- and nearly so by MO-BOHB; every arm that does \emph{not} run \texttt{Pyramid} still beats
-random search significantly at least a fifth of the time.
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/duplication_rate.png}
-    \caption{Mean proposal-time genotype duplication rate by method, pooled across all four search spaces,
-    all four budgets, and all thirty seeds.}
-    \label{fig:duplication-rate}
-\end{figure}
-
-Table~\ref{tab:p3-alone-sweeps} reports the P3-alone ablation's own diagnostic, the median number of full
-optimal-mixing sweeps completed within budget (Baselines, above; the two population-size variants are not
-included, since \texttt{p3\_alone\_sweep\_completion\_table} matches on the exact method name
-\texttt{p3\_alone}). At budget~50 the counts are small and similar across all four search spaces (7.0
-sweeps on all three JAHS-Bench-201 datasets, 9.0 on NAS-HPO-Bench-II), consistent with the budget-starvation
-story the ablation was designed around: a full sweep over a joint genotype's linkage subsets costs several
-full evaluations, so a 50-evaluation budget only affords a handful. That story extends even less cleanly to
-the larger tiers: the median reaches 2203.5 sweeps on CIFAR-10, 1508.5 on Colorectal-Histology, 1540.5 on
-Fashion-MNIST, and 2388.5 on NAS-HPO-Bench-II at budget~350 -- four to seven times the evaluation budget
-itself, on every search space. The mechanism is the same explanation throughout: every completed sweep is
-counted regardless of whether its proposed modifications were fresh evaluations or cache hits against the
-deduplication cache (Section~\ref{sec:proposed-optimizer}), and P3-alone's population size is fixed at 10,
-so once that small population stalls on a handful of genotypes it keeps revisiting, most subsequent sweeps
-complete almost entirely from cache at near-zero cost to the evaluation budget, without the search actually
-exploring anything new. The raw sweep count remains not directly interpretable as exploration achieved.
-
-\begin{table}[t]
-    \centering
-    \footnotesize
-    \caption{P3-alone: median number of full optimal-mixing sweeps completed within budget (Baselines,
-    above). $n=30$ seeds per cell.}
-    \label{tab:p3-alone-sweeps}
-    \begin{tabular}{@{}lrrr@{}}
-        \toprule
-        \textbf{Search space} & \textbf{Budget} & \textbf{Median sweeps} & \textbf{IQR} \\
-        \midrule
-        JAHS-Bench-201 (CIFAR-10) & 50 & 7.0 & 1.8 \\
-        JAHS-Bench-201 (CIFAR-10) & 100 & 33.0 & 44.5 \\
-        JAHS-Bench-201 (CIFAR-10) & 200 & 573.5 & 555.8 \\
-        JAHS-Bench-201 (CIFAR-10) & 350 & 2203.5 & 1084.0 \\
-        JAHS-Bench-201 (Colorectal-Histology) & 50 & 7.0 & 1.0 \\
-        JAHS-Bench-201 (Colorectal-Histology) & 100 & 25.5 & 9.8 \\
-        JAHS-Bench-201 (Colorectal-Histology) & 200 & 465.5 & 348.0 \\
-        JAHS-Bench-201 (Colorectal-Histology) & 350 & 1508.5 & 907.5 \\
-        JAHS-Bench-201 (Fashion-MNIST) & 50 & 7.0 & 2.0 \\
-        JAHS-Bench-201 (Fashion-MNIST) & 100 & 25.0 & 17.0 \\
-        JAHS-Bench-201 (Fashion-MNIST) & 200 & 417.5 & 489.5 \\
-        JAHS-Bench-201 (Fashion-MNIST) & 350 & 1540.5 & 1298.8 \\
-        NAS-HPO-Bench-II & 50 & 9.0 & 1.0 \\
-        NAS-HPO-Bench-II & 100 & 51.5 & 157.0 \\
-        NAS-HPO-Bench-II & 200 & 808.5 & 383.8 \\
-        NAS-HPO-Bench-II & 350 & 2388.5 & 953.2 \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\paragraph{Diagnostics: surrogate representational capacity.} A separate hypothesis from the same
-investigation, orthogonal to \texttt{Pyramid}'s growth rule above: whether $\hat{\delta}_F$'s own model class
-can represent what P3's linkage-guided crossover proposes. \texttt{RelativeLinkageAwareSurrogate.fit}
-(\texttt{p3net.surrogates.relative\_linkage\_aware}) trains \texttt{sklearn.LinearRegression} on
-$X = \mathrm{onehot}(x) \oplus \mathrm{onehot}(x')$, $y = f_1(x) - f_1(x')$; a linear model on concatenated
-one-hot endpoints can only represent $\hat{\delta}_F(x,x') = w \cdot \mathrm{onehot}(x) - w \cdot
-\mathrm{onehot}(x')$ -- an antisymmetric, strictly \emph{additive} function of the genotype coordinates,
-with no term for how two simultaneously changed coordinates jointly affect the outcome, confirmed
-empirically ($\mathrm{corr}(w_{\text{left}}, -w_{\text{right}}) = 1.0000$ exactly, 40/40 real fits pooled
-across 10 seeds and all four search spaces). The identical model class -- \texttt{sklearn.LinearRegression}
-over a plain one-hot encoding, no interaction terms -- is also what \texttt{AbsoluteRegressorSurrogate} uses
-for both the P3+absolute-regressor ablation and NSGANetV2 (\texttt{scripts/run\_experiment.py::
-build\_method} wires \texttt{model\_factory=LinearRegression} identically for all three). This limitation is
-therefore shared by every surrogate-based arm in the grid, not specific to the relative formulation, and so
-cannot by itself explain a difference \emph{between} them. A further complication for reading the
-P3Net-vs-P3+absolute-regressor numbers reported above as isolating the surrogate alone: at the time that grid
-was run, \texttt{methods.p3\_absolute.P3Absolute} did not reuse \texttt{Pyramid} -- it swept a single
-fixed-size population of 20 every call, with no geometric growth and none of the bootstrap-dominance
-pathology above (Diagnostics: population-pyramid bootstrap share) -- so the gap between the two arms above
-mixes a surrogate-formulation difference with a population-management difference, not the surrogate alone as
-the Baselines paragraph frames it. \texttt{P3Absolute} has since been rewritten to share P3Net's own Pyramid
-engine exactly (Conclusions), closing this specific confound; the full grid has been re-run under it
-(2026-08-18) and Tables~\ref{tab:fixed-budget-jahs}--\ref{tab:fixed-budget-nashpo} above already reflect the
-shared-engine numbers, not the earlier flat-population ones. The headline result, stated here rather than
-left implicit: with the population-engine confound removed, P3Net vs.\ P3+absolute-regressor reaches
-significance in $0/16$ cells, in either direction (P3+abs.\ regressor rows above) -- once isolated, this grid
-shows no measurable advantage of the relative surrogate over the absolute regressor (Conclusions).
-
-What it can plausibly explain is why any of the three surrogate-based arms' benefit over their no-surrogate
-counterparts (P3-alone, P3-alone-pop20/40, NSGA-Net) is inconsistent across datasets. P3's own crossover
-restricts variation to linkage subsets specifically because the linkage tree has detected variables whose
-\emph{joint} effect on fitness is not the sum of their individual effects -- protecting exactly those
-detected groups from disruption is the stated purpose of linkage-guided crossover (Related Work); a purely
-additive landscape would need no linkage tree at all, since a single-coordinate hill-climber would already
-find the optimum. Scoring exactly those linkage-guided, multi-coordinate proposals with a model that is
-mathematically blind to any interaction among the coordinates it groups together is a structural tension in
-the current design, not merely a hyperparameter choice. A held-out-CV measure of ``architecture-involving
-epistasis'' ($R^2$ gained by adding second-order interactions touching at least one architecture edge, over
-a main-effects-only model of $f_1$) is flat in total ($0.40$--$0.50$) across all four search spaces but moves
-in non-overlapping ranges, in exactly the order of where P3Net's win over its own no-surrogate ablations is
-strongest to weakest: Fashion-MNIST $-0.020$ (near-perfectly additive; P3Net wins at every budget), CIFAR-10
-$+0.034$, Colorectal-Histology $+0.102$, NAS-HPO-Bench-II $+0.250$ (P3Net's ablation wins disappear and
-invert at budget~350) -- the same ordering the population-pyramid finding above already partly explains,
-offered here as a second, structural and independently-motivated account rather than a competing one. $98\%$
-of real P3Net moves touch an architecture edge, so this misspecification is the dominant, not a marginal,
-error mode for this surrogate. Whether this specifically, rather than the bootstrap-dominance mechanism
-above, is what destroys the ablation-family win on the highest-epistasis datasets was not tested
-interventionally (e.g.\ by holding the pyramid fixed and swapping only the model class) and is flagged as
-unverified; Conclusions returns to it as a second, independent candidate direction alongside the pyramid
-redesign.
-
-The candidate interaction-feature fix for this representational limit (Conclusions) is unit-tested against a
-constructed non-additive pattern (capacity gain confirmed directly) and run on the full grid as
-\texttt{p3net\_surrogate\_interactions}. Against the Phase-2-fixed \texttt{p3net} baseline it reaches
-significance in $0/16$ cells, with small, sign-inconsistent effect sizes. The added capacity is real, but
-this benchmark family's landscapes evidently do not carry
-enough exploitable interaction structure, at this scale, for it to change search outcomes -- consistent with
-the account (Related Work, Conclusions) that P3Net's mechanism needs more architectural complexity than these
-four benchmarks offer before its advantage can show.
-
-This also bears on how $\hat{\delta}_F$ compares to the two search-time, linkage-aware surrogates it is
-positioned against in Related Work. Bartnik's absolute regressor is deliberately not restricted to a linear
-model: it is fit as one of several nonlinear-capable families (SVR, MLP, random forest, or gradient
-boosting)~\citep{bartnik2026evolutionary}, so an interaction between two genotype coordinates is
-representable there regardless of whether her linkage mechanism routes it explicitly. eLyMPuS~\citep{przewozniczek2026lympus} does not face
-this specific failure mode either, but for a different, more structural reason: it is not a regression over
-a concatenated encoding at all, but a discrete better/worse/ambiguous comparison tied directly to its own
-recursive linkage discovery, under a monotonicity assumption P3Net's own adaptation explicitly declines to
-import (Related Work). $\hat{\delta}_F$'s specific combination -- linear, and
-fit over the flat concatenated encoding rather than routed through the linkage tree's own subset structure
--- is accordingly closer to what CS-GOMEA's authors already flag as an open problem in their own,
-differently-shaped surrogate: a model that does not exploit linkage tree information in its own
-construction~\citep{dushatskiy2019csgomea}.
-
-\paragraph{Scope, and what would extend it.} The comparisons above hold within a single, shared cell search
-space and small-scale image classification, across four datasets (Related Work), a scope this project's own
-background research and the wider NAS benchmarking literature both document as a real limit on how far any
-single-benchmark result generalises~\citep{yang2020nasfrustratinglyhard,mehta2022nasbenchsuite,
-lopes2023nasbenchdesign,tu2022nasbench360,duan2021transnasbench101}. The dataset extension this project
-carried out within that shared family -- running JAHS-Bench-201's Colorectal-Histology and Fashion-MNIST
-datasets alongside its CIFAR-10 default -- is itself informative about that limit, and the honest reading is
-mixed rather than confirmatory. The core surrogate-vs.-no-surrogate mechanism holds most completely on
-Fashion-MNIST (Fixed-budget summary, above: P3Net beats every ablation-family arm at multiple budgets,
-including the absolute-regressor variant, the largest and cleanest margin in the grid), holds partially on
-CIFAR-10, narrows on Colorectal-Histology, and disappears -- inverting at the highest budget -- on
-NAS-HPO-Bench-II, the one benchmark built from measured rather than surrogate-modelled data. Extending
-within this benchmark family did not produce a uniformly stronger case for the mechanism; it produced real,
-measured heterogeneity, which is itself evidence worth having rather than a null result to discount.
-
-Two observations, unaffected by that within-family heterogeneity because they concern a different axis --
-structural complexity and dimensionality, not dataset identity -- are still consistent with, though do not
-by themselves establish, the hypothesis that the relative surrogate's advantage would be at least as large
-on a bigger or more structurally complex search space than any tested here. First, the surrogate's value on
-its best-case search spaces is a real, replicated effect obtained on a search space Lopes et al.\ document as
-comparatively small and unstructured among NAS benchmarks~\citep{lopes2023nasbenchdesign} -- toward the
-easier end of what the P3/GOMEA lineage has been validated on, not the harder end where this lineage's own
-literature reports its advantage over generic search actually growing (Related Work). Second, the
-duplication-rate gap (Diagnostics, above) separates P3Net from every non-linkage-aware method by roughly an
-order of magnitude on this six-edge cell encoding, consistently across all four datasets regardless of
-whether the fixed-budget comparison favours P3Net on that dataset or not; a larger or deeper genotype, with
-more higher-order dependencies for a linkage tree to actually exploit, is exactly the regime in which this
-method family's own combinatorial validation literature reports that gap widening further, not
-narrowing~\citep{goldman2015fast,qiao2024gomearuntime,dushatskiy2019csgomea}. Neither observation licenses a
-claim that P3Net would outperform its baselines on a larger search space or a different task domain --
-establishing that would require actually running the comparison there, which this study does not do, and the
-dataset-level heterogeneity just reported is itself a reason for caution about how far any such extrapolation
-should be trusted -- but together they remain a specific, measured reason, tempered rather than strengthened
-by what extending within this family actually showed, that testing a larger or more structurally complex
-search space is a reasoned next step and not merely a possible one (Conclusions).
-
+\paragraph{The closest prior design.} Bartnik's SA-P3-GOMEA-class algorithm is documented to win on a search
+space of this scale~\citep{bartnik2026evolutionary}. We reconstructed it as \texttt{bartnik\_p3}: canonical
+single-individual-climbing P3, a random-forest absolute surrogate, and a quantile acceptance
+gate~\citep{dushatskiy2021novelsurrogateassistedevolutionaryalgorithm}. This design avoids both of P3Net's
+diagnosed defects: it has no geometrically bootstrapped levels, and its surrogate is not additive. On the
+identical setup it does not separate from random search, nor from P3Net (Table~\ref{tab:isolation}). The null is
+therefore not specific to P3Net's implementation; under this harness and baseline set, a design free of both
+defects produces it as well.
