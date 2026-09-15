@@ -1,0 +1,25 @@
+# Surrogate-only ablation on the final engine (v0.0.4 plan, stage 3).
+#
+# The final P3Net (p3net_cascade.yaml, S5) with its relative, linkage-aware
+# surrogate delta_hat_F replaced by an absolute regressor on the one-hot
+# genotype (P3Absolute's surrogate). The regressor is RidgeCV, the same
+# model class as S5's relative surrogate, so the only difference is
+# relative + linkage-aware vs absolute. Acceptance: predicted f1 improves on
+# the current individual by at least acceptance_threshold (P3Absolute's rule).
+#
+# It replaces running the v0.0.3 p3_absolute arm (fixed engine, OLS) on the
+# cascade engine: p3_absolute has no cascade mode, and OLS was dropped from
+# the design at S3.
+#
+# Reference: lib p3net.methods.p3net (surrogate_kind "absolute_linear").
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  cascade: true
+  surrogate_kind: absolute_linear
+  surrogate_model: ridge_cv

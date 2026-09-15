@@ -1,0 +1,14 @@
+# P3Net-eLyMPuS (plan M8): as p3net_bartnik_fihc, but the hill-climbing acceptance is decided by eLyMPuS partial comparisons on the same forest.
+#
+# Hyperparameters are this project's defaults, never tuned on these benchmarks.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  cascade: true
+  surrogate_kind: absolute_rf
+  hill_climber: fihc_elympus

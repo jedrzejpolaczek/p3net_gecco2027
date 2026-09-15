@@ -1,0 +1,14 @@
+# P3Net-Bartnik + FIHC (control for P3Net-eLyMPuS): as p3net_bartnik, plus plain first-improvement hill climbing on the forest's predicted f1 after each sweep. Differs from p3net_elympus only in the comparison mechanism.
+#
+# Hyperparameters are this project's defaults, never tuned on these benchmarks.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  cascade: true
+  surrogate_kind: absolute_rf
+  hill_climber: fihc

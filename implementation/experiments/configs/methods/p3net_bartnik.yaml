@@ -1,0 +1,14 @@
+# P3Net-Bartnik (plan M7): the final P3Net engine (S5, cascade) with its relative surrogate replaced by an absolute random forest (the nonlinear surrogate of this project's Bartnik reconstruction). No local refinement.
+#
+# Hyperparameters are this project's defaults, never tuned on these benchmarks.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  cascade: true
+  surrogate_kind: absolute_rf
+  hill_climber: none
