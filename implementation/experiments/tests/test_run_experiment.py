@@ -325,3 +325,37 @@ def test_build_method_p3net_requires_a_substrate():
             rng=None,
             cache=None,
         )
+
+
+# -- design-decision ablation variants (restored 2026-09-13, review P4) -----
+
+_DESIGN_VARIANTS = {
+    "p3net_inherited_cost": {},
+    "p3net_cascade": {"cascade": True},
+    "p3net_f1_truncation": {"truncation": "f1_sort"},
+    "p3net_grow_on_stall": {"stall_recovery": "grow"},
+    "p3net_transient_donors": {"donor_pool": "transient"},
+    "p3net_kappa_half": {"kappa": 4},
+    "p3net_kappa_double": {"kappa": 16},
+    "p3net_threshold_strict": {"acceptance_threshold": 0.01},
+    "p3net_threshold_permissive": {"acceptance_threshold": -0.01},
+}
+
+
+@pytest.mark.parametrize("name,expected", sorted(_DESIGN_VARIANTS.items()))
+def test_design_variant_config_loads_runs_and_reaches_p3net(name, expected, fake_search_space_config):
+    """Each restored variant is a single-axis params: override on
+    method: p3net, stays out of the default grid, runs a full budget, and
+    its one changed setting actually reaches the constructed P3Net."""
+    config = run_experiment.load_method_config(name)
+    assert config["method"] == "p3net"
+    assert config["default_grid"] is False
+
+    result = run_experiment.run_single(config, fake_search_space_config, budget=60, seed=1)
+    assert result.state.evaluations_used == 60
+    for attr, value in expected.items():
+        assert getattr(result.method, attr) == value
+    if name == "p3net_inherited_cost":
+        assert result.method.analytic_cost is None
+    else:
+        assert result.method.analytic_cost is not None
