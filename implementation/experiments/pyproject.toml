@@ -23,6 +23,16 @@ dependencies = [
     # requirement set, not arbitrary transitive dependencies.
     "netifaces",
     "hpbandster>=0.7.4",
+    "smac>=2.4.1",
+    "botorch>=0.18.1",
+    "pymoo>=0.6.2",
+    "google-vizier[jax]>=0.1.24",
+    "jax>=0.4.34,<0.5",
+    # CUDA build from the PyTorch index ([tool.uv.sources] below): BoTorch
+    # arms run on the GPU when one is available.
+    "torch>=2.14.0",
+    "psutil>=7.0",
+    "pyarrow>=17",
 ]
 
 [project.optional-dependencies]
@@ -44,12 +54,18 @@ reporting = [
 # is the forcing function that keeps the library's public API honest.
 [tool.uv.sources]
 p3net = { path = "../lib", editable = true }
+torch = { index = "pytorch-cu126" }
 # netifaces has no prebuilt wheel for modern Python on Windows and needs
 # MSVC Build Tools to build from source. It's a hard install_requires of
 # hpbandster (MO-BOHB's backend) but is only ever used inside a lazy
 # import in a function this project's usage never calls -- see
 # vendor/netifaces-stub/netifaces/__init__.py for the verified reasoning.
 netifaces = { path = "vendor/netifaces-stub", editable = true }
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]
