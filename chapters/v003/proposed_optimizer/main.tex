@@ -16,7 +16,7 @@
         \node[box, right=of propose]      (score) {score\\$\hat{\delta}_F(x,x')$};
         \node[tentative, right=of score]  (accept) {tentative accept\\if $\hat\delta_F \geq 0$};
         \node[box, right=of accept]       (select) {sweep done or\\$\kappa$ reached:\\select $C^*$};
-        \node[real, right=of select]      (eval) {full\\evaluation\\$f_1(x)$};
+        \node[real, right=of select]      (eval) {full\\evaluation\\$\mathbf{f}(x)$};
         \node[real, right=of eval]        (update) {update $\mathcal{H}_t$,\\retrain $\hat\delta_F$,\\rebuild tree};
 
         \draw[arr] (parent) -- (propose);
@@ -33,96 +33,62 @@
             node[midway, below, font=\tiny] {next iteration};
     \end{tikzpicture}%
     }
-    \caption{One P3Net search-loop iteration (Search loop, below). Solid boxes hold individuals with a
-    real, fully evaluated $f_1$ (members of $\mathcal{H}_t$); dashed boxes hold transient individuals
-    accepted only by the surrogate $\hat\delta_F$, never yet confirmed by a full evaluation. The upper loop
-    repeats for each linkage subset visited in the sweep, up to the chain-depth limit $\kappa$
-    (Chain depth, below); the lower loop begins the next search iteration.}
+    \caption{One P3Net iteration. Solid boxes hold fully evaluated individuals (members of $\mathcal{H}_t$);
+    dashed boxes hold transient individuals accepted only by the surrogate. The upper loop repeats per linkage
+    subset in the sweep, up to chain depth $\kappa$; the lower loop starts the next iteration.}
     \Description{A left-to-right flow diagram: parent x from H sub t leads to propose x-prime on subset F,
     then score via delta-hat sub F, then tentative accept if delta-hat is at least zero, then select C-star
-    once the sweep is done or kappa is reached, then full evaluation of f sub 1, then update H sub t and
-    rebuild the linkage tree. A small loop returns from tentative accept back to propose for the next subset,
-    and a larger loop returns from the update step back to parent for the next search iteration.}
+    once the sweep is done or kappa is reached, then full evaluation, then update H sub t and rebuild the
+    linkage tree. A small loop returns from tentative accept back to propose for the next subset, and a
+    larger loop returns from the update step back to parent for the next iteration.}
     \label{fig:p3net-loop}
 \end{figure*}
 
-\paragraph{Representation and linkage tree.} A linkage tree is built from the current population, reflecting statistical dependencies between genotype variables: the per-edge operation choices of Section~\ref{sec:problem-formulation}, extended below to include the discretised $\Theta$ coordinates once the joint setting is in scope. Following the standard P3 procedure, the tree is constructed by agglomerative, UPGMA-style hierarchical clustering -- repeatedly merging the two most similar remaining groups of variables -- over a normalised mutual information based dependency measure between genotype variables, yielding the nested family of variable subsets used by the optimal mixing operator (Figure~\ref{fig:linkage-tree}); this construction is applied to the NAS genotype unchanged from its original combinatorial optimisation form. P3Net adopts option~(i) from Section~\ref{sec:problem-formulation}: each continuous coordinate of $\Theta$ is discretised into a finite set of bins, fixed once before search (e.g.\ a log-spaced grid for learning rate), so that the joint genotype $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$ is entirely categorical and the linkage tree, its mutual-information-based dependency measure, and the optimal mixing sweep described below apply to it exactly as to the architecture-only encoding, with no separate real-valued mixing mechanism. This trades the resolution of the continuous hyperparameter search for keeping the central comparison against NSGA-II/NSGANetV2 attributable to the search engine and surrogate alone, rather than conflating it with an additional, separately novel continuous-mixing extension to P3; extending to option~(ii) (real valued mixing in the spirit of RV-GOMEA~\citep{andreadis2024maxclique}) is left as future work.
+\paragraph{Representation and variation.} Following standard P3, a linkage tree is built by UPGMA-style
+agglomerative clustering over a normalised mutual-information dependency measure between genotype
+coordinates~\citep{goldman2014parameterless}. Each continuous hyperparameter is discretised once before search
+into a fixed grid (e.g.\ log-spaced for learning rate), so the tree, its dependency measure, and optimal mixing
+apply to the joint genotype unchanged. This trades hyperparameter resolution for keeping the comparison
+attributable to engine and surrogate rather than to a new real-valued mixing operator; every baseline searches
+the same discretised grid. As in the P3/GOMEA lineage there is no mutation: all variation comes from
+linkage-guided optimal mixing against donors.
 
-\begin{figure}[t]
-    \centering
-    \begin{tikzpicture}[scale=0.85, every node/.style={font=\scriptsize}]
-        \node (l1) at (0, 0)  {$x_1$};
-        \node (l2) at (8mm, 0)  {$x_2$};
-        \node (l3) at (16mm, 0) {$x_3$};
-        \node (l4) at (24mm, 0) {$x_4$};
-        \node (l5) at (32mm, 0) {$x_5$};
-
-        \coordinate (m12)  at (4mm, 6mm);
-        \coordinate (m45)  at (28mm, 6mm);
-        \coordinate (m123) at (10mm, 12mm);
-        \coordinate (root) at (16mm, 18mm);
-
-        \draw (l1) |- (m12);
-        \draw (l2) |- (m12);
-        \draw (m12) |- (m123);
-        \draw (l3) |- (m123);
-        \draw (l4) |- (m45);
-        \draw (l5) |- (m45);
-        \draw (m123) |- (root);
-        \draw (m45) |- (root);
-
-        \draw[thick] (m123) circle(1mm);
-        \node[align=left, text width=16mm] at (10mm, 16mm) {\tiny $F=\{1,2,3\}$};
-    \end{tikzpicture}
-    \caption{Illustrative linkage tree over five genotype variables. Leaves are individual coordinates of
-    the joint genotype $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$; each internal node is a
-    candidate linkage subset $F$ that may be visited during the optimal mixing sweep (step~1, Search loop,
-    below). A concrete subset, $F=\{1,2,3\}$, is highlighted.}
-    \Description{A binary tree over five leaf variables x sub 1 through x sub 5: x1 and x2 merge into a node,
-    which merges with x3 into a highlighted node representing the subset F equals 1, 2, 3; separately x4 and
-    x5 merge into another node; both merged nodes join at the root.}
-    \label{fig:linkage-tree}
-\end{figure}
-
-\paragraph{Crossover.} Crossover operates on the level of variable groups identified by this tree, rather than individual bits, protecting detected groups of related design decisions from being disrupted.
-
-\paragraph{No mutation operator.} P3Net, like the wider P3/GOMEA lineage it draws on~\citep{goldman2014parameterless,thierens2011optimal}, has no separate mutation step: all variation is produced by the crossover-guided optimal mixing sweep described below, so population diversity comes entirely from recombination against the linkage tree rather than from an additional random perturbation operator.
-
-\paragraph{Surrogate.} The surrogate's construction in P3Net exploits the same dependency structure that guides the variation operator: the relative, linkage aware estimator $\hat{\delta}_F$ defined in Section~\ref{sec:problem-formulation}, trained on pairwise fitness differences derived from $\mathcal{H}_t$, is what P3's optimal mixing sweep queries at every proposed modification. Mechanistically this regression-based estimator is closer to CS-GOMEA's relative surrogate~\citep{dushatskiy2019csgomea} than to eLyMPuS's discrete comparison; the debt to eLyMPuS, a variant of LyMPuS~\citep{przewozniczek2026lympus}, is philosophical rather than mechanistic. Both predict relative fitness change conditioned on an incompletely discovered linkage structure rather than one assumed known in advance (Section~\ref{sec:related-work} elaborates), adapted here to network architecture encoding.
-
-\paragraph{Telescoping construction.} An estimate of a candidate's absolute error is obtained compositionally, by telescoping this relative correction back along the sweep to the nearest ancestor with a known, fully evaluated value of $f_1$: writing $x_0, x_1, \dots, x_m = x'$ for the chain of tentatively accepted modifications since that ancestor $x_0$ (with $f_1(x_0)$ known), each step contributing $\hat{\delta}_{F_i}(x_{i-1}, x_i)$ for the linkage subset $F_i$ modified at step $i$,
+\paragraph{Surrogate.} $\hat\delta_F$ is a ridge regression (regularisation strength chosen by built-in
+cross-validation) on the concatenated one-hot encodings of parent and candidate, with target
+$f_1(x) - f_1(x')$. A linear model over this encoding can only represent
+$w \cdot \mathrm{onehot}(x) - w \cdot \mathrm{onehot}(x')$: it is additive in the genotype coordinates and has
+no term for how two jointly changed coordinates interact (Section~\ref{sec:results} examines the consequence).
+An absolute estimate for a candidate reached by a chain $x_0, \dots, x_m$ of tentatively accepted modifications
+from a fully evaluated ancestor $x_0$ is obtained by telescoping,
 \[
-    \hat{f}_1(x_m) = f_1(x_0) - \sum_{i=1}^{m} \hat{\delta}_{F_i}(x_{i-1}, x_i),
+    \hat{f}_1(x_m) = f_1(x_0) - \textstyle\sum_{i=1}^{m} \hat{\delta}_{F_i}(x_{i-1}, x_i).
 \]
-which reduces to $\hat{f}_1(x') = f_1(x) - \hat{\delta}_F(x, x')$ in the single step case $m=1$. The chain depth $m$ is bounded by $\kappa$, introduced below, precisely to limit how far this accumulated surrogate error can propagate before a full evaluation resets it.
 
-\paragraph{Search loop.} The linkage tree, the surrogate, and the telescoping construction above are the three pieces the search loop assembles into one working cycle; Figure~\ref{fig:p3net-loop} summarises one iteration, which proceeds as follows:
+\paragraph{Search loop.} Each iteration (Figure~\ref{fig:p3net-loop}):
 \begin{enumerate}
-    \item P3 generates a candidate set $C \subset \Lambda^*$ through crossover guided by the linkage tree; for each parent selected for variation, every linkage subset in the current dependency model is visited in random order, following the standard optimal mixing sweep, and for each subset $F$ a donor is drawn from the population to propose a modification restricted to $F$ (Parent, donor, and ancestor provenance, below);
-    \item every proposed modification $x'$ is scored by the surrogate relative to its immediate predecessor in the sweep, $\hat{f}_1(x')$, obtained via $\hat{\delta}_F$;
-    \item a modification is tentatively accepted if $\hat{\delta}_F$ predicts nonnegative improvement (a zero acceptance threshold by default; Section~\ref{sec:results} assesses sensitivity to this threshold jointly with $\kappa$), and the sweep continues from the resulting individual; otherwise the modification is rejected, the individual is left unchanged, and the sweep proceeds to the next linkage subset in the order fixed in step~1;
-    \item once every parent's sweep has run to completion, or has been curtailed by the chain depth limit $\kappa$ described below, a promising subset $C^* \subseteq C$ is selected among all sweep outcomes as the candidates nondominated in the $(\hat{f}_1, f_2)$ objective space ($C^*$ is an iteration-local selection set, distinct from the global front $\mathcal{P}^*$ of Section~\ref{sec:problem-formulation} that the search approximates over time);
-    \item each $x \in C^*$ undergoes a full evaluation, yielding the true value $f_1(x)$;
-    \item $\mathcal{H}_t$ is updated, $\hat{\delta}_F$ is retrained, and the linkage tree is rebuilt as new data arrives, evolving alongside the population; within a single iteration, the same tree built at the start of that iteration is used for every parent's sweep in step~1, and is not rebuilt again until the next pass through step~6.
+    \item For each parent, every linkage subset of the current tree is visited in random order; for each subset
+    $F$ a donor proposes a modification restricted to $F$. Parents, donors, and the telescoping ancestor $x_0$
+    are always drawn from $\mathcal{H}_t$, never from surrogate-only individuals.
+    \item Each proposal $x'$ violating $g(x') \leq 0$ is discarded; the rest are scored by $\hat\delta_F$
+    relative to the individual they modify.
+    \item A proposal is tentatively accepted if $\hat\delta_F \geq 0$ and the sweep continues from it;
+    otherwise it is rejected and the sweep moves to the next subset.
+    \item Once a sweep completes, or $\kappa$ modifications have been accepted since the last full evaluation,
+    the candidates nondominated in $(\hat f_1, f_2)$ among that iteration's outcomes form $C^*$. Restricting
+    nondomination to one iteration keeps the compared estimates on a common surrogate snapshot.
+    \item Each $x \in C^*$ is fully evaluated; duplicates already in $\mathcal{H}_t$ are served from a cache
+    shared identically by every compared method and do not consume budget.
+    \item $\mathcal{H}_t$ is updated, $\hat\delta_F$ refit, and the linkage tree rebuilt.
 \end{enumerate}
+$\kappa$ defaults to eLyMPuS's $2\lceil\log_2 n\rceil$~\citep{przewozniczek2026lympus}, used as a heuristic
+bound on accumulated telescoping error rather than as a guarantee, since the monotonicity assumption behind that
+bound is not expected to hold for network accuracy.
 
-\paragraph{Parent, donor, and ancestor provenance.} Step~1's own donor and parent selection needs one more restriction, stated separately here because it applies to two different roles at once: parents for step~1, and the ancestor $x_0$ used in the telescoping construction (above), are always drawn from individuals that have completed steps~5--6, i.e.\ elements of $\mathcal{H}_t$ with a genuinely known $f_1$, never from the transient, surrogate-only individuals produced mid-sweep; the telescoping construction therefore never bottoms out on a surrogate estimate. The donor drawn within step~1 is held to this same restriction: only $\mathcal{H}_t$ members are eligible, never a transient, surrogate-only individual produced earlier in the same sweep. A variant allowing transient donors shows no significant difference in fixed-budget hypervolume across a four-dataset, four-budget grid ($R=30$), so the more conservative, already-stated restriction is kept as the only behaviour (Section~\ref{sec:results}, Findings).
-
-\paragraph{Fidelity scope.} A separate design axis, independent of how candidates are generated above: P3Net operates exclusively at full fidelity $r_K$: the lower-fidelity apparatus introduced in Section~\ref{sec:problem-formulation} is substrate-level machinery, instantiated where applicable in Section~\ref{sec:results}, but is not consumed by the search loop above. Training the surrogate on lower-fidelity observations as well is a design alternative discussed in Section~\ref{sec:conclusions}.
-
-\paragraph{Constraint handling.} Candidates violating the constraint $g(x) \leq 0$ are rejected prior to surrogate scoring (i.e.\ before step~2 of the loop above).
-
-\paragraph{Deduplication.} Duplicates already present in $\mathcal{H}_t$ skip reevaluation. This is applied identically to every compared method as part of the shared evaluation harness (Section~\ref{sec:results}, Fairness controls), so the saving is not specific to P3Net; it is a safeguard of substantial practical relevance given the genotype-to-phenotype redundancy documented in NSGA-Net (Section~\ref{sec:introduction}). The computational cost $f_2$ itself is computed analytically, without surrogate involvement (Section~\ref{sec:problem-formulation}), so selection of candidates for full evaluation relies on nondomination in the $(\hat{f}_1, f_2)$ space.
-
-\paragraph{Chain depth ($\kappa$).} One more independent axis, this time bounding how far the surrogate is trusted before a real check-in: to bound the accumulation of surrogate error along a sweep, a maximum chain depth $\kappa$ of tentatively accepted modifications based only on the surrogate is imposed: once $\kappa$ modifications have been accepted since the last full evaluation along a given sweep, the current individual is forced into $C^*$ regardless of its predicted $\hat{f}_1$. $\kappa$ is initialised at eLyMPuS's own $2\lceil\log_2(n)\rceil$-step bound, as a heuristic default, not as a derivation from the monotonicity guarantee that bound relies on, which does not apply here. Here $n$ is the dimensionality of the full extended, discretised genotype $\Lambda_1 \times \cdots \times \Lambda_n \times \Theta$, matching the scope of the linkage tree itself, not the architecture-only count of Section~\ref{sec:problem-formulation}; its sensitivity, jointly with that of the step-3 acceptance threshold (also a heuristic default, fixed at zero above), is assessed empirically rather than fixed by assumption (Section~\ref{sec:results}).
-
-\paragraph{Population pyramid.} A further, independent axis governs how the population itself is managed, separately from how far any one individual's surrogate chain is trusted above. Following canonical P3~\citep{goldman2014parameterless}, the population is organised into a sequence of levels of geometrically growing target size, $\text{size}_k = \text{growth\_factor}^k$ for level $k=1,2,\dots$ ($\text{growth\_factor}=2$ by default, so sizes $2,4,8,\dots$); only the newest level is ever swept by the search loop above, a deliberate simplification against canonical P3's own scheme of cascading a single individual's improvement up through every level at once. A level is promoted -- causing the next, larger level to be grown and become the newly-swept one -- once a sweep pass over the current level fails to improve it: concretely, once a sweep-proposed candidate fails to increase the level's own population's hypervolume relative to a padded nadir reference point derived from that population, rather than the stricter requirement of dominating the level's single best incumbent on both objectives simultaneously, so that a genuinely improving trade-off point counts as progress even when it does not strictly dominate (Section~\ref{sec:results}, ``Diagnostics: population-pyramid bootstrap share''). A newly grown level is warm-started from the current nondominated front of $\mathcal{H}_t$, truncated to the level's target size by the same rule described immediately below, before being filled out the rest of the way by uniform random sampling -- seeding it with already-evaluated elites at zero additional evaluation cost.
-
-\paragraph{Population truncation.} Once a pyramid level's population exceeds its target size, it is truncated back down by nondominated sort and crowding distance over $(\hat{f}_1, f_2)$, the same multi-objective survivor selection every genuinely multi-objective baseline in this project uses, rather than by sorting on $f_1$ alone -- the latter would silently discard genotypes that are Pareto-optimal overall merely because another genotype ranks better on $f_1$, narrowing the population's diversity along $f_2$ over time. A single-objective ($f_1$-only) truncation variant shows no significant difference in fixed-budget hypervolume against the nondominated-sort default (Section~\ref{sec:results}, Findings), so the nondominated-sort rule is kept as the only behaviour -- both on this empirical result and because it is the theoretically preferred choice for protecting objective diversity.
-
-\paragraph{Design rationale (adapted from eLyMPuS).} Three further design choices follow from adapting the eLyMPuS mechanism to this setting:
-\begin{itemize}
-    \item Candidate generation follows the full optimal mixing sweep described in step~1, rather than a single modification per candidate, so that P3Net remains consistent with the variation operator on which P3's own performance guarantees rely.
-    \item eLyMPuS's guarantee of recovering a missing dependency within $2\lceil\log_2(n)\rceil$ steps relies on a monotonicity assumption about the underlying fitness landscape that is not expected to hold for neural network accuracy; $\hat{\delta}_F$ is therefore treated as a learned heuristic estimator without that guarantee, and its reliability is instead assessed empirically through the surrogate quality analysis reported in Section~\ref{sec:results}.
-    \item Nondomination in step~4 is restricted to candidates produced within the same search iteration, i.e.\ propagated from ancestors evaluated against the same snapshot of $\mathcal{H}_t$, so that compared $\hat{f}_1$ estimates share a common reference point rather than being pooled across iterations with a potentially drifting surrogate.
-\end{itemize}
+\paragraph{Population pyramid.} Following P3, the population is a sequence of levels of geometrically growing
+target size, $2^k$ for level $k$. Two simplifications differ from canonical P3 and matter for
+Section~\ref{sec:results}. First, only the newest level is swept, rather than cascading one individual's
+improvement through every level. Second, a new level is grown as soon as a sweep over the current level fails to
+increase that level's hypervolume against a padded nadir reference. A newly grown level is warm-started from the
+nondominated front of $\mathcal{H}_t$, truncated to its target size by nondominated sorting and crowding distance
+over $(\hat f_1, f_2)$, and filled the rest of the way by uniform random sampling. Levels that exceed their target
+size are truncated by the same rule.
