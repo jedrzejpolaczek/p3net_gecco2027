@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from p3net.metrics.hypervolume import hypervolume, nadir_point
 from p3net.problem.genotype import Genotype
-from p3net.problem.objectives import Objectives
+from p3net.problem.objectives import Objectives, dominates
 
 
 def _padded_reference(points: Sequence[Objectives]) -> Objectives:
@@ -72,6 +72,11 @@ class Pyramid:
     def is_stalled(self, level_index: int) -> bool:
         return self._stalled[level_index]
 
+    def mark_stalled(self, level_index: int) -> None:
+        """Force a level stalled without a promote() call. Used only by
+        P3Net's stall_recovery="grow" ablation variant."""
+        self._stalled[level_index] = True
+
     def promote(
         self,
         level_index: int,
@@ -79,6 +84,7 @@ class Pyramid:
         objectives: Objectives,
         *,
         population_objectives: Sequence[Objectives],
+        criterion: str = "hypervolume",
     ) -> bool:
         """Register a genotype with a REAL objective value at the given
         level. Promotes (marks not-stalled) iff adding it to the level's
@@ -109,7 +115,14 @@ class Pyramid:
         rule's `best_objectives is None` special case.
         """
         level = self.levels[level_index]
-        if not population_objectives:
+        if criterion == "dominance":
+            # The original rule (before 2026-08-18): the pass's best result
+            # must strictly Pareto-dominate the level's single best
+            # incumbent. Kept selectable for the Design Evolution stages.
+            improved = level.best_objectives is None or dominates(objectives, level.best_objectives)
+        elif criterion != "hypervolume":
+            raise ValueError(f"unknown promote criterion {criterion!r}")
+        elif not population_objectives:
             improved = True
         else:
             reference = _padded_reference(list(population_objectives) + [objectives])
