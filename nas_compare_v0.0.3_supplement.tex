@@ -1,0 +1,33 @@
+% nas_compare_v0.0.3 -- supplementary material
+% Full fixed-budget tables (median, IQR, corrected p, Cliff's delta) for every
+% arm, search space, and budget. Moved out of the main paper to fit GECCO's
+% page limit; the main paper's effect-size heatmaps show the same comparisons.
+% Every table here is GENERATED -- see implementation/experiments/scripts/render_results_tex.py.
+\documentclass[sigconf,authordraft]{acmart}
+
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+
+\settopmatter{printacmref=false}
+\setcopyright{none}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+
+\title{Supplementary Material: P3Net}
+\author{Jędrzej Tomasz Polaczek}
+\affiliation{\institution{TBD}\city{Szczecin}\country{Poland}}
+
+\begin{document}
+\maketitle
+
+\section*{Fixed-budget tables}
+
+Median and interquartile range of the primary metric per arm, with the Holm--Bonferroni-corrected paired
+Wilcoxon $p$ and Cliff's $\delta$ of each arm against P3Net, corrected within each (search space, budget) cell.
+The primary metric is hypervolume relative to the frozen best-known front on the three JAHS-Bench-201 datasets
+(higher is better) and normalised IGD+ against the exact oracle front on NAS-HPO-Bench-II (lower is better).
+In both cases a positive $\delta$ favours P3Net.
+
+\input{chapters/v003/results/_generated_fixed_budget}
+
+\end{document}

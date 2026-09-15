@@ -15,12 +15,11 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
 
-% Reviewer request: no automatic word hyphenation at line breaks -- wrap
-% whole words instead, even at the cost of a more ragged right margin in
-% ACM's narrow two-column measure. `none` disables TeX's hyphenation
-% algorithm outright (distinct from \sloppy, which only relaxes
-% interword spacing and would still hyphenate).
-\usepackage[none]{hyphenat}
+% Hyphenation stays ON for the GECCO submission. An earlier draft loaded
+% [none]{hyphenat} to satisfy a no-hyphenation request from a different
+% review context; in acmart's narrow two-column measure that reliably
+% produces overfull hboxes and visible rivers, which costs more than the
+% hyphens save. Re-enable only if a venue actually requires it.
 
 % TODO before camera-ready: fill in the real conference dates/location and,
 % once assigned, the ISBN/DOI/price via \acmISBN{}/\acmDOI{}/\acmPrice{}.
@@ -53,7 +52,5 @@
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{refs}
-
-\input{chapters/v003/notes/main}
 
 \end{document}
