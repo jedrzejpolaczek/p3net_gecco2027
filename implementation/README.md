@@ -75,6 +75,31 @@ report's figures/tables from whatever is on disk:
 uv run python scripts/generate_report.py
 ```
 
+#### From raw runs to the numbers in the paper
+
+Every number the Results section quotes is generated, never typed. After any
+change to `results/raw/`, run all four steps, in order:
+
+```
+cd implementation/experiments
+uv run python scripts/build_oracle_front.py         # once; exact NAS-HPO-Bench-II front for IGD+
+uv run python scripts/generate_report.py            # tables + figures (frozen fronts reused)
+uv run python scripts/generate_variants_report.py   # design variants, split by pre/post pyramid fix
+uv run python scripts/render_results_tex.py         # heatmaps, supplement tables, narrative -> chapters/v003/results/_generated_*.tex
+uv run python scripts/check_paper_numbers.py --strict
+```
+
+The last step fails if any number in the Results, Conclusions, or Abstract
+chapters is absent from every generated table — that is how the v0.0.2→v0.0.3
+drift (prose reporting 61 significant comparisons against a table showing 54)
+would have been caught.
+
+`generate_report.py` pins the hypervolume denominator: the best-known front is
+built once, saved to `results/reference_fronts/`, and reused, so adding an arm
+does not retroactively change existing arms' numbers. Pass `--refreeze` only
+when that change is intended. `results/tables/reference_front_provenance.md`
+records which runs each frozen front was built from.
+
 ### 2. Architecture-only NAS-Bench-201 isolation — `experiments/`
 
 Tests whether removing P3Net's own joint architecture+hyperparameter
