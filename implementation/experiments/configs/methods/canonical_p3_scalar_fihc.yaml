@@ -1,0 +1,14 @@
+# B4 control arm (plan M10): canonical P3 + RF gate + plain first-improvement hill climbing on the same scalar objective (predicted f1) that przewozniczek_p3elympus compares with eLyMPuS. Only this arm isolates eLyMPuS (review finding B4).
+#
+# Hyperparameters are this project's defaults, never tuned on these benchmarks.
+
+method: przewozniczek_p3elympus
+default_grid: false
+params:
+  warmup: null
+  lambda_quantile: 0.5
+  eta: 0.999
+  n_estimators: 100
+  objective_index: 0
+  max_climb_attempts: 5
+  hill_climber: fihc_scalar
