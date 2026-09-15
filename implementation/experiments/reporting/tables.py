@@ -52,6 +52,24 @@ P3NET_METHOD_NAME = "p3net"
 #: reporting/plots.py themselves, which stay generic over whatever method
 #: names their caller passes (tests/test_reporting.py relies on this
 #: genericity with synthetic method names of its own).
+#: The four search spaces the paper's headline grid is defined over
+#: (Results, "Benchmark and search space"): JAHS-Bench-201's three
+#: built-in datasets plus NAS-HPO-Bench-II. Deliberately explicit, for the
+#: same reason MAIN_COMPARISON_METHODS is: results/raw/ also holds the
+#: architecture-only NAS-Bench-201 isolation grid, which is a separate
+#: analysis axis with its own budgets and its own comparison set, not two
+#: extra cells of the headline one. Without this filter that grid silently
+#: joins the headline table (18 cells per arm instead of 16), inflates the
+#: pooled diagnostics, and shifts every "of 160" count the paper quotes.
+PRIMARY_SEARCH_SPACES = frozenset(
+    {
+        "jahs_bench_201",
+        "jahs_bench_201_colorectal",
+        "jahs_bench_201_fashion",
+        "nas_hpo_bench_ii",
+    }
+)
+
 MAIN_COMPARISON_METHODS = frozenset(
     {
         "mo_bohb",
@@ -108,7 +126,12 @@ def _run_metric(
 ) -> float:
     front = pareto_front(list(run.objectives), lambda p: p)
     if oracle_front is not None:
-        return igd_plus(front, oracle_front)
+        # Normalised: this project's two objectives are a validation error
+        # and a computational cost in unrelated units. On NAS-HPO-Bench-II's
+        # exact oracle front the cost objective spans roughly 18 times the
+        # range of the error objective, so unnormalised IGD+ there would rank
+        # methods mostly on cost.
+        return igd_plus(front, oracle_front, normalise=True)
     assert best_known_front is not None and reference is not None
     return hypervolume_relative_to_best_known_front(front, best_known_front, reference)
 
@@ -118,7 +141,26 @@ def fixed_budget_summary_table(
     *,
     oracle_fronts: Mapping[str, Sequence[Objectives]] | None = None,
     alpha: float = 0.05,
+    reference_method: str = P3NET_METHOD_NAME,
+    frozen_fronts: Mapping[str, Sequence[Objectives]] | None = None,
+    frozen_references: Mapping[str, Objectives] | None = None,
 ) -> list[SummaryRow]:
+    """`reference_method` is the arm every other arm in a cell is compared
+    against (and Holm-corrected within). It defaults to P3Net -- the
+    paper's own comparison set -- but the identical per-cell protocol is
+    also run with `random_search` as the reference, for the
+    "every arm vs. random search" check the Results section reports; that
+    check is only trustworthy if it uses the SAME correction scope and
+    metric as the headline table, which passing the name here guarantees
+    rather than reimplementing.
+
+    `frozen_fronts`/`frozen_references` pin the best-known front and
+    hypervolume reference point to a previously computed, persisted set
+    (results/reference_fronts/) instead of rebuilding them from whatever
+    runs are passed in. Without this, the pooled front is a function of
+    the arm set: adding an arm that finds better points retroactively
+    changes every other arm's reported metric. Callers that report
+    numbers into the paper should always pass frozen fronts."""
     oracle_fronts = oracle_fronts or {}
     runs_with_history = [r for r in runs if r.objectives]
 
@@ -139,6 +181,11 @@ def fixed_budget_summary_table(
     references: dict[str, Objectives] = {}
     for search_space, space_runs in runs_by_space.items():
         if search_space in oracle_fronts:
+            continue
+        if frozen_fronts is not None and search_space in frozen_fronts:
+            best_known_fronts[search_space] = list(frozen_fronts[search_space])
+            assert frozen_references is not None, "frozen_fronts requires frozen_references"
+            references[search_space] = tuple(frozen_references[search_space])
             continue
         # Reference must be weakly worse than every point that will be
         # scored against it -- derived from every raw point pooled for
@@ -198,11 +245,11 @@ def fixed_budget_summary_table(
     # afterwards.
     results_by_key: dict[tuple[str, str, int], object] = {}
     for (search_space, budget), group_runs in by_space_budget.items():
-        p3net_scores = scores_by_group.get((search_space, budget, P3NET_METHOD_NAME))
+        p3net_scores = scores_by_group.get((search_space, budget, reference_method))
         if not p3net_scores:
             continue
         cell_comparisons: list[Comparison] = []
-        other_methods = {r.method for r in group_runs} - {P3NET_METHOD_NAME}
+        other_methods = {r.method for r in group_runs} - {reference_method}
         for method in sorted(other_methods):
             baseline_scores = scores_by_group.get((search_space, budget, method))
             if not baseline_scores:
@@ -224,9 +271,25 @@ def fixed_budget_summary_table(
             key = (comparison.baseline, comparison.benchmark, comparison.budget)
             results_by_key[key] = result
 
+    # Effect-size orientation. cliffs_delta(reference_scores,
+    # baseline_scores) is P(reference > baseline) - P(reference <
+    # baseline): a statement about raw magnitude, not about quality.
+    # Hypervolume-relative is MAXIMISED, so a positive delta there means
+    # the reference arm is better -- but IGD+ is MINIMISED, so the
+    # identical positive delta means the reference arm is WORSE. Reporting
+    # both under one "positive favours the reference arm" convention (which
+    # is how every heatmap, table caption, and narrative sentence in the
+    # paper reads them) therefore requires flipping the sign for minimised
+    # metrics. Without this, adding IGD+ to the grid silently inverts the
+    # meaning of every NAS-HPO-Bench-II effect size.
+    minimised_metrics = {"igd_plus"}
+
     updated_rows: list[SummaryRow] = []
     for row in rows:
         result = results_by_key.get((row.method, row.search_space, row.budget))
+        effect = result.effect_size if result else None
+        if effect is not None and row.metric in minimised_metrics:
+            effect = -effect
         updated_rows.append(
             SummaryRow(
                 method=row.method,
@@ -237,7 +300,7 @@ def fixed_budget_summary_table(
                 iqr=row.iqr,
                 n_runs=row.n_runs,
                 adjusted_p_value=result.adjusted_p_value if result else None,
-                effect_size=result.effect_size if result else None,
+                effect_size=effect,
                 reject_null=result.reject_null if result else None,
             )
         )

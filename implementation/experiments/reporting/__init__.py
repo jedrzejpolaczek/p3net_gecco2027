@@ -16,6 +16,24 @@ from reporting._common import (
     load_raw_runs,
     nadir_reference_point,
 )
+from reporting.diagnostics_tables import (
+    acceptance_gate_precision_table,
+    bootstrap_share_table,
+    chain_depth_error_table,
+    duplication_rate_table,
+    epistasis_table,
+    margin_correlation,
+    rejection_counts,
+    render_bootstrap_share_markdown,
+    render_calibration_markdown,
+    render_chain_depth_markdown,
+    render_duplication_rate_markdown,
+    render_epistasis_markdown,
+    render_gate_precision_markdown,
+    render_margin_correlation_markdown,
+    render_rejection_counts_markdown,
+    surrogate_calibration_table,
+)
 from reporting.plots import (
     SensitivityPoint,
     convergence_curve_figure,
@@ -27,6 +45,7 @@ from reporting.plots import (
 )
 from reporting.tables import (
     MAIN_COMPARISON_METHODS,
+    PRIMARY_SEARCH_SPACES,
     SummaryRow,
     SweepCompletionRow,
     fixed_budget_summary_table,
@@ -37,6 +56,23 @@ from reporting.tables import (
 
 __all__ = [
     "MAIN_COMPARISON_METHODS",
+    "PRIMARY_SEARCH_SPACES",
+    "acceptance_gate_precision_table",
+    "bootstrap_share_table",
+    "chain_depth_error_table",
+    "duplication_rate_table",
+    "epistasis_table",
+    "margin_correlation",
+    "rejection_counts",
+    "render_bootstrap_share_markdown",
+    "render_calibration_markdown",
+    "render_chain_depth_markdown",
+    "render_duplication_rate_markdown",
+    "render_epistasis_markdown",
+    "render_gate_precision_markdown",
+    "render_margin_correlation_markdown",
+    "render_rejection_counts_markdown",
+    "surrogate_calibration_table",
     "RawRun",
     "SensitivityPoint",
     "SummaryRow",

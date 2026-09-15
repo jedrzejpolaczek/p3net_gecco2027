@@ -82,3 +82,75 @@ def test_generate_report_returns_nothing_when_only_non_main_methods_present(tmp_
 
     assert tables == []
     assert figures == []
+
+
+def test_generate_report_excludes_search_spaces_outside_the_primary_grid(tmp_path):
+    """The architecture-only NAS-Bench-201 isolation grid shares
+    results/raw/ with the headline grid but is a separate analysis axis.
+    Letting it into the headline report adds cells to every arm (18
+    instead of 16) and shifts every "of 160" count the paper quotes."""
+    raw_dir = tmp_path / "raw"
+    tables_dir = tmp_path / "tables"
+    figures_dir = tmp_path / "figures"
+    raw_dir.mkdir()
+
+    for seed in (1, 2):
+        for space in ("jahs_bench_201", "nas_bench_201"):
+            _write_raw_run(
+                raw_dir, method="p3net", search_space=space, seed=seed,
+                points=[(5.0, 5.0), (4.0, 4.5)],
+            )
+            _write_raw_run(
+                raw_dir, method="random_search", search_space=space, seed=seed,
+                points=[(6.0, 6.0), (5.5, 5.8)],
+            )
+
+    generate_report.generate_report(
+        raw_results_dir=raw_dir, tables_dir=tables_dir, figures_dir=figures_dir
+    )
+    summary_text = (tables_dir / "fixed_budget_summary.md").read_text(encoding="utf-8")
+    assert "jahs_bench_201" in summary_text
+    assert "nas_bench_201 " not in summary_text and "| nas_bench_201 |" not in summary_text
+
+
+def test_generate_report_keeps_frozen_fronts_next_to_the_raw_runs_it_was_given(tmp_path):
+    """A caller pointing raw_results_dir at its own directory must never
+    read or write the real project's persisted fronts."""
+    raw_dir = tmp_path / "raw"
+    raw_dir.mkdir()
+    for seed in (1, 2):
+        _write_raw_run(raw_dir, method="p3net", seed=seed, points=[(5.0, 5.0), (4.0, 4.5)])
+        _write_raw_run(raw_dir, method="random_search", seed=seed, points=[(6.0, 6.0)])
+
+    generate_report.generate_report(
+        raw_results_dir=raw_dir, tables_dir=tmp_path / "tables", figures_dir=tmp_path / "figures"
+    )
+    assert (tmp_path / "reference_fronts" / "jahs_bench_201.json").exists()
+
+
+def test_frozen_front_is_reused_rather_than_rebuilt_when_an_arm_is_added(tmp_path):
+    """Adding an arm that finds strictly better points must not change the
+    metric already reported for the existing arms."""
+    raw_dir = tmp_path / "raw"
+    tables_dir = tmp_path / "tables"
+    raw_dir.mkdir()
+    for seed in (1, 2, 3):
+        _write_raw_run(raw_dir, method="p3net", seed=seed, points=[(5.0, 5.0), (4.0, 6.0)])
+        _write_raw_run(raw_dir, method="random_search", seed=seed, points=[(6.0, 6.0), (5.0, 7.0)])
+
+    generate_report.generate_report(
+        raw_results_dir=raw_dir, tables_dir=tables_dir, figures_dir=tmp_path / "f1"
+    )
+    before = (tables_dir / "fixed_budget_summary.md").read_text(encoding="utf-8")
+    p3net_before = next(l for l in before.splitlines() if l.startswith("| p3net |"))
+
+    for seed in (1, 2, 3):
+        _write_raw_run(raw_dir, method="tpe", seed=seed, points=[(1.0, 1.0)])
+
+    generate_report.generate_report(
+        raw_results_dir=raw_dir, tables_dir=tables_dir, figures_dir=tmp_path / "f2"
+    )
+    after = (tables_dir / "fixed_budget_summary.md").read_text(encoding="utf-8")
+    p3net_after = next(l for l in after.splitlines() if l.startswith("| p3net |"))
+    assert p3net_before == p3net_after
+

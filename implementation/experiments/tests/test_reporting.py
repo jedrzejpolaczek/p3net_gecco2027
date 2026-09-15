@@ -526,10 +526,14 @@ def test_surrogate_calibration_figure_ignores_other_methods():
 def test_generate_report_writes_tables_and_figures_from_raw_json(tmp_path):
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir()
-    for method, seed in (("p3net", 1), ("baseline", 1)):
+    # A primary search space and a main-comparison arm: generate_report
+    # scopes its report to both (reporting.PRIMARY_SEARCH_SPACES,
+    # reporting.MAIN_COMPARISON_METHODS), so synthetic data outside either
+    # set would legitimately produce no report at all.
+    for method, seed in (("p3net", 1), ("random_search", 1)):
         payload = {
             "method": method,
-            "search_space": "space",
+            "search_space": "jahs_bench_201",
             "budget": 10,
             "seed": seed,
             "evaluations_used": 2,
@@ -539,7 +543,7 @@ def test_generate_report_writes_tables_and_figures_from_raw_json(tmp_path):
             ],
             "diagnostics": {"duplication_rate": 0.2},
         }
-        (raw_dir / f"{method}__space__budget10__seed{seed}.json").write_text(
+        (raw_dir / f"{method}__jahs_bench_201__budget10__seed{seed}.json").write_text(
             json.dumps(payload), encoding="utf-8"
         )
 
