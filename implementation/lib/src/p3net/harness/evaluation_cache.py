@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -42,15 +43,29 @@ class EvaluationCache:
         self._store[CacheKey(genotype, experiment_type, protocol_version)] = value
 
     def record_proposal(
-        self, genotype: Genotype, *, experiment_type: str, protocol_version: str
+        self,
+        genotype: Genotype,
+        *,
+        experiment_type: str,
+        protocol_version: str,
+        pending: Collection[Genotype] = (),
     ) -> bool:
         """Call once per candidate a search operator generates, regardless
         of whether it is later intercepted by the cache. Returns True iff
-        this proposal duplicates a genotype already in the cache."""
+        this proposal duplicates a genotype already in the cache.
+
+        `pending` is the set of genotypes the caller has already proposed in
+        the SAME batch, not yet evaluated and therefore not yet in the
+        cache. A proposal matching one of them is a duplicate too: without
+        this, a method that assembles one batch from several independent
+        sub-proposers (P3Net with cascade=True: one per pyramid level) can
+        hand the Runner the same genotype twice, and the Runner evaluates it
+        twice, spending budget on nothing. Defaults to empty, which is
+        exactly the previous behaviour for every existing caller."""
         self._proposals_seen += 1
         is_duplicate = self.has(
             genotype, experiment_type=experiment_type, protocol_version=protocol_version
-        )
+        ) or genotype in pending
         if is_duplicate:
             self._proposal_duplicates += 1
         return is_duplicate
