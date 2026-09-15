@@ -51,7 +51,29 @@ def tpe_ask_tell(
     experiment_type: str = "tpe",
     protocol_version: str = "v1",
 ) -> tuple[Callable[[], Genotype], Callable[[Genotype, Objectives], None]]:
-    """Builds a real (sampler, report) pair backed by optuna's TPESampler.
+    return optuna_ask_tell(
+        search_space,
+        validity,
+        cache,
+        sampler=optuna.samplers.TPESampler(seed=seed),
+        n_objectives=n_objectives,
+        experiment_type=experiment_type,
+        protocol_version=protocol_version,
+    )
+
+
+def optuna_ask_tell(
+    search_space: SearchSpace,
+    validity: Validity,
+    cache: EvaluationCache,
+    *,
+    sampler: optuna.samplers.BaseSampler,
+    n_objectives: int = 2,
+    experiment_type: str,
+    protocol_version: str = "v1",
+) -> tuple[Callable[[], Genotype], Callable[[Genotype, Objectives], None]]:
+    """Builds a real (sampler, report) pair backed by any optuna sampler
+    (TPESampler for tpe, NSGAIIISampler for nsga3).
     `cache` must be the SAME EvaluationCache instance passed to the
     AskTellMethod this feeds. Calls cache.record_proposal (not the
     read-only cache.has) on every genotype optuna suggests, duplicate or
@@ -61,10 +83,7 @@ def tpe_ask_tell(
     this one, then naturally becomes a no-op for whatever genotype this
     function returns (it can never be a duplicate by construction) --
     counted twice as "seen" but never double-counted as a duplicate."""
-    study = optuna.create_study(
-        directions=["minimize"] * n_objectives,
-        sampler=optuna.samplers.TPESampler(seed=seed),
-    )
+    study = optuna.create_study(directions=["minimize"] * n_objectives, sampler=sampler)
     pending_trials: dict[Genotype, optuna.trial.Trial] = {}
 
     def sample() -> Genotype:
