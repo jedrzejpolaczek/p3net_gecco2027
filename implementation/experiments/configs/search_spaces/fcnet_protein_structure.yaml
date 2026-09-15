@@ -1,0 +1,17 @@
+# FCNet (Klein & Hutter, 2019), task protein_structure: second benchmark family
+# (phase 2d). Fixed lookup table, every configuration tabulated -> exact
+# oracle front (Category 1, like NAS-HPO-Bench-II).
+#
+# f1 = validation MSE after 100 epochs, f2 = training time (s); both are
+# means over the table's 4 training seeds (substrates/fcnet.py).
+
+search_space: fcnet_genotype
+substrate: fcnet
+task: protein_structure
+
+fidelity:
+  epochs: 100
+
+# Separate benchmark family with its own pipeline stage and table: kept out of
+# the legacy scripts/run_grid.py default grid (same opt-out as nas_bench_201).
+default_grid: false
