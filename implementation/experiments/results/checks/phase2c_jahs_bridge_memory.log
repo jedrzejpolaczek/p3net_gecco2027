@@ -1,0 +1,14 @@
+JAHS-Bench-201 query bridge memory (2026-09-15, measurement/resources.py, whole process tree)
+Machine: i7-11800H, 31.7 GB RAM, Windows 11.
+
+cifar10, random_search, 20 queries in one bridge:
+  peak resident memory (loading the surrogate models): 17.47 GB
+  resident memory after loading:                         1.85 GB
+  first query (includes loading):                      ~224 s
+
+Consequences for the parallel pipeline:
+  * one bridge loads at a time: lock locks/jahs-bridge-load.lock
+    (substrates/jahs_bench_201.py, P3NET_JAHS_LOAD_LOCK);
+  * per JAHS worker after loading: ~1.9 GB bridge + 0.6-2.7 GB worker process;
+  * 3 workers, worst case: 17.5 + 2 x 1.9 + 3 x 2.7 = ~29 GB of 31.7 GB
+    -> plan default workers: 3.
