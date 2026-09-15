@@ -49,6 +49,7 @@ now").
 
 from __future__ import annotations
 
+import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -90,9 +91,48 @@ class ELyMPuS:
 
     search_space: SearchSpace
     fitness_fn: Callable[[Genotype], float]
+    #: No default, matching this codebase's convention that every
+    #: stateful, randomised component is threaded a caller-supplied,
+    #: explicitly seeded RNG -- see e.g. p3net.methods.p3net.P3Net,
+    #: BartnikP3, PrzewozniczekP3ELyMPuS. Only consulted when
+    #: `verify_probability > 0.0`, but required regardless so a caller
+    #: cannot silently end up with an unseeded, wall-clock-seeded instance
+    #: by omission.
+    rng: random.Random
     dependencies: dict[int, set[int]] = field(default_factory=dict)
+    #: Probability of spot-checking a cache hit from a genotype other than
+    #: the one that established it (see `_pairwise_comparison`'s
+    #: docstring). Defaults to 0.0 -- off -- so a caller that already
+    #: knows/seeds the true dependency graph (Check 1's `eG = G`
+    #: precondition, as every existing test in test_elympus.py does) pays
+    #: exactly zero extra evaluations, matching this module's own
+    #: documented zero-overhead guarantee for that case. A caller that
+    #: does NOT seed the true graph (the actual production case in
+    #: `PrzewozniczekP3ELyMPuS`, which starts `dependencies` empty) MUST
+    #: set this above 0.0, or `dependencies` never grows at all --
+    #: `discover_missing_dependency` exists and is independently tested
+    #: (Check 2) but nothing ever calls it otherwise.
+    verify_probability: float = 0.0
     evaluation_count: int = field(default=0, init=False)
     _table: dict[int, dict[Context, dict[Any, Comparison]]] = field(
+        default_factory=dict, init=False, repr=False
+    )
+    #: One witness genotype per (g, context, value_a, value_b) cache entry
+    #: -- mirrors `_table`'s own shape exactly -- recording whose
+    #: evaluation actually produced that entry. Used by
+    #: `_pairwise_comparison` to run Theorem 1's own non-monotonicity spot
+    #: check on a cache hit from a genuinely different genotype; without
+    #: this, `dependencies` never grows past whatever the caller seeds it
+    #: with, since nothing would ever call `discover_missing_dependency`
+    #: (see that method's docstring and
+    #: notes/lympus-nas-adaptation-validation.md). MUST be tracked per
+    #: entry, not per (g, context) alone: several distinct value pairs
+    #: under one context can each be first computed by a different
+    #: genotype, and a coarser per-context witness would not necessarily
+    #: correspond to whichever genotype produced the specific entry being
+    #: spot-checked -- an earlier version of this field did exactly that
+    #: and could inject false dependencies as a result.
+    _context_witness: dict[int, dict[Context, dict[Any, Genotype]]] = field(
         default_factory=dict, init=False, repr=False
     )
     #: Plain memoisation of the real fitness function itself (Genotype is
@@ -158,25 +198,116 @@ class ELyMPuS:
         the SAME comparison outcome, not the same absolute fitness) -- a
         real bug caught by Faza 2's own correctness test (Check 1) failing
         on a genuine cross-genotype cache-reuse mismatch, not a
-        micro-optimisation detail."""
+        micro-optimisation detail.
+
+        Every call reaching this method comes from `partial_comparison`
+        (directly, or via this method's own same-arguments recursive
+        retry below), whose contract guarantees `value_b ==
+        genotype.values[g]` -- asserted, not just assumed, since a future
+        caller violating it would otherwise silently corrupt
+        `discover_missing_dependency`'s precondition rather than fail
+        loudly. Both cache orientations, (value_a, value_b) and its flip,
+        are therefore always written TOGETHER from a single fresh
+        computation below -- there is no code path that ever writes only
+        one direction, so a lookup can never find one orientation cached
+        without the other already being cached too (proof by induction
+        from the empty table; the earlier reverse-lookup shortcut this
+        method used to have was therefore always dead code and has been
+        removed).
+
+        A cache HIT from a genotype other than the one whose evaluation
+        actually produced THIS EXACT (g, context, value_a, value_b) entry
+        -- `_context_witness` is keyed by the full pair, not by `value_b`
+        alone -- is spot-checked against a fresh, direct recomputation for
+        THIS genotype (Theorem 1's own non-monotonicity check): if they
+        disagree, `dependencies[g]` is provably still missing a real
+        dependency (some coordinate differing between the two genotypes,
+        outside the currently-known context, actually affects g's local
+        behaviour) -- `discover_missing_dependency` is invoked to find and
+        record it, `g`'s now-stale cache is cleared, and the freshly
+        computed, correct verdict is used instead of the stale one. This
+        is what lets `dependencies` grow from an initially-empty (or
+        partial) graph at runtime rather than requiring the caller to seed
+        the true graph up front.
+
+        Keying witnesses by the pair, not by `value_b` alone, is
+        deliberate and load-bearing, not an arbitrary choice: a `value_b`
+        -only key gets overwritten by ANY call sharing that value, even
+        one for a completely different `value_a` -- so a later spot check
+        for (value_a=X, value_b) could end up comparing against a witness
+        whose own evaluation only ever confirmed (value_a=Y, value_b),
+        never X. That witness's `values` can legitimately agree with
+        `cached` by coincidence or by an earlier successful spot check for
+        a DIFFERENT value_a, while `cached` itself was established by some
+        earlier, different genotype entirely -- so the mismatch check
+        compares the wrong pairing and `discover_missing_dependency` can
+        report a real-looking but false dependency. This is not a
+        hypothetical: it is exactly what a `value_b`-keyed witness design
+        produced in practice (reproducible with search_engines'
+        `k_ary_trap_fitness` on a 2-block problem, rng seed 3) before this
+        docstring paragraph was written. The cost of keying per pair
+        instead is that only the (value_a, value_b) orientation actually
+        queried first ever accumulates a witness -- the flip orientation
+        stays permanently un-spot-checked until it happens to be queried
+        directly itself -- a real, accepted reduction in discovery
+        coverage, preferred here over a coverage-improving change that
+        reintroduces false positives."""
         if value_a == value_b:
             return Comparison.TIE
+        if value_b != genotype.values[g]:
+            # A real `raise`, not `assert`: assertions are stripped under
+            # `-O`/`PYTHONOPTIMIZE`, which would silently turn this
+            # documented "fail loudly" contract into exactly the silent
+            # precondition corruption it exists to prevent.
+            raise ValueError(
+                "_pairwise_comparison's caller contract requires value_b == "
+                "genotype.values[g] (only partial_comparison calls this method); "
+                "discover_missing_dependency's precondition depends on it"
+            )
         ctx = self.context_of(g, genotype)
         ctx_table = self._table.setdefault(g, {}).setdefault(ctx, {})
+        ctx_witnesses = self._context_witness.setdefault(g, {}).setdefault(ctx, {})
         key = (value_a, value_b)
+        witness = ctx_witnesses.get(key)
         cached = ctx_table.get(key)
         if cached is not None:
+            if (
+                witness is not None
+                and witness.values != genotype.values
+                and self.verify_probability > 0.0
+                and self.rng.random() < self.verify_probability
+            ):
+                fresh = Comparison.of(
+                    self._evaluate(genotype.with_values(indices=[g], new_values=[value_a])),
+                    self._evaluate(genotype),
+                )
+                if fresh != cached:
+                    found = self.discover_missing_dependency(g, value_a, witness, genotype)
+                    if found is not None:
+                        self._table[g] = {}
+                        self._context_witness[g] = {}
+                        return self._pairwise_comparison(g, value_a, value_b, genotype)
+                    # Discovery could not pin down a culprit (its own
+                    # defensive branch) -- still fix up this one entry so
+                    # future lookups don't keep serving the now-known-wrong
+                    # cached verdict indefinitely, even though the root
+                    # cause (an incomplete `dependencies[g]`) is not fully
+                    # resolved.
+                    ctx_table[key] = fresh
+                    ctx_table[(value_b, value_a)] = _flip(fresh)
+                    ctx_witnesses[key] = genotype
+                    return fresh
             return cached
-        reverse_cached = ctx_table.get((value_b, value_a))
-        if reverse_cached is not None:
-            result = _flip(reverse_cached)
-            ctx_table[key] = result
-            return result
         fitness_a = self._evaluate(genotype.with_values(indices=[g], new_values=[value_a]))
-        fitness_b = self._evaluate(genotype.with_values(indices=[g], new_values=[value_b]))
+        fitness_b = self._evaluate(genotype)
         result = Comparison.of(fitness_a, fitness_b)
         ctx_table[key] = result
         ctx_table[(value_b, value_a)] = _flip(result)
+        # `genotype` is a valid witness for `key` only (its own g-value ==
+        # value_b, key's second element); the reverse entry's witness
+        # would need a genotype whose own g-value == value_a instead, so
+        # it is deliberately left unset here (see docstring above).
+        ctx_witnesses[key] = genotype
         return result
 
     def partial_comparison(self, g: int, value: Any, genotype: Genotype) -> Comparison:
@@ -186,9 +317,13 @@ class ELyMPuS:
 
     def rank_values(self, g: int, genotype: Genotype) -> list[Any]:
         """The k-1 comparisons against the current value, best alternative
-        first (BETTER before TIE before WORSE) -- the direct k-ary
-        generalisation FIHC-eLyMPuS (Faza 3) needs in place of iterating
-        `domain.values` in random order and testing one at a time."""
+        first (BETTER before TIE before WORSE). NOT currently called by
+        `p3net.search_engines.p3.fihc_elympus.fihc_elympus`, which instead
+        does exactly the random-order, first-improvement iteration this
+        method's ranking could replace -- kept as a public, independently
+        useful k-ary generalisation of "which alternative is best" (and
+        exercised by its own tests), not because anything in this project
+        currently consumes it."""
         domain = self.search_space.domains[g]
         alternatives = [v for v in domain.values if v != genotype.values[g]]
         scored = [(self.partial_comparison(g, v, genotype), v) for v in alternatives]

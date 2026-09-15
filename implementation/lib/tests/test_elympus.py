@@ -36,7 +36,7 @@ def ground_truth_comparison(g: int, value, genotype: Genotype, fitness_fn) -> Co
 def test_partial_comparison_matches_ground_truth_when_dependencies_are_complete():
     space = build_k_ary_trap_space(n_blocks=3, block_size=4, alphabet_size=4)
     graph = true_dependency_graph(n_blocks=3, block_size=4)
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(0))
 
     rng = random.Random(0)
     for _ in range(200):
@@ -52,7 +52,7 @@ def test_partial_comparison_matches_ground_truth_when_dependencies_are_complete(
 def test_partial_comparison_reuses_cache_across_different_genotypes_sharing_context():
     space = build_k_ary_trap_space(n_blocks=2, block_size=4, alphabet_size=4)
     graph = true_dependency_graph(n_blocks=2, block_size=4)
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(1))
 
     # g=1's dependencies are {0, 2, 3} (its own block) -- indices 4-7 (the
     # second block) are irrelevant to g=1 and safe to vary between a and b.
@@ -68,7 +68,7 @@ def test_partial_comparison_reuses_cache_across_different_genotypes_sharing_cont
 def test_rank_values_orders_better_before_tie_before_worse():
     space = build_k_ary_trap_space(n_blocks=1, block_size=4, alphabet_size=4)
     graph = true_dependency_graph(n_blocks=1, block_size=4)
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(2))
 
     genotype = Genotype(values=(0, 0, 0, 1))  # u=3 -> deceptive worst (score 0)
     ranked = e.rank_values(0, genotype)
@@ -86,7 +86,7 @@ def test_discover_missing_dependency_finds_a_true_dependency_and_terminates():
     space = build_k_ary_trap_space(n_blocks=2, block_size=4, alphabet_size=4)
     # No known dependencies at all -- this is the incomplete-eG starting
     # point the source paper's RecursiveLL is meant to repair.
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, rng=random.Random(1))
     true_graph = true_dependency_graph(n_blocks=2, block_size=4)
 
     rng = random.Random(1)
@@ -114,10 +114,52 @@ def test_discover_missing_dependency_finds_a_true_dependency_and_terminates():
     assert found is not None, "no mismatching (x1, x2, g, value) sampled in 200 attempts"
 
 
+def test_partial_comparison_discovers_dependencies_at_runtime_when_verify_probability_is_set():
+    """Regression test for the production wiring gap this fix closes:
+    with `dependencies` starting empty (the real starting point
+    `PrzewozniczekP3ELyMPuS` uses) and `verify_probability=1.0`,
+    repeated `partial_comparison` calls across genuinely different
+    genotypes sharing a (currently too-narrow) context must eventually
+    grow `dependencies[g]` towards the true neighbourhood -- without
+    this, `dependencies` stays permanently empty (see this class's
+    module docstring and notes/lympus-nas-adaptation-validation.md)."""
+    # n_blocks=2 (not 1): with a single block, every OTHER coordinate is a
+    # true dependency, so a witness-tracking bug that attributes a
+    # discovery to the wrong genotype could still only ever "discover" a
+    # real edge -- it would never surface a FALSE cross-block edge the way
+    # a multi-block problem does. This is exactly the false-positive
+    # discovery a earlier, per-context (not per-cache-entry) witness
+    # design produced in practice.
+    space = build_k_ary_trap_space(n_blocks=2, block_size=4, alphabet_size=4)
+    true_graph = true_dependency_graph(n_blocks=2, block_size=4)
+    e = ELyMPuS(
+        search_space=space,
+        fitness_fn=k_ary_trap_fitness,
+        verify_probability=1.0,
+        rng=random.Random(3),
+    )
+
+    rng = random.Random(3)
+    for _ in range(400):
+        genotype = random_genotype(space, rng)
+        g = rng.randrange(space.n)
+        value = rng.choice([v for v in space.domains[g].values if v != genotype.values[g]])
+        e.partial_comparison(g, value, genotype)
+
+    assert any(e.dependencies[g] for g in range(space.n)), (
+        "dependencies stayed empty after 400 partial_comparison calls with "
+        "verify_probability=1.0 -- discovery is still not being triggered"
+    )
+    for g in range(space.n):
+        assert e.dependencies[g] <= true_graph[g], (
+            f"discovered a false dependency for g={g}: {e.dependencies[g]} not <= {true_graph[g]}"
+        )
+
+
 def test_discover_missing_dependency_returns_none_when_no_dependency_differs():
     space = build_k_ary_trap_space(n_blocks=1, block_size=4, alphabet_size=4)
     graph = true_dependency_graph(n_blocks=1, block_size=4)
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(3))
     x1 = Genotype(values=(0, 1, 2, 3))
     x2 = Genotype(values=(0, 1, 2, 3))
     assert e.discover_missing_dependency(0, 1, x1, x2) is None
@@ -181,7 +223,7 @@ def test_elympus_guided_hill_climb_never_uses_more_evaluations_than_naive_on_a_c
     start = random_genotype(space, rng_naive)
     naive_count = naive_hill_climb_evaluations(space, k_ary_trap_fitness, start, rng_naive)
 
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(4))
     rng_elympus = random.Random(42)
     start2 = random_genotype(space, rng_elympus)
     assert start2 == start
@@ -205,7 +247,7 @@ def test_elympus_saves_evaluations_across_repeated_runs_via_cache_reuse():
         start = random_genotype(space, rng_naive)
         naive_total += naive_hill_climb_evaluations(space, k_ary_trap_fitness, start, rng_naive)
 
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(5))
     rng_elympus = random.Random(7)
     for _ in range(15):
         start = random_genotype(space, rng_elympus)
