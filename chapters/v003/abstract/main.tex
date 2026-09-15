@@ -1,29 +1,19 @@
 \begin{abstract}
-Joint neural architecture and hyperparameter search must trade prediction accuracy against a fixed, limited
-budget of expensive full evaluations, and the field's dominant engine, NSGA-II-style crossover paired with an
-absolute-regressor surrogate (as in NSGANetV2), varies genotype coordinates independently of whether they
-actually interact. We propose P3Net, which instead couples the Parameter-less Population Pyramid (P3), a
-linkage-tree-guided crossover operator with no separate mutation step, to a relative, linkage-aware surrogate
-$\hat\delta_F$ that predicts the \emph{change} in accuracy from a proposed modification, restricted to the one
-linkage subset that changed, rather than regressing absolute accuracy from the full encoding. We evaluate
-P3Net against NSGANetV2, matched engine/surrogate ablations that isolate each design lever, and four further
-baselines (SH-EMOA, MO-BOHB, TPE, random search) on JAHS-Bench-201 (CIFAR-10, Colorectal-Histology,
-Fashion-MNIST) and NAS-HPO-Bench-II, across four evaluation budgets and $R=30$ seeds per cell, using
-hypervolume relative to the best-known front.
+Linkage-learning evolutionary algorithms such as P3 exploit dependencies between genotype variables, and
+surrogate-assisted variants of them have succeeded on combinatorial benchmarks. We ask whether that
+combination transfers to joint neural architecture and hyperparameter search under a small, fixed budget of
+full evaluations. P3Net pairs P3 with a relative, linkage-aware surrogate that predicts the \emph{change} in
+accuracy from a modification restricted to one linkage subset. We compare it against NSGANetV2, matched
+engine and surrogate ablations, SH-EMOA, MO-BOHB, TPE, and random search on JAHS-Bench-201 (three datasets)
+and NAS-HPO-Bench-II, at four budgets with 30 seeds each.
 
-The result is a largely negative, but diagnostically rigorous, finding: P3Net does not separate statistically
-from uniform random search in any of the sixteen (search-space, budget) cells tested. We trace a substantial
-part of this to a structural pathology in \texttt{Pyramid}'s geometric level-growth rule, which we show
-forces an increasing share of the evaluation budget into uniform-random population bootstrap as the budget
-grows (up to $93$--$94\%$ at the largest budget tested); a warm-start and hypervolume-contribution redesign
-measurably, but only partially, corrects this. Once a population-engine confound in the matched
-P3-plus-absolute-regressor ablation is independently identified and closed, that ablation also shows no
-measurable advantage for the relative surrogate over a simpler absolute one, and a targeted fix for
-$\hat\delta_F$'s provably additive-only representational limit, though independently verified to add real
-capacity, likewise shows no benefit at this benchmark scale. We report these as honest null results rather
-than omitting or reframing them, alongside the one benchmark cell where P3Net does win significantly, and
-argue from the P3/GOMEA literature that the mechanism under test is more likely to pay off on larger,
-structurally richer search spaces than the four evaluated here.
+The result is negative. P3Net does not separate statistically from uniform random search in any of the
+sixteen (search space, budget) cells, and neither does the same engine with an absolute surrogate. We trace
+this to a structural property of the population pyramid: geometric level growth forces the uniform-random
+bootstrap share of the budget to rise with budget, reaching 89.7--92.4\% at 350 evaluations even after a
+warm-start redesign. Removing the hyperparameter dimension does not change the outcome, and a
+reconstruction of the closest prior surrogate-assisted linkage-learning design reproduces the same null on
+the same benchmark. We report the diagnosis, the fixes attempted, and why each fell short.
 \end{abstract}
 
 \begin{CCSXML}
@@ -44,4 +34,4 @@ structurally richer search spaces than the four evaluated here.
 \ccsdesc[500]{Computing methodologies~Discrete space search}
 \ccsdesc[300]{Computing methodologies~Neural networks}
 
-\keywords{neural architecture search, surrogate predictor, P3, evolutionary optimisation, multi objective optimisation}
+\keywords{neural architecture search, surrogate predictor, P3, linkage learning, multi-objective optimisation, negative result}
