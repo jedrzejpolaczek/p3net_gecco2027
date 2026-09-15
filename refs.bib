@@ -204,6 +204,19 @@
   note   = {Supervisor: Micha{\l} Przewo{\'z}niczek. Master thesis; adapts SA-P3-GOMEA to multi-objective NAS on NAS-Bench-201, accuracy vs.\ measured GPU energy}
 }
 
+@inproceedings{denottelander2021localsearch,
+  title     = {Local Search is a Remarkably Strong Baseline for Neural Architecture Search},
+  author    = {den Ottelander, Tom and Dushatskiy, Arkadiy and Virgolin, Marco and Bosman, Peter A. N.},
+  booktitle = {Evolutionary Multi-Criterion Optimization (EMO 2021)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {12654},
+  pages     = {465--479},
+  publisher = {Springer, Cham},
+  year      = {2021},
+  doi       = {10.1007/978-3-030-72062-9_37},
+  note      = {Compares MO-GOMEA, NSGA-II, local search, and random search on multi-objective (accuracy vs.\ complexity) NAS; finds negligible differences among all four on the cell-based NAS-Bench-101 search space, but a real MO-GOMEA/local-search advantage over random search on their own larger, less redundant macro-level MacroNAS benchmarks}
+}
+
 @inproceedings{zela2018towards,
   title     = {Towards Automated Deep Learning: Efficient Joint Neural Architecture and Hyperparameter Search},
   author    = {Zela, Arber and Klein, Aaron and Falkner, Stefan and Hutter, Frank},
@@ -410,4 +423,109 @@
   pages   = {55--67},
   year    = {1970},
   doi     = {10.1080/00401706.1970.10488634}
+}
+
+@article{zheng2023genius,
+  title   = {Can {GPT-4} Perform Neural Architecture Search?},
+  author  = {Zheng, Mingkai and Su, Xiu and You, Shan and Wang, Fei and Qian, Chen and Xu, Chang and Albanie, Samuel},
+  journal = {arXiv preprint arXiv:2304.10970},
+  year    = {2023}
+}
+
+@inproceedings{nasir2024llmatic,
+  title     = {{LLMatic}: Neural Architecture Search via Large Language Models and Quality Diversity Optimization},
+  author    = {Nasir, Muhammad U. and Earle, Sam and Togelius, Julian and James, Steven and Cleghorn, Christopher},
+  booktitle = {Proceedings of the Genetic and Evolutionary Computation Conference (GECCO)},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  pages     = {1110--1118},
+  year      = {2024},
+  doi       = {10.1145/3638529.3654017}
+}
+
+@inproceedings{liu2024lmea,
+  title     = {Large Language Models as Evolutionary Optimizers},
+  author    = {Liu, Shengcai and Chen, Caishun and Qu, Xinghua and Tang, Ke and Ong, Yew-Soon},
+  booktitle = {IEEE Congress on Evolutionary Computation (CEC)},
+  pages     = {1--8},
+  year      = {2024},
+  doi       = {10.1109/CEC60901.2024.10611913}
+}
+
+@article{huang2024llmblackbox,
+  title   = {Exploring the True Potential: Evaluating the Black-box Optimization Capability of Large Language Models},
+  author  = {Huang, Beichen and Wu, Xingyu and Zhou, Yu and Wu, Jibin and Feng, Liang and Cheng, Ran and Tan, Kay Chen},
+  journal = {arXiv preprint arXiv:2404.06290},
+  year    = {2024}
+}
+
+@article{hao2024llmsurrogate,
+  title   = {Large language models as surrogate models in evolutionary algorithms: A preliminary study},
+  author  = {Hao, Hao and Zhang, Xiaoqun and Zhou, Aimin},
+  journal = {Swarm and Evolutionary Computation},
+  volume  = {91},
+  pages   = {101741},
+  year    = {2024},
+  doi     = {10.1016/j.swevo.2024.101741}
+}
+
+@inproceedings{jawahar2024llmpp,
+  title     = {{LLM} Performance Predictors are good initializers for Architecture Search},
+  author    = {Jawahar, Ganesh and Abdul-Mageed, Muhammad and Lakshmanan, Laks V. S. and Ding, Dujian},
+  booktitle = {Findings of the Association for Computational Linguistics: ACL 2024},
+  pages     = {10540--10560},
+  year      = {2024},
+  doi       = {10.18653/v1/2024.findings-acl.627}
+}
+
+@inproceedings{liu2024llambo,
+  title     = {Large Language Models to Enhance {B}ayesian Optimization},
+  author    = {Liu, Tennison and Astorga, Nicol{\'a}s and Seedat, Nabeel and van der Schaar, Mihaela},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2024}
+}
+
+@article{zhang2024llmhpo,
+  title   = {Using Large Language Models for Hyperparameter Optimization},
+  author  = {Zhang, Michael R. and Desai, Nishkrit and Bae, Juhan and Lorraine, Jonathan and Ba, Jimmy},
+  journal = {arXiv preprint arXiv:2312.04528},
+  year    = {2024}
+}
+
+@inproceedings{zhou2025lapt,
+  title     = {Design Principle Transfer in Neural Architecture Search via Large Language Models},
+  author    = {Zhou, Xun and Wu, Xingyu and Feng, Liang and Lu, Zhichao and Tan, Kay Chen},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {39},
+  number    = {21},
+  pages     = {23000--23008},
+  year      = {2025},
+  doi       = {10.1609/aaai.v39i21.34463}
+}
+
+@inproceedings{kristiadi2024sober,
+  title     = {A Sober Look at {LLMs} for Material Discovery: Are They Actually Good for {B}ayesian Optimization Over Molecules?},
+  author    = {Kristiadi, Agustinus and Strieth-Kalthoff, Felix and Skreta, Marta and Poupart, Pascal and Aspuru-Guzik, Al{\'a}n and Pleiss, Geoff},
+  booktitle = {Proceedings of the 41st International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {235},
+  pages     = {25603--25622},
+  publisher = {PMLR},
+  year      = {2024}
+}
+
+@inproceedings{gupta2025llmbo,
+  title     = {{LLMs} for {B}ayesian Optimization in Scientific Domains: Are We There Yet?},
+  author    = {Gupta, Rushil and Hartford, Jason and Liu, Bang},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2025},
+  pages     = {15482--15510},
+  year      = {2025},
+  doi       = {10.18653/v1/2025.findings-emnlp.838}
+}
+
+@article{ferreira2026centaur,
+  title   = {Can {LLMs} Beat Classical Hyperparameter Optimization Algorithms? A Study on autoresearch},
+  author  = {Ferreira, Fabio and Wobbe, Lucca and Krishnakumar, Arjun and Hutter, Frank and Zela, Arber},
+  journal = {arXiv preprint arXiv:2603.24647},
+  year    = {2026}
 }
