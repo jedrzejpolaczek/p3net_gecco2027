@@ -43,56 +43,38 @@
     },
     {
       "genotype": [
-        "nor_conv_1x1",
-        "skip_connect",
         "none",
+        "nor_conv_3x3",
+        "avg_pool_3x3",
         "nor_conv_1x1",
         "nor_conv_3x3",
-        "nor_conv_1x1",
+        "avg_pool_3x3",
+        0.019306977288832506,
+        3.98107170553497e-05,
+        "mish",
+        true
+      ],
+      "objectives": [
+        6.329376220703125,
+        0.5812424421310425
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "avg_pool_3x3",
+        "none",
+        "skip_connect",
+        "skip_connect",
         0.051794746792312114,
         0.0006309573444801935,
-        "mish",
-        false
+        "hardswish",
+        true
       ],
       "objectives": [
-        5.761329650878906,
-        0.37772125005722046
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_1x1",
-        "skip_connect",
-        "none",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        0.0010000000000000002,
-        9.999999999999997e-06,
-        "mish",
-        false
-      ],
-      "objectives": [
-        6.739189147949219,
-        0.36141714453697205
-      ]
-    },
-    {
-      "genotype": [
-        "none",
-        "nor_conv_3x3",
-        "none",
-        "nor_conv_1x1",
-        "skip_connect",
-        "nor_conv_3x3",
-        1.0,
-        0.0006309573444801935,
-        "relu",
-        false
-      ],
-      "objectives": [
-        23.253822326660156,
-        0.5006949305534363
+        6.570472717285156,
+        0.07394633442163467
       ]
     },
     {
@@ -133,254 +115,38 @@
     },
     {
       "genotype": [
-        "avg_pool_3x3",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        "avg_pool_3x3",
-        "none",
-        "nor_conv_3x3",
-        0.372759372031494,
-        9.999999999999997e-06,
-        "mish",
-        true
-      ],
-      "objectives": [
-        8.5205078125,
-        0.628200888633728
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_1x1",
         "skip_connect",
         "none",
-        "nor_conv_1x1",
-        "skip_connect",
-        "skip_connect",
-        0.0010000000000000002,
-        9.999999999999997e-06,
-        "mish",
-        false
-      ],
-      "objectives": [
-        7.298500061035156,
-        0.12381725013256073
-      ]
-    },
-    {
-      "genotype": [
-        "avg_pool_3x3",
-        "avg_pool_3x3",
-        "nor_conv_1x1",
         "none",
         "nor_conv_1x1",
         "nor_conv_3x3",
-        0.372759372031494,
-        0.00015848931924611147,
-        "mish",
-        true
-      ],
-      "objectives": [
-        6.96246337890625,
-        0.37311312556266785
-      ]
-    },
-    {
-      "genotype": [
         "nor_conv_1x1",
-        "skip_connect",
-        "none",
-        "nor_conv_1x1",
-        "skip_connect",
-        "skip_connect",
         0.051794746792312114,
         0.0006309573444801935,
         "hardswish",
         true
       ],
       "objectives": [
-        5.664649963378906,
-        0.09784381836652756
+        5.324310302734375,
+        0.23069517314434052
       ]
     },
     {
       "genotype": [
-        "none",
-        "avg_pool_3x3",
-        "none",
-        "none",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        0.372759372031494,
-        9.999999999999997e-06,
-        "relu",
-        true
-      ],
-      "objectives": [
-        5.68951416015625,
-        0.37651315331459045
-      ]
-    },
-    {
-      "genotype": [
-        "none",
-        "avg_pool_3x3",
-        "none",
-        "avg_pool_3x3",
-        "none",
-        "nor_conv_3x3",
-        0.372759372031494,
-        0.00015848931924611147,
-        "mish",
-        true
-      ],
-      "objectives": [
-        7.720344543457031,
-        0.23296189308166504
-      ]
-    },
-    {
-      "genotype": [
-        "avg_pool_3x3",
-        "avg_pool_3x3",
-        "nor_conv_1x1",
-        "nor_conv_1x1",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        0.372759372031494,
-        9.999999999999997e-06,
-        "hardswish",
-        false
-      ],
-      "objectives": [
-        7.184059143066406,
-        0.4549437165260315
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_3x3",
-        "none",
-        "skip_connect",
-        "nor_conv_3x3",
-        "skip_connect",
-        "none",
-        0.0010000000000000002,
-        0.00251188643150958,
-        "relu",
-        false
-      ],
-      "objectives": [
-        6.2708740234375,
-        0.6355798244476318
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_3x3",
-        "avg_pool_3x3",
-        "avg_pool_3x3",
-        "nor_conv_3x3",
         "nor_conv_1x1",
         "skip_connect",
-        0.019306977288832506,
-        0.00251188643150958,
-        "hardswish",
-        false
-      ],
-      "objectives": [
-        5.7933349609375,
-        0.6022709608078003
-      ]
-    },
-    {
-      "genotype": [
-        "skip_connect",
+        "avg_pool_3x3",
         "none",
-        "nor_conv_1x1",
-        "avg_pool_3x3",
-        "nor_conv_1x1",
-        "avg_pool_3x3",
-        0.0010000000000000002,
-        0.0006309573444801935,
-        "mish",
-        false
-      ],
-      "objectives": [
-        19.224136352539062,
-        0.15634261071681976
-      ]
-    },
-    {
-      "genotype": [
-        "skip_connect",
-        "none",
-        "avg_pool_3x3",
         "nor_conv_3x3",
-        "nor_conv_3x3",
-        "skip_connect",
-        0.0071968567300115215,
+        "nor_conv_1x1",
+        1.0,
         0.009999999999999995,
-        "relu",
-        true
-      ],
-      "objectives": [
-        6.209236145019531,
-        0.6001427173614502
-      ]
-    },
-    {
-      "genotype": [
-        "skip_connect",
-        "skip_connect",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        "none",
-        0.0026826957952797263,
-        0.00251188643150958,
-        "relu",
-        true
-      ],
-      "objectives": [
-        5.7586822509765625,
-        0.5245342254638672
-      ]
-    },
-    {
-      "genotype": [
-        "avg_pool_3x3",
-        "nor_conv_1x1",
-        "nor_conv_1x1",
-        "none",
-        "nor_conv_1x1",
-        "skip_connect",
-        0.0010000000000000002,
-        3.98107170553497e-05,
         "hardswish",
-        true
-      ],
-      "objectives": [
-        6.335563659667969,
-        0.11603391915559769
-      ]
-    },
-    {
-      "genotype": [
-        "skip_connect",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        "none",
-        "avg_pool_3x3",
-        "avg_pool_3x3",
-        0.372759372031494,
-        3.98107170553497e-05,
-        "mish",
         false
       ],
       "objectives": [
-        5.785675048828125,
-        0.42789673805236816
+        46.80819320678711,
+        0.22525203227996826
       ]
     },
     {
@@ -406,579 +172,2678 @@
         "nor_conv_1x1",
         "skip_connect",
         "none",
-        "nor_conv_1x1",
+        "none",
         "nor_conv_3x3",
-        "skip_connect",
+        "nor_conv_1x1",
         0.372759372031494,
         0.00015848931924611147,
-        "mish",
+        "hardswish",
         true
       ],
       "objectives": [
-        6.379219055175781,
-        0.36532101035118103
+        6.737754821777344,
+        0.2005460262298584
       ]
     },
     {
       "genotype": [
+        "none",
         "avg_pool_3x3",
+        "none",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
         "nor_conv_3x3",
-        "skip_connect",
-        "nor_conv_3x3",
-        "skip_connect",
-        "skip_connect",
         0.372759372031494,
-        0.00251188643150958,
-        "hardswish",
-        false
-      ],
-      "objectives": [
-        9.412818908691406,
-        0.5694962739944458
-      ]
-    },
-    {
-      "genotype": [
-        "avg_pool_3x3",
-        "skip_connect",
-        "none",
-        "none",
-        "nor_conv_3x3",
-        "avg_pool_3x3",
-        0.0010000000000000002,
-        9.999999999999997e-06,
-        "hardswish",
-        true
-      ],
-      "objectives": [
-        7.344413757324219,
-        0.2976718246936798
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_1x1",
-        "none",
-        "nor_conv_3x3",
-        "avg_pool_3x3",
-        "avg_pool_3x3",
-        "avg_pool_3x3",
-        0.0010000000000000002,
-        9.999999999999997e-06,
-        "hardswish",
-        true
-      ],
-      "objectives": [
-        25.657432556152344,
-        0.3674957752227783
-      ]
-    },
-    {
-      "genotype": [
-        "skip_connect",
-        "avg_pool_3x3",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        "skip_connect",
-        0.372759372031494,
-        0.00251188643150958,
+        0.00015848931924611147,
         "relu",
         true
       ],
       "objectives": [
-        66.25303268432617,
-        0.3579103350639343
+        9.560676574707031,
+        0.38045039772987366
       ]
     },
     {
       "genotype": [
-        "skip_connect",
-        "none",
         "nor_conv_1x1",
         "skip_connect",
         "avg_pool_3x3",
+        "none",
         "nor_conv_3x3",
+        "nor_conv_1x1",
         0.051794746792312114,
-        9.999999999999997e-06,
+        0.0006309573444801935,
+        "hardswish",
+        false
+      ],
+      "objectives": [
+        6.625762939453125,
+        0.19327494502067566
+      ]
+    },
+    {
+      "genotype": [
+        "avg_pool_3x3",
+        "nor_conv_1x1",
+        "avg_pool_3x3",
+        "avg_pool_3x3",
+        "none",
+        "nor_conv_3x3",
+        0.0010000000000000002,
+        3.98107170553497e-05,
+        "relu",
+        true
+      ],
+      "objectives": [
+        6.01800537109375,
+        0.330914169549942
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_1x1",
+        "skip_connect",
+        "none",
+        "none",
+        "nor_conv_3x3",
+        "nor_conv_1x1",
+        0.051794746792312114,
+        0.0006309573444801935,
         "hardswish",
         true
       ],
       "objectives": [
-        5.487724304199219,
-        0.4469529688358307
+        6.218193054199219,
+        0.20386144518852234
       ]
     },
     {
       "genotype": [
-        "nor_conv_1x1",
         "skip_connect",
         "none",
         "avg_pool_3x3",
         "none",
         "nor_conv_3x3",
-        0.372759372031494,
-        0.00015848931924611147,
+        "nor_conv_1x1",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        6.3079071044921875,
+        0.1905348300933838
+      ]
+    },
+    {
+      "genotype": [
+        "none",
+        "avg_pool_3x3",
+        "nor_conv_1x1",
+        "skip_connect",
+        "skip_connect",
+        "nor_conv_3x3",
+        0.051794746792312114,
+        3.98107170553497e-05,
+        "mish",
+        false
+      ],
+      "objectives": [
+        6.484535217285156,
+        0.3881382644176483
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "avg_pool_3x3",
+        "avg_pool_3x3",
+        "avg_pool_3x3",
+        "nor_conv_3x3",
+        "none",
+        1.0,
+        3.98107170553497e-05,
         "mish",
         true
       ],
       "objectives": [
-        7.580802917480469,
-        0.34989821910858154
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_3x3",
-        "avg_pool_3x3",
-        "nor_conv_1x1",
-        "nor_conv_1x1",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        0.372759372031494,
-        9.999999999999997e-06,
-        "hardswish",
-        true
-      ],
-      "objectives": [
-        5.6573028564453125,
-        0.6571668982505798
+        7.5316162109375,
+        0.6257809400558472
       ]
     },
     {
       "genotype": [
         "skip_connect",
-        "avg_pool_3x3",
-        "avg_pool_3x3",
+        "none",
+        "none",
+        "none",
+        "nor_conv_3x3",
+        "nor_conv_1x1",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        5.65478515625,
+        0.18409916758537292
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
         "nor_conv_1x1",
         "avg_pool_3x3",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
+        "avg_pool_3x3",
+        0.051794746792312114,
+        9.999999999999997e-06,
+        "relu",
+        false
+      ],
+      "objectives": [
+        5.79193115234375,
+        0.5669694542884827
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "avg_pool_3x3",
+        "none",
+        "skip_connect",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "mish",
+        false
+      ],
+      "objectives": [
+        6.294609069824219,
+        0.09497295320034027
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "none",
+        "none",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
+        "avg_pool_3x3",
+        0.019306977288832506,
+        0.00251188643150958,
+        "relu",
+        false
+      ],
+      "objectives": [
+        4.945167541503906,
+        0.38366085290908813
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "none",
+        "none",
+        "nor_conv_3x3",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "mish",
+        false
+      ],
+      "objectives": [
+        5.968231201171875,
+        0.3244034945964813
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "none",
+        "none",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        false
+      ],
+      "objectives": [
+        5.731651306152344,
+        0.460234671831131
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "avg_pool_3x3",
+        "none",
+        "skip_connect",
+        "nor_conv_1x1",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        false
+      ],
+      "objectives": [
+        6.736656188964844,
+        0.08243998140096664
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "none",
+        "none",
+        "none",
+        "skip_connect",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        5.2730255126953125,
+        0.37887829542160034
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "avg_pool_3x3",
+        "none",
+        "skip_connect",
+        "avg_pool_3x3",
+        0.019306977288832506,
+        0.0006309573444801935,
+        "hardswish",
+        false
+      ],
+      "objectives": [
+        8.448341369628906,
+        0.05885211005806923
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "nor_conv_1x1",
+        "none",
+        "skip_connect",
+        "nor_conv_1x1",
         "skip_connect",
         0.0071968567300115215,
-        9.999999999999997e-06,
+        0.009999999999999995,
         "mish",
+        true
+      ],
+      "objectives": [
+        5.939750671386719,
+        0.35771122574806213
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_1x1",
+        "skip_connect",
+        "none",
+        "none",
+        "none",
+        "avg_pool_3x3",
+        0.13894954943731377,
+        0.00251188643150958,
+        "hardswish",
         false
       ],
       "objectives": [
-        6.868896484375,
-        0.1600217968225479
+        17.49536895751953,
+        0.10055060684680939
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "avg_pool_3x3",
+        "none",
+        "skip_connect",
+        "nor_conv_1x1",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        5.937255859375,
+        0.07906202971935272
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "none",
+        "none",
+        "nor_conv_3x3",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "mish",
+        true
+      ],
+      "objectives": [
+        5.413818359375,
+        0.32496824860572815
       ]
     },
     {
       "genotype": [
         "avg_pool_3x3",
-        "nor_conv_1x1",
+        "nor_conv_3x3",
+        "nor_conv_3x3",
         "nor_conv_1x1",
         "none",
         "nor_conv_1x1",
+        0.0010000000000000002,
+        3.98107170553497e-05,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        9.428840637207031,
+        0.4772031307220459
+      ]
+    },
+    {
+      "genotype": [
+        "avg_pool_3x3",
+        "avg_pool_3x3",
+        "avg_pool_3x3",
+        "none",
         "skip_connect",
-        0.372759372031494,
+        "none",
+        0.019306977288832506,
+        0.00015848931924611147,
+        "hardswish",
+        false
+      ],
+      "objectives": [
+        13.103858947753906,
+        0.08592135459184647
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "avg_pool_3x3",
+        "none",
+        "skip_connect",
+        "avg_pool_3x3",
+        0.019306977288832506,
+        0.00251188643150958,
+        "relu",
+        false
+      ],
+      "objectives": [
+        6.1467437744140625,
+        0.06674918532371521
+      ]
+    },
+    {
+      "genotype": [
+        "avg_pool_3x3",
+        "nor_conv_3x3",
+        "none",
+        "avg_pool_3x3",
+        "skip_connect",
+        "none",
+        1.0,
+        0.0006309573444801935,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        26.31024169921875,
+        0.2551857829093933
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "none",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
+        "skip_connect",
+        0.051794746792312114,
+        0.00251188643150958,
+        "relu",
+        true
+      ],
+      "objectives": [
+        5.6254730224609375,
+        0.12539353966712952
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "none",
+        "nor_conv_1x1",
+        "skip_connect",
+        "nor_conv_1x1",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        5.162590026855469,
+        0.11225298792123795
+      ]
+    },
+    {
+      "genotype": [
+        "none",
+        "skip_connect",
+        "none",
+        "skip_connect",
+        "nor_conv_3x3",
+        "avg_pool_3x3",
+        0.0071968567300115215,
+        0.0006309573444801935,
+        "mish",
+        false
+      ],
+      "objectives": [
+        6.2616729736328125,
+        0.274507611989975
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "skip_connect",
+        "nor_conv_1x1",
+        "nor_conv_3x3",
+        "nor_conv_3x3",
+        "avg_pool_3x3",
+        0.13894954943731377,
+        0.0006309573444801935,
+        "mish",
+        false
+      ],
+      "objectives": [
+        6.191070556640625,
+        0.6363308429718018
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "none",
+        "none",
+        "nor_conv_1x1",
+        "skip_connect",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "relu",
+        true
+      ],
+      "objectives": [
+        5.01507568359375,
+        0.4198395013809204
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "none",
+        "none",
+        "skip_connect",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "hardswish",
+        true
+      ],
+      "objectives": [
+        5.8957061767578125,
+        0.07120513916015625
+      ]
+    },
+    {
+      "genotype": [
+        "skip_connect",
+        "none",
+        "avg_pool_3x3",
+        "none",
+        "skip_connect",
+        "skip_connect",
+        0.051794746792312114,
+        0.0006309573444801935,
+        "relu",
+        true
+      ],
+      "objectives": [
+        6.566368103027344,
+        0.08673455566167831
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
+        "avg_pool_3x3",
+        "nor_conv_1x1",
+        "skip_connect",
+        0.0010000000000000002,
         3.98107170553497e-05,
         "hardswish",
         false
       ],
       "objectives": [
-        6.422538757324219,
-        0.13075493276119232
+        9.628631591796875,
+        0.3847426176071167
       ]
     },
     {
       "genotype": [
-        "skip_connect",
-        "none",
-        "none",
-        "nor_conv_3x3",
+        "avg_pool_3x3",
+        "avg_pool_3x3",
         "nor_conv_3x3",
         "avg_pool_3x3",
-        1.0,
+        "nor_conv_1x1",
+        "avg_pool_3x3",
+        0.0071968567300115215,
         0.00015848931924611147,
         "relu",
         true
       ],
       "objectives": [
-        19.6343994140625,
-        0.29608264565467834
+        6.615760803222656,
+        0.3525327742099762
       ]
     },
     {
       "genotype": [
-        "nor_conv_1x1",
         "nor_conv_3x3",
         "none",
-        "nor_conv_3x3",
         "none",
-        "nor_conv_3x3",
-        0.051794746792312114,
-        0.00251188643150958,
-        "hardswish",
-        true
-      ],
-      "objectives": [
-        5.966239929199219,
-        0.6854464411735535
-      ]
-    },
-    {
-      "genotype": [
-        "skip_connect",
-        "avg_pool_3x3",
+        "none",
         "nor_conv_1x1",
         "avg_pool_3x3",
-        "nor_conv_1x1",
-        "none",
         0.019306977288832506,
-        9.999999999999997e-06,
+        0.00251188643150958,
         "relu",
-        true
-      ],
-      "objectives": [
-        8.107040405273438,
-        0.15509137511253357
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_1x1",
-        "avg_pool_3x3",
-        "skip_connect",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        "avg_pool_3x3",
-        0.051794746792312114,
-        3.98107170553497e-05,
-        "mish",
         false
       ],
       "objectives": [
-        6.327018737792969,
-        0.40551039576530457
+        4.998069763183594,
+        0.3612510859966278
       ]
     },
     {
       "genotype": [
+        "skip_connect",
         "none",
-        "nor_conv_1x1",
-        "none",
-        "nor_conv_3x3",
-        "none",
-        "nor_conv_1x1",
-        0.051794746792312114,
-        9.999999999999997e-06,
-        "relu",
-        true
-      ],
-      "objectives": [
-        5.193061828613281,
-        0.6000712513923645
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_1x1",
-        "avg_pool_3x3",
         "none",
         "none",
         "nor_conv_1x1",
         "skip_connect",
+        0.051794746792312114,
+        0.00251188643150958,
+        "relu",
+        true
+      ],
+      "objectives": [
+        6.885047912597656,
+        0.09864873439073563
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_1x1",
+        "skip_connect",
+        "skip_connect",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
+        "nor_conv_1x1",
         1.0,
         0.009999999999999995,
         "mish",
         true
       ],
       "objectives": [
-        63.57419967651367,
-        0.13123250007629395
+        31.29901123046875,
+        0.17453764379024506
       ]
     },
     {
       "genotype": [
-        "avg_pool_3x3",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
         "none",
-        "nor_conv_3x3",
-        0.051794746792312114,
-        0.00251188643150958,
-        "hardswish",
-        false
-      ],
-      "objectives": [
-        6.0832366943359375,
-        0.6865733861923218
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_3x3",
-        "nor_conv_1x1",
+        "none",
         "avg_pool_3x3",
         "skip_connect",
-        "none",
         "nor_conv_3x3",
-        0.0071968567300115215,
-        0.0006309573444801935,
-        "relu",
-        true
-      ],
-      "objectives": [
-        6.16241455078125,
-        0.5054793357849121
-      ]
-    },
-    {
-      "genotype": [
-        "none",
-        "skip_connect",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        "none",
-        "none",
-        0.0071968567300115215,
-        0.00251188643150958,
-        "hardswish",
-        true
-      ],
-      "objectives": [
-        5.708488464355469,
-        0.3983505368232727
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_1x1",
-        "none",
-        "nor_conv_1x1",
-        "none",
-        "skip_connect",
-        "nor_conv_3x3",
-        0.372759372031494,
-        0.00015848931924611147,
-        "hardswish",
-        true
-      ],
-      "objectives": [
-        5.238273620605469,
-        0.3752148747444153
-      ]
-    },
-    {
-      "genotype": [
-        "nor_conv_1x1",
-        "none",
-        "none",
-        "nor_conv_3x3",
-        "none",
-        "skip_connect",
-        0.372759372031494,
-        3.98107170553497e-05,
-        "hardswish",
-        true
-      ],
-      "objectives": [
-        6.772773742675781,
-        0.31610560417175293
-      ]
-    },
-    {
-      "genotype": [
-        "avg_pool_3x3",
-        "nor_conv_3x3",
-        "avg_pool_3x3",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        "none",
-        0.13894954943731377,
-        9.999999999999997e-06,
-        "mish",
-        true
-      ],
-      "objectives": [
-        6.909065246582031,
-        0.6148348450660706
-      ]
-    },
-    {
-      "genotype": [
-        "none",
-        "nor_conv_3x3",
-        "nor_conv_3x3",
-        "nor_conv_1x1",
-        "none",
         "nor_conv_1x1",
         0.0010000000000000002,
         9.999999999999997e-06,
-        "relu",
-        true
+        "hardswish",
+        false
       ],
       "objectives": [
-        7.682746887207031,
-        0.5658663511276245
+        23.399879455566406,
+        0.24208949506282806
       ]
     },
     {
       "genotype": [
+        "nor_conv_3x3",
+        "none",
+        "none",
         "nor_conv_1x1",
         "skip_connect",
-        "avg_pool_3x3",
         "nor_conv_1x1",
-        "none",
-        "none",
         0.051794746792312114,
         0.0006309573444801935,
+        "relu",
+        true
+      ],
+      "objectives": [
+        4.932502746582031,
+        0.42045891284942627
+      ]
+    },
+    {
+      "genotype": [
+        "nor_conv_3x3",
+        "nor_conv_3x3",
+        "nor_conv_3x3",
+        "skip_connect",
+        "none",
+        "none",
+        0.0026826957952797263,
+        0.009999999999999995,
         "relu",
         false
       ],
       "objectives": [
-        6.0059814453125,
-        0.12631607055664062
-      ]
-    },
-    {
-      "genotype": [
-        "none",
-        "nor_conv_3x3",
-        "skip_connect",
-        "none",
-        "skip_connect",
-        "nor_conv_1x1",
-        0.019306977288832506,
-        0.00251188643150958,
-        "relu",
-        true
-      ],
-      "objectives": [
-        7.174354553222656,
-        0.36164218187332153
+        5.962684631347656,
+        0.7281746864318848
       ]
     },
     {
       "genotype": [
         "nor_conv_1x1",
         "nor_conv_1x1",
-        "nor_conv_3x3",
-        "none",
+        "skip_connect",
+        "avg_pool_3x3",
         "avg_pool_3x3",
         "nor_conv_1x1",
-        0.372759372031494,
+        0.0010000000000000002,
         0.00251188643150958,
         "hardswish",
         true
       ],
       "objectives": [
-        13.443855285644531,
-        0.4265708923339844
-      ]
-    },
-    {
-      "genotype": [
-        "skip_connect",
-        "skip_connect",
-        "nor_conv_1x1",
-        "nor_conv_1x1",
-        "nor_conv_3x3",
-        "nor_conv_3x3",
-        0.372759372031494,
-        9.999999999999997e-06,
-        "relu",
-        false
-      ],
-      "objectives": [
-        6.0040283203125,
-        0.5902413725852966
-      ]
-    },
-    {
-      "genotype": [
-        "none",
-        "nor_conv_1x1",
-        "skip_connect",
-        "avg_pool_3x3",
-        "nor_conv_3x3",
-        "skip_connect",
-        1.0,
-        9.999999999999997e-06,
-        "relu",
-        false
-      ],
-      "objectives": [
-        6.2493438720703125,
-        0.33449918031692505
+        6.393119812011719,
+        0.14758363366127014
       ]
     }
   ],
   "diagnostics": {
-    "duplication_rate": 0.2361111111111111,
+    "duplication_rate": 0.4742268041237113,
     "surrogate_quality_log": [
       {
-        "history_size": 2,
-        "predicted_delta": 10.069262695312503,
-        "true_delta": 12.581398010253906
-      },
-      {
         "history_size": 3,
-        "predicted_delta": 9.436048507690458,
-        "true_delta": 11.603538513183594
+        "predicted_delta": 4.814872192315869,
+        "true_delta": 11.772254943847656
+      },
+      {
+        "history_size": 6,
+        "predicted_delta": 1.2179059719285306,
+        "true_delta": 1.2461624145507812
+      },
+      {
+        "history_size": 6,
+        "predicted_delta": 0.2944772565948419,
+        "true_delta": -28.465465545654297
       },
       {
         "history_size": 8,
-        "predicted_delta": 5.368988353474963,
-        "true_delta": 11.044227600097656
+        "predicted_delta": 8.83997046314077,
+        "true_delta": -0.409149169921875
       },
       {
         "history_size": 8,
-        "predicted_delta": 1.9044966876707896,
-        "true_delta": -0.4268341064453125
+        "predicted_delta": 0.48373333812983077,
+        "true_delta": 11.604972839355469
       },
       {
-        "history_size": 10,
-        "predicted_delta": 12.027267456054616,
-        "true_delta": 12.678077697753906
+        "history_size": 8,
+        "predicted_delta": 4.320608250564648,
+        "true_delta": -3.8045272827148438
       },
       {
-        "history_size": 10,
-        "predicted_delta": 0.1315331266266062,
-        "true_delta": 0.8461151123046875
+        "history_size": 8,
+        "predicted_delta": 22.925547729778913,
+        "true_delta": 40.182430267333984
       },
       {
-        "history_size": 10,
-        "predicted_delta": 1.9420018737926341,
-        "true_delta": -0.7578811645507812
+        "history_size": 12,
+        "predicted_delta": 4.070031161496053,
+        "true_delta": 0.40756988525390625
       },
       {
-        "history_size": 21,
-        "predicted_delta": 5.587874968626872,
-        "true_delta": 12.609268188476562
+        "history_size": 14,
+        "predicted_delta": 0.453152233023717,
+        "true_delta": 0.26256561279296875
       },
       {
-        "history_size": 21,
-        "predicted_delta": 7.6063901147652215,
-        "true_delta": -3.0772552490234375
+        "history_size": 16,
+        "predicted_delta": 2.458080002065624,
+        "true_delta": 0.1013641357421875
+      },
+      {
+        "history_size": 18,
+        "predicted_delta": 3.4220967178652457,
+        "true_delta": 0.33115386962890625
+      },
+      {
+        "history_size": 20,
+        "predicted_delta": 3.459270069557647,
+        "true_delta": -0.2120819091796875
+      },
+      {
+        "history_size": 22,
+        "predicted_delta": 3.750906812707626,
+        "true_delta": -0.7864837646484375
+      },
+      {
+        "history_size": 22,
+        "predicted_delta": 1.0460870355292426,
+        "true_delta": -0.9805068969726562
       },
       {
         "history_size": 24,
-        "predicted_delta": 13.482013852614688,
-        "true_delta": -59.9174690246582
+        "predicted_delta": 5.021642996988809,
+        "true_delta": 1.2974472045898438
+      },
+      {
+        "history_size": 24,
+        "predicted_delta": 0.8195183017418382,
+        "true_delta": -3.503173828125
       },
       {
         "history_size": 27,
-        "predicted_delta": 10.642066606833497,
-        "true_delta": 0.1395416259765625
+        "predicted_delta": 0.43392283721192193,
+        "true_delta": 0.35735321044921875
       },
       {
         "history_size": 27,
-        "predicted_delta": 8.505444971433452,
-        "true_delta": 0.10137939453125
+        "predicted_delta": 1.3383465939248236,
+        "true_delta": 1.3228378295898438
       },
       {
-        "history_size": 27,
-        "predicted_delta": 7.1408905151512485,
-        "true_delta": -1.083221435546875
+        "history_size": 32,
+        "predicted_delta": 2.282674435206772,
+        "true_delta": 2.3015975952148438
       },
       {
-        "history_size": 27,
-        "predicted_delta": 13.80058647558944,
-        "true_delta": 12.801597595214844
+        "history_size": 32,
+        "predicted_delta": 2.780887475807578,
+        "true_delta": -0.3011627197265625
+      },
+      {
+        "history_size": 32,
+        "predicted_delta": 0.40022932961612767,
+        "true_delta": 0.5708694458007812
+      },
+      {
+        "history_size": 36,
+        "predicted_delta": 5.635114245441504,
+        "true_delta": 1.5553970336914062
+      },
+      {
+        "history_size": 36,
+        "predicted_delta": 0.2849358813315268,
+        "true_delta": -0.1622467041015625
+      },
+      {
+        "history_size": 36,
+        "predicted_delta": 2.4903873944662482,
+        "true_delta": -1.403778076171875
+      },
+      {
+        "history_size": 41,
+        "predicted_delta": 0.3258727232374108,
+        "true_delta": -0.0529022216796875
+      },
+      {
+        "history_size": 41,
+        "predicted_delta": 0.32587272304279224,
+        "true_delta": -1.2595748901367188
+      },
+      {
+        "history_size": 45,
+        "predicted_delta": 3.792283590163061,
+        "true_delta": 3.515838623046875
       }
+    ],
+    "bootstrap_proposals": 4,
+    "mixing_proposals": 47,
+    "surrogate_fit_seconds": 0.36827759991865605,
+    "linkage_tree_seconds": 1.5617479000939056,
+    "chain_depth_log": [
+      8,
+      3,
+      8,
+      3,
+      5,
+      7,
+      8,
+      7,
+      6,
+      8,
+      6,
+      8,
+      4,
+      8,
+      2,
+      6,
+      3,
+      3,
+      8,
+      6,
+      6,
+      8,
+      8,
+      5,
+      4,
+      1,
+      6
+    ],
+    "level_size_log": [
+      2,
+      2,
+      4,
+      2,
+      4,
+      4,
+      4,
+      4,
+      2,
+      4,
+      4,
+      4,
+      2,
+      4,
+      2,
+      2,
+      4,
+      4,
+      2,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8
+    ],
+    "population_snapshots": [
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "avg_pool_3x3",
+          "nor_conv_3x3",
+          "skip_connect",
+          "avg_pool_3x3",
+          1.0,
+          0.009999999999999995,
+          "mish",
+          true
+        ],
+        [
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          0.372759372031494,
+          0.00015848931924611147,
+          "relu",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "avg_pool_3x3",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          1.0,
+          0.009999999999999995,
+          "hardswish",
+          false
+        ],
+        [
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          0.372759372031494,
+          0.00015848931924611147,
+          "relu",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "avg_pool_3x3",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ],
+        [
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          0.372759372031494,
+          0.00015848931924611147,
+          "relu",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "avg_pool_3x3",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "avg_pool_3x3",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "avg_pool_3x3",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          false
+        ],
+        [
+          "nor_conv_1x1",
+          "skip_connect",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "skip_connect",
+          0.051794746792312114,
+          0.00251188643150958,
+          "relu",
+          true
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "relu",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "skip_connect",
+          0.051794746792312114,
+          0.00251188643150958,
+          "relu",
+          true
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "relu",
+          true
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "relu",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ]
+      ],
+      [
+        [
+          "nor_conv_3x3",
+          "none",
+          "none",
+          "nor_conv_1x1",
+          "nor_conv_1x1",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.00251188643150958,
+          "relu",
+          false
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "avg_pool_3x3",
+          0.019306977288832506,
+          0.0006309573444801935,
+          "hardswish",
+          false
+        ]
+      ],
+      [
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "nor_conv_1x1",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "hardswish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "none",
+          "none",
+          "nor_conv_3x3",
+          "skip_connect",
+          0.051794746792312114,
+          0.0006309573444801935,
+          "mish",
+          true
+        ],
+        [
+          "skip_connect",
+          "none",
+          "avg_pool_3x3",
+          "none",
+          "skip_connect",
+          "skip_connect",
+          0.0010000000000000002,
+          9.999999999999997e-06,
+          "mish",
+          false
+        ]
+      ]
     ]
   }
 }
