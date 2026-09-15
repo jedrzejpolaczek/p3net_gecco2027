@@ -45,8 +45,18 @@ class AbsoluteRandomForestSurrogate:
         self._models = []
         for objective_index in range(n_objectives):
             y = [obs.objectives[objective_index] for obs in observations]
+            # Offsetting by `objective_index`, not reusing `self.random_state`
+            # unchanged: with the SAME seed and the SAME X, sklearn draws the
+            # SAME bootstrap sample indices and per-split candidate-feature
+            # subsets for every objective's model (only the fitted split
+            # thresholds differ, driven by y) -- correlating the models'
+            # bootstrap-noise errors across objectives, contrary to this
+            # module's own "two independent models" docstring above.
+            model_random_state = (
+                None if self.random_state is None else self.random_state + objective_index
+            )
             model = RandomForestRegressor(
-                n_estimators=self.n_estimators, random_state=self.random_state
+                n_estimators=self.n_estimators, random_state=model_random_state
             )
             model.fit(X, y)
             self._models.append(model)
