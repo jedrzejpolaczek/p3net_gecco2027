@@ -54,6 +54,13 @@ TINY_SWEEP_CONFIG = {
 }
 
 
+@pytest.fixture(autouse=True)
+def _results_dir_in_tmp(tmp_path, monkeypatch):
+    """run_sensitivity_grid persists by default; never let a test write its
+    fake-substrate runs into the real results/raw/."""
+    monkeypatch.setattr(run_experiment, "RESULTS_DIR", tmp_path / "raw")
+
+
 @pytest.fixture
 def fake_search_space_config(monkeypatch):
     monkeypatch.setitem(run_experiment._SUBSTRATE_BUILDERS, "fake", lambda cfg: FakeSubstrate())
