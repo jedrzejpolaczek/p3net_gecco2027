@@ -1,0 +1,215 @@
+# Full from-scratch experiment plan for paper v0.0.4.
+#
+# Consumed by scripts/run_pipeline.py (wrapper: scripts/run_pipeline.ps1).
+# Every stage is a grid of (method x search space x budget x seed); the
+# pipeline writes one JSON per grid point, atomically, and on restart runs
+# only the points that are not yet complete -- a crash costs at most the
+# single run that was in progress.
+#
+# Method names below are the configs/methods/<name>.yaml files each stage
+# needs. A stage's `methods` may list method groups defined once below
+# (YAML anchors); nested lists are flattened. The pipeline refuses to start
+# while any referenced config is missing or marked not_yet_implemented.
+#
+# Changing this file (or any config it references) after a run root has
+# been started changes the plan hash, and the pipeline refuses to resume
+# into that run root -- start a new one instead. That is deliberate: one
+# run root = one plan = one code version.
+
+name: v004
+
+primary_search_spaces: &primary
+  - jahs_bench_201
+  - jahs_bench_201_colorectal
+  - jahs_bench_201_fashion
+  - nas_hpo_bench_ii
+fcnet_search_spaces: &fcnet
+  - fcnet_protein_structure
+  - fcnet_naval_propulsion
+  - fcnet_parkinsons_telemonitoring
+  - fcnet_slice_localization
+primary_budgets: &budgets [50, 100, 200, 350]
+
+# ---------------------------------------------------------------------------
+# Method groups
+# ---------------------------------------------------------------------------
+method_groups:
+  # Joint NAS+HPO comparison arms (scope rule: joint methods only).
+  comparison: &comparison
+    # v0.0.3 arms (p3net = design stage S4)
+    - p3net
+    - p3_alone
+    - p3_alone_pop20
+    - p3_alone_pop40
+    - p3_absolute
+    - nsga_net
+    - nsganetv2
+    - sh_emoa
+    - mo_bohb
+    - tpe
+    - random_search
+    # baselines B1-B5
+    - mo_ls
+    - botorch_qnehvi
+    - botorch_qparego
+    - smac3_parego
+    - regularized_evolution_mo
+    - nsga3
+    - moead
+    # additional methods M1-M3
+    - reinforce_mo
+    - bananas_mo
+    - oss_vizier
+    # canonical P3 family: Bartnik reconstruction, M9 and its control M10
+    - bartnik_p3
+    - przewozniczek_p3elympus
+    - canonical_p3_scalar_fihc
+  # The final engine S5 and its surrogate variants (M7, M8 with control).
+  final: &final
+    - p3net_cascade               # S5, final form
+    - p3_absolute_cascade         # surrogate-only ablation: absolute RidgeCV
+    - p3net_bartnik               # M7: absolute random forest
+    - p3net_bartnik_fihc          # control for M8: same forest + plain FIHC refinement
+    - p3net_elympus               # M8: same forest + FIHC-eLyMPuS refinement
+  # Multi-fidelity track (budget = full-evaluation equivalents; D1).
+  multi_fidelity: &multi_fidelity
+    - hyperband_mo
+    - asha_mo
+    - bohb_mo
+
+# Parallel execution (scripts/run_pipeline.py, "Parallel execution").
+parallel:
+  # Worker processes for grid stages; override with --workers. Each
+  # JAHS-Bench-201 worker runs its own benchmark query process: 17.5 GB while
+  # loading (one load at a time, lock), 1.9 GB afterwards; 3 workers fit in
+  # 31.7 GB RAM (measurement:
+  # results/checks/phase2c_jahs_bridge_memory.log).
+  workers: 3
+  # Threads for numerical libraries in every run, whatever the worker count,
+  # so parallelism changes neither results nor per-run CPU accounting.
+  threads_per_run: 2
+  slots:
+    # One GPU (4 GB): at most one GPU run at a time.
+    gpu:
+      capacity: 1
+      methods: [botorch_qnehvi, botorch_qparego]
+    # CPU-heavy GP arms: at most two at a time, so they do not starve the rest.
+    heavy_gp:
+      capacity: 2
+      methods: [oss_vizier]
+
+stages:
+  - name: checks
+    kind: checks
+    # Test suites and a determinism sample: every method referenced anywhere
+    # in this plan is run twice on the same seed; the histories must match.
+    determinism:
+      search_space: nas_hpo_bench_ii
+      budget: 20
+      seed: 1
+
+  - name: s1_headline
+    kind: grid
+    methods: [*comparison]
+    search_spaces: *primary
+    budgets: *budgets
+    seeds: {from: 1, to: 30}
+
+  - name: s2_design_evolution
+    kind: grid
+    methods:
+      - p3net_s1_initial          # f2 inherited, OLS, empty level start, strict dominance
+      - p3net_s2_analytic_cost    # S1 + fresh f2
+      - p3net_s3_ridge            # S2 + RidgeCV
+      - p3net_s4_eager_mixing     # S4 + earlier mixing start (dead end)
+    search_spaces: *primary
+    budgets: *budgets
+    seeds: {from: 1, to: 30}
+
+  - name: s3_final
+    kind: grid
+    methods: [*final]
+    search_spaces: *primary
+    budgets: *budgets
+    seeds: {from: 1, to: 30}
+
+  - name: s4_design_defense
+    kind: grid
+    methods:
+      # single-axis design variants on the final engine
+      - p3net_cascade_inherited_cost
+      - p3net_cascade_f1_truncation
+      - p3net_cascade_grow_on_stall
+      - p3net_cascade_transient_donors
+      - p3net_cascade_threshold_permissive
+      # kappa x acceptance-threshold sweep on the final engine; the
+      # (2 ceil(log2 n), 0) cell is p3net_cascade itself, so 11 new cells
+      - p3net_cascade_kappa1_thr0
+      - p3net_cascade_kappa1_thr1eps
+      - p3net_cascade_kappa1_thr2eps
+      - p3net_cascade_kappalog_thr0
+      - p3net_cascade_kappalog_thr1eps
+      - p3net_cascade_kappalog_thr2eps
+      - p3net_cascade_kappa2log_thr1eps
+      - p3net_cascade_kappa2log_thr2eps
+      - p3net_cascade_kappainf_thr0
+      - p3net_cascade_kappainf_thr1eps
+      - p3net_cascade_kappainf_thr2eps
+    search_spaces: *primary
+    budgets: *budgets
+    seeds: {from: 1, to: 30}
+
+  - name: s5_nas_bench_201
+    kind: grid
+    # D6: architecture-only NAS-Bench-201 -- diagnostics of P3Net and the
+    # Bartnik reproduction only, not a method comparison.
+    methods:
+      - p3net                     # S4
+      - p3net_cascade             # S5
+      - p3net_bartnik
+      - p3net_elympus
+      - bartnik_p3
+      - przewozniczek_p3elympus
+      - canonical_p3_scalar_fihc
+      - mo_ls
+      - random_search
+    search_spaces: [nas_bench_201]
+    budgets: [100, 350]
+    seeds: {from: 1, to: 30}
+
+  - name: s6_heldout_seeds
+    kind: grid
+    # Confirmation on seeds never used for any design decision, all
+    # comparison arms. The analysis plan is pre-registered
+    # (notes/plans/v004-preregistration.md); no pass/fail thresholds --
+    # results are reported in full.
+    methods: [*comparison, *final, *multi_fidelity]
+    search_spaces: *primary
+    budgets: *budgets
+    seeds: {from: 31, to: 60}
+
+  - name: s7_multi_fidelity
+    kind: grid
+    # D1: budget = cost equivalent to 50/100/200/350 full evaluations.
+    methods: [*multi_fidelity]
+    search_spaces: *primary
+    budgets: *budgets
+    seeds: {from: 1, to: 30}
+
+  - name: s8_fcnet
+    kind: grid
+    # D3: second benchmark family, all comparison arms, all four tasks.
+    methods: [*comparison, *final, *multi_fidelity]
+    search_spaces: *fcnet
+    budgets: *budgets
+    seeds: {from: 1, to: 30}
+
+  - name: s9_timing
+    kind: timing
+    # D5: sequential timing, one run at a time in a fresh process with nothing
+    # else running, after every grid stage. Wall-clock, CPU and memory costs
+    # in the paper come from here, not from the parallel grid runs.
+    methods: [*comparison, *final, *multi_fidelity]
+    search_spaces: *primary
+    budgets: [350]
+    seeds: [1]
