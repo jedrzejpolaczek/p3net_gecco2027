@@ -1,0 +1,1387 @@
+<title>Jak naprawdę działa NSGA-Net</title>
+<style>
+  :root {
+    --bg: #eef0ec;
+    --bg-raised: #ffffff;
+    --bg-sunken: #e4e7e0;
+    --ink: #1b1f27;
+    --ink-muted: #565f6b;
+    --ink-faint: #8b929c;
+    --line: #d7dad3;
+    --line-strong: #b9bdb2;
+    --accent: #2f7a3d;
+    --accent-ink: #ffffff;
+    --accent-soft: #dcefdf;
+    --accent-soft-line: #a9d4b0;
+    --kept: #2f6690;
+    --kept-soft: #dbe7ef;
+    --revert-line: #b9bdb2;
+    --grp-vary: #7c5a9e;
+    --grp-train: #b6501e;
+    --code-bg: #1b1f27;
+    --code-ink: #eef0ec;
+    --code-accent: #6fbd80;
+    --shadow: 0 1px 2px rgba(27,31,39,.06), 0 8px 24px rgba(27,31,39,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c;
+      --bg-raised: #1b1f27;
+      --bg-sunken: #101317;
+      --ink: #edeeea;
+      --ink-muted: #9ba3ad;
+      --ink-faint: #6b7280;
+      --line: #2c313b;
+      --line-strong: #3a4048;
+      --accent: #7fd18f;
+      --accent-ink: #0f2013;
+      --accent-soft: #1c2e1f;
+      --accent-soft-line: #355a3c;
+      --kept: #7fb8e0;
+      --kept-soft: #1c2733;
+      --revert-line: #3a4048;
+      --grp-vary: #b89ee0;
+      --grp-train: #e08a4b;
+      --code-bg: #0d0f12;
+      --code-ink: #e8e9e4;
+      --code-accent: #6fbd80;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c;
+    --bg-raised: #1b1f27;
+    --bg-sunken: #101317;
+    --ink: #edeeea;
+    --ink-muted: #9ba3ad;
+    --ink-faint: #6b7280;
+    --line: #2c313b;
+    --line-strong: #3a4048;
+    --accent: #7fd18f;
+    --accent-ink: #0f2013;
+    --accent-soft: #1c2e1f;
+    --accent-soft-line: #355a3c;
+    --kept: #7fb8e0;
+    --kept-soft: #1c2733;
+    --revert-line: #3a4048;
+    --grp-vary: #b89ee0;
+    --grp-train: #e08a4b;
+    --code-bg: #0d0f12;
+    --code-ink: #e8e9e4;
+    --code-accent: #6fbd80;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  }
+
+  a { color: var(--accent); }
+
+  /* ---------- top nav ---------- */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    overflow-x: auto;
+  }
+  .topnav-mark {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--accent);
+    white-space: nowrap;
+    padding-right: 6px;
+    border-right: 1px solid var(--line);
+  }
+  .topnav a {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--ink-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+  }
+  .topnav a:hover { color: var(--ink); border-bottom-color: var(--line-strong); }
+
+  /* ---------- layout shell ---------- */
+  main { max-width: 720px; margin: 0 auto; padding: 0 24px 120px; }
+  .wide { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  section { padding-top: 64px; }
+  section:first-of-type { padding-top: 8px; }
+
+  .eyebrow {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .eyebrow .lvl { color: var(--ink-faint); letter-spacing: .1em; }
+
+  h1, h2, h3 { font-family: inherit; text-wrap: balance; color: var(--ink); }
+  h1 {
+    font-size: clamp(32px, 5vw, 46px);
+    font-weight: 700;
+    line-height: 1.08;
+    margin: 4px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2 { font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.005em; }
+  h3 { font-size: 19px; font-weight: 700; margin: 40px 0 10px; }
+  h3 .num { font-family: "SF Mono", Consolas, monospace; font-size: 14px; color: var(--accent); margin-right: 8px; }
+
+  p { margin: 14px 0; color: var(--ink); max-width: 68ch; }
+  .lede { font-size: 20px; color: var(--ink-muted); max-width: 60ch; margin: 0 0 8px; }
+  .subdek { color: var(--ink-muted); font-size: 16px; margin-top: -4px; }
+
+  strong { color: var(--ink); }
+  em.term { font-style: normal; color: var(--accent); }
+
+  hr.rule { border: none; border-top: 1px solid var(--line); margin: 64px 0 0; }
+
+  /* ---------- figure / diagram card ---------- */
+  figure {
+    margin: 28px 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  figure.bleed { margin-left: calc(50% - 50vw + 12px); margin-right: calc(50% - 50vw + 12px); max-width: 1120px; margin-left: auto; margin-right: auto; }
+  figure svg { display: block; width: 100%; height: auto; padding: 20px; }
+  figcaption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+    padding: 10px 20px 16px;
+    border-top: 1px solid var(--line);
+    line-height: 1.5;
+  }
+  figcaption .k { color: var(--accent); }
+
+  /* ---------- callouts ---------- */
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-soft-line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 24px 0;
+  }
+  .callout .tag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout p { margin: 6px 0; max-width: none; }
+
+  /* ---------- code blocks ---------- */
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "SF Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    box-shadow: var(--shadow);
+    margin: 20px 0;
+  }
+  pre.code .kw { color: var(--code-accent); }
+  pre.code .cm { color: #8b929c; font-style: italic; }
+
+  /* ---------- tables ---------- */
+  .tablewrap { overflow-x: auto; margin: 24px 0; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; background: var(--bg-raised); font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.fixed-col { color: var(--ink-muted); }
+  td.decide-col strong { color: var(--accent); }
+
+  /* ---------- checklist ---------- */
+  .checklist { list-style: none; margin: 20px 0; padding: 0; display: grid; gap: 10px; }
+  .checklist li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .checklist .box { width: 14px; height: 14px; border: 1.5px solid var(--accent); border-radius: 3px; margin-top: 4px; }
+
+  /* ---------- hover/focus detail tooltips ---------- */
+  [data-tt] { cursor: help; }
+  [data-tt]:hover, [data-tt]:focus-visible { filter: brightness(1.12); }
+  [data-tt]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .p3-tooltip {
+    position: absolute;
+    z-index: 100;
+    display: none;
+    max-width: 280px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 9px 11px;
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+    pointer-events: none;
+  }
+  .tt-hint { display: inline-block; font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; color: var(--ink-faint); letter-spacing: .04em; margin: 2px 0 0; }
+
+  /* ---------- live demo (section 4) ---------- */
+  .demo-bleed-wrap {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
+    padding: 0 12px;
+    box-sizing: border-box;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+  .demo {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px 24px;
+    max-width: min(1680px, 100%);
+    margin-left: auto; margin-right: auto;
+  }
+  .hero-block { margin-bottom: 8px; }
+  .map-strip { border: 1.5px solid var(--line-strong); border-radius: 10px 10px 0 0; background: var(--bg-sunken); padding: 10px 16px 0; }
+  .map-strip svg { display: block; width: 100%; height: auto; }
+  .genome-strip {
+    border: 1.5px solid var(--line-strong); border-top: none; border-radius: 0 0 10px 10px;
+    background: var(--bg-raised); padding: 14px 18px 16px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .genome-strip .glabel {
+    font-family: "SF Mono", Consolas, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); white-space: nowrap;
+  }
+  .map-box { fill: none; stroke: currentColor; stroke-width: 1.4; transition: fill .3s ease, stroke .3s ease, stroke-width .3s ease; }
+  .map-box.map-active { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.8; }
+  .map-label { fill: currentColor; font-family: "SF Mono", Consolas, monospace; transition: fill .3s ease; }
+  .map-label.map-active { fill: var(--ink); font-weight: 700; }
+  .map-arrow { stroke: currentColor; opacity: .6; }
+
+  .demo-phase-caption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0 18px;
+    min-height: 20px;
+  }
+  .demo-phase-caption strong { color: var(--accent); }
+
+  .zone-caption {
+    margin: 22px 0 12px; font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-faint);
+    display: flex; align-items: center; gap: 10px; cursor: help;
+  }
+  .zone-caption::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .result-row { display: grid; grid-template-columns: 1.2fr 0.9fr 1fr 1.3fr; gap: 16px; }
+  @media (max-width: 1000px) { .result-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .result-row { grid-template-columns: 1fr; } }
+  .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .card-row { grid-template-columns: 1fr; } }
+  .demo-panel { background: var(--bg-raised); border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; }
+
+  .demo-topline { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .demo-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+  .demo-btn {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    background: var(--bg-sunken);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .demo-btn:hover { border-color: var(--accent); }
+  .demo-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .demo-btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .demo-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; font-family: "SF Mono", Consolas, monospace; font-size: 11.5px; color: var(--ink-muted); background: var(--bg-sunken); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; }
+  .demo-legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .demo-legend .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex: none; }
+  .demo-legend .swatch.grp-vary { background: var(--grp-vary); }
+  .demo-legend .swatch.grp-train { background: var(--grp-train); }
+  .demo-legend .swatch.grp-select { background: var(--accent); }
+  .demo-legend .swatch.front0 { background: var(--accent); }
+  .demo-legend .swatch.front1 { background: var(--kept); }
+  .demo-legend .swatch.frontrest { background: transparent; border: 1.4px solid var(--ink-faint); opacity: .6; }
+  .demo-map-legend { margin-bottom: 10px; }
+  .demo-legend-phases { white-space: normal; color: var(--ink-faint); flex-basis: 100%; }
+
+  .demo-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .demo-stat { background: var(--bg-sunken); border-radius: 8px; padding: 10px 12px; }
+  .demo-stat .lbl { font-family: "SF Mono", Consolas, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+  .demo-stat .val { font-family: "SF Mono", Consolas, monospace; font-size: 20px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .demo-genome { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 6px; }
+  .trap-group { display: flex; gap: 3px; padding: 5px; border-radius: 7px; background: var(--bg-sunken); align-items: center; }
+  .gene-box {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px;
+    border: 1.4px solid var(--line-strong);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 13px;
+    background: var(--bg-raised);
+    color: var(--ink);
+  }
+  .gene-box.vary { border-color: var(--grp-vary); background: color-mix(in srgb, var(--grp-vary) 18%, var(--bg-raised)); }
+  .gene-box.type-a { box-shadow: inset 0 -3px 0 var(--grp-train); }
+  .gene-box.type-b { box-shadow: inset 0 -3px 0 var(--kept); }
+  .pop-row { display: flex; align-items: center; gap: 10px; font-family: "SF Mono", Consolas, monospace; font-size: 11px; color: var(--ink-muted); margin: 4px 0; flex-wrap: wrap; }
+  .pop-row .metrics { white-space: nowrap; }
+  .pop-row .metrics .r0 { color: var(--accent); font-weight: 700; }
+
+  .demo-log { font-family: "SF Mono", Consolas, monospace; font-size: 12.5px; color: var(--ink-muted); background: var(--bg-sunken); border-radius: 8px; padding: 10px 14px; margin: 14px 0; min-height: 20px; }
+  .demo-log strong { color: var(--accent); }
+
+  /* ---------- Pareto scatter ---------- */
+  .pareto-wrap { position: relative; }
+  .pareto-wrap svg { display: block; width: 100%; height: auto; }
+  .pareto-pt { fill: var(--ink-faint); opacity: .55; }
+  .pareto-pt.front0 { fill: var(--accent); opacity: 1; }
+  .pareto-pt.front1 { fill: var(--kept); opacity: .9; }
+
+  /* ---------- cost callout: the point of the whole page ---------- */
+  .cost-callout {
+    background: var(--bg-sunken);
+    border: 1px solid var(--line-strong);
+    border-left: 4px solid var(--grp-train);
+    border-radius: 9px;
+    padding: 14px 18px 16px;
+    margin: 14px 0 18px;
+  }
+  .cost-callout-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .cost-label { font-family: "SF Mono", Consolas, monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-muted); }
+  .cost-value { font-family: "SF Mono", Consolas, monospace; font-size: 30px; color: var(--grp-train); font-variant-numeric: tabular-nums; font-weight: 700; }
+  .cost-bar-track { height: 10px; border-radius: 6px; background: var(--bg-raised); border: 1px solid var(--line-strong); overflow: hidden; margin: 10px 0 8px; }
+  .cost-bar-fill { height: 100%; width: 0%; background: var(--grp-train); transition: width .45s cubic-bezier(.3,.7,.4,1); }
+  .cost-note { font-family: "SF Mono", Consolas, monospace; font-size: 11.5px; color: var(--ink-faint); line-height: 1.6; margin: 0; }
+
+  .chip { font-family: "SF Mono", Consolas, monospace; font-size: 11px; padding: 5px 9px; border-radius: 6px; border: 1.3px solid var(--line-strong); background: var(--bg-sunken); color: var(--ink-muted); }
+  .chip.front0 { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+
+  .demo-panel h4 { font-family: "SF Mono", Consolas, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 10px; }
+  .demo-note { font-family: "SF Mono", Consolas, monospace; font-size: 11.5px; color: var(--ink-faint); margin-top: 14px; line-height: 1.6; }
+
+  .diagram-label { font-family: "SF Mono", Consolas, monospace; }
+  ::selection { background: var(--accent-soft); }
+
+  footer.page-end {
+    max-width: 720px; margin: 80px auto 0; padding: 24px 24px 40px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+  }
+</style>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <span class="topnav-mark">NSGA-Net / przewodnik</span>
+    <a href="#context">1&nbsp;Kontekst</a>
+    <a href="#bigpicture">2&nbsp;Ogólny obraz</a>
+    <a href="#components">3&nbsp;Komponenty</a>
+    <a href="#live">4&nbsp;Zobacz na żywo</a>
+    <a href="#code">5&nbsp;Pseudokod</a>
+    <a href="#practice">6&nbsp;Co wymyślasz sam</a>
+  </div>
+</div>
+
+<main>
+
+<section id="top">
+  <div class="eyebrow"><span>NSGA-Net — ewolucyjny NAS z pełnym treningiem</span></div>
+  <h1>Jak naprawdę działa NSGA-Net</h1>
+  <p class="lede">Klasyczny NSGA-II — sortowanie niezdominowane plus crowding distance — zastosowany wprost do genotypów architektur sieci neuronowych. Od jednej pętli, wokół której jest zbudowany, przez cztery procedury, które trzeba napisać, żeby go zaimplementować, aż po garść decyzji, które <em class="term">Ty</em> i tak musisz podjąć sam, zanim puścisz go na własny problem.</p>
+  <p class="subdek">Ułożone jak diagram C4: kontekst, potem duże ruchome elementy, potem każdy z nich rozłożony na czynniki pierwsze, potem kod, na końcu praktyczna checklista.</p>
+</section>
+
+<hr class="rule">
+
+<section id="context">
+  <h3><span class="num">1</span>Kontekst — gdzie NSGA-Net stoi w krajobrazie NAS</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: NSGA-Net bierze NSGA-II — dokładnie ten sam algorytm wielokryterialny, który od dwudziestu lat służy do optymalizacji inżynierskiej — i uruchamia go wprost na genotypach architektur, bez żadnego skrótu w ocenie.</p>
+  <p>Każdy kandydat, jakiego wyprodukuje mutacja albo krzyżowanie, zostaje <strong>w pełni wytrenowany</strong>, zanim algorytm w ogóle pozna jego cele (dokładność, FLOP-y, opóźnienie — co sobie wybierzesz). Żadnej tańszej oceny pośredniej, żadnego surogatu, żadnej wagi łączącej cele w jedną liczbę. To czysta, podręcznikowa ewolucja wielokryterialna, zastosowana do przestrzeni, w której jedna ewaluacja bywa godzinami treningu na GPU.</p>
+
+  <div class="callout">
+    <span class="tag">Miejsce w siatce ablacyjnej tego artykułu</span>
+    <p>Ta strona to jedno z dziewięciu ramion siatki ablacyjnej porównującej P3Net z sześcioma bazowymi metodami (random search, TPE, MO-BOHB, SH-EMOA, NSGA-Net, NSGANetV2) na JAHS-Bench-201 i NAS-HPO-Bench-II. NSGA-Net jest w tej siatce <strong>najbliższym krewnym P3Net</strong>: oba są ewolucyjnymi metodami wielokryterialnymi, oba operują wprost na genotypie architektury jako wektorze dyskretnych decyzji. Różnica jest w tym, czego NSGA-Net <em>nie ma</em>: żadnej piramidy, która rośnie sama, i żadnego surogatu, który zastępowałby prawdziwy trening. Rozmiar populacji ustalasz z góry, raz, i płacisz pełną ewaluację za każdego kandydata, jakiego to ustalenie wyprodukuje.</p>
+  </div>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 300" role="img" aria-label="Diagram ćwiartkowy: oś pozioma to czy metoda ustala rozmiar populacji z góry czy pozwala mu wyłonić się samemu, oś pionowa to czy metoda ocenia kandydatów surogatem czy zawsze prawdziwym treningiem. NSGA-Net leży w rogu: rozmiar z góry, zawsze prawdziwa ocena. P3Net leży w przeciwnym rogu: rozmiar wyłania się sam, ocena przez tani surogat.">
+      <defs>
+        <marker id="arrQ" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <line x1="80" y1="30" x2="80" y2="260" stroke="currentColor" stroke-width="1.2" opacity="0.4" marker-end="url(#arrQ)"></line>
+      <line x1="80" y1="260" x2="800" y2="260" stroke="currentColor" stroke-width="1.2" opacity="0.4" marker-end="url(#arrQ)"></line>
+      <text x="60" y="24" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.6">surogat</text>
+      <text x="60" y="252" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.6">zawsze<tspan x="60" dy="12">prawdziwy</tspan><tspan x="60" dy="12">trening</tspan></text>
+      <text x="808" y="264" text-anchor="start" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.6">rozmiar populacji</text>
+      <text x="90" y="278" text-anchor="start" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.6">ustalony z góry, na stałe</text>
+      <text x="80" y="16" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.6">wyłania się sam</text>
+
+      <rect x="580" y="200" width="180" height="46" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.7" pointer-events="all" tabindex="0" data-tt="N ustalasz Ty, raz, zanim padnie pierwsza ewaluacja. Każdy potomek, dobry czy zły, dostaje pełny trening — sekcje 2 i 3.3 poniżej."></rect>
+      <text x="670" y="228" text-anchor="middle" class="diagram-label" font-size="13" fill="var(--ink)">NSGA-Net (ta strona)</text>
+
+      <rect x="120" y="46" width="180" height="46" rx="8" fill="none" stroke="var(--kept)" stroke-width="1.6" stroke-dasharray="3 3" pointer-events="all" tabindex="0" data-tt="P3Net: piramida rośnie tylko wtedy, gdy coś ją faktycznie pokona, a klaster w krzyżowaniu jest oceniany tanim, relatywnym predyktorem — pełna ewaluacja pada tylko raz na przemiatanie."></rect>
+      <text x="210" y="74" text-anchor="middle" class="diagram-label" font-size="13" fill="var(--kept)">P3Net (dla porównania)</text>
+
+      <path d="M660,200 C500,150 350,110 300,80" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 4" opacity="0.5" marker-end="url(#arrQ)"></path>
+      <text x="480" y="140" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.6">to jest dokładnie ta różnica, do której wraca sekcja&nbsp;6</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> ten sam rodzaj genotypu, te same cele wielokryterialne — ale w przeciwległych rogach jednej mapy. NSGA-Net zgaduje N z góry i płaci pełną cenę za każdego kandydata; P3Net unika obu tych zobowiązań. Reszta tej strony rozkłada róg NSGA-Net na czynniki pierwsze.</figcaption>
+  </figure>
+</section>
+
+<section id="bigpicture">
+  <h3><span class="num">2</span>Ogólny obraz — jedna pętla, cztery ruchome elementy</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: populacja o stałym rozmiarze N produkuje N potomków, wszystkie N są w pełni trenowane, rodzice i potomkowie łączą się w pulę 2N, z której sortowanie niezdominowane i crowding distance wybierają z powrotem dokładnie N.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Element</th><th>Zadanie</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Populacja (rozmiar N)</strong></td><td>Stała liczba w pełni ocenionych architektur, ustalona na starcie i nigdy niezmieniana w trakcie biegu.</td></tr>
+        <tr><td><strong>Selekcja turniejowa + wariacja</strong></td><td>Dwóch losowych rodziców, porównanie po randze i crowding distance, potem jednorodne krzyżowanie i mutacja — bez żadnej wiedzy o strukturze genotypu.</td></tr>
+        <tr><td><strong>Pełny trening</strong></td><td>Każdy nowo utworzony potomek jest trenowany naprawdę, od zera, zanim jego cele są znane. Zero skrótów.</td></tr>
+        <tr><td><strong>Sortowanie niezdominowane + crowding distance</strong></td><td>Dzieli połączoną pulę rodzice+potomkowie na fronty Pareto, potem dobiera brakującą resztę populacji po gęstości sąsiadów na froncie granicznym.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Pełna wersja tej samej pętli, krok po kroku:</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 -34 880 700" role="img" aria-label="Jedna generacja NSGA-Net: populacja P o rozmiarze N wchodzi do selekcji turniejowej i wariacji, produkując N potomków Q; każdy z nich jest w pełni trenowany; P i Q łączą się w pulę R o rozmiarze 2N; sortowanie niezdominowane dzieli R na fronty; fronty wypełniają nową populację po kolei, a ostatni, który się nie mieści, jest docinany według crowding distance, dając z powrotem dokładnie N.">
+      <defs>
+        <marker id="arrR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <circle cx="148" cy="-19" r="4" fill="var(--grp-vary)"></circle>
+      <text x="158" y="-16" class="diagram-label" font-size="11" fill="currentColor" opacity="0.85">Selekcja + wariacja (3.2)</text>
+      <circle cx="378" cy="-19" r="4" fill="var(--grp-train)"></circle>
+      <text x="388" y="-16" class="diagram-label" font-size="11" fill="currentColor" opacity="0.85">Pełny trening (3.3)</text>
+      <circle cx="560" cy="-19" r="4" fill="var(--accent)"></circle>
+      <text x="570" y="-16" class="diagram-label" font-size="11" fill="currentColor" opacity="0.85">Sortowanie + crowding distance (3.4)</text>
+
+      <rect x="300" y="14" width="280" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Rozmiar N jest stały przez cały bieg — dokładnie tyle samo architektur wchodzi do każdej generacji, niezależnie od tego, jak trudny okazuje się problem."></rect>
+      <text x="440" y="41" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">populacja P<tspan baseline-shift="sub" font-size="9">t</tspan>, N architektur, już ocenionych</text>
+      <path d="M440,58 L440,84" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrR)"></path>
+
+      <rect x="270" y="86" width="7" height="44" rx="3" fill="var(--grp-vary)"></rect>
+      <rect x="280" y="86" width="320" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Dwóch losowych kandydatów, wygrywa niższa ranga frontu; remis rozstrzyga wyższa crowding distance. Szczegóły w 3.2."></rect>
+      <text x="440" y="113" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">selekcja turniejowa (ranga, potem crowding)</text>
+      <path d="M440,130 L440,156" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrR)"></path>
+
+      <rect x="270" y="158" width="7" height="44" rx="3" fill="var(--grp-vary)"></rect>
+      <rect x="280" y="158" width="320" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Każdy gen niezależnie: rzut monetą decyduje, od którego rodzica pochodzi, potem osobny rzut decyduje, czy zmutować go na losową wartość. Żadna struktura genotypu nie jest brana pod uwagę — to jest różnica względem drzewa powiązań P3/P3Net."></rect>
+      <text x="440" y="185" text-anchor="middle" class="diagram-label" font-size="12.5" fill="currentColor">krzyżowanie jednorodne + mutacja</text>
+      <path d="M440,202 L440,228" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrR)"></path>
+
+      <rect x="270" y="230" width="7" height="46" rx="3" fill="var(--grp-train)"></rect>
+      <rect x="280" y="230" width="320" height="46" rx="8" fill="var(--accent-soft)" stroke="var(--grp-train)" stroke-width="1.8" pointer-events="all" tabindex="0" data-tt="To jest prawdziwy koszt algorytmu — N pełnych treningów w każdej generacji, niezależnie od tego, jak obiecujący jest kandydat. Zero surogatu, zero wcześniejszego zatrzymania. Sekcja 3.3."></rect>
+      <text x="440" y="258" text-anchor="middle" class="diagram-label" font-size="13" fill="var(--ink)">PEŁNY TRENING każdego z N potomków — realny koszt</text>
+      <path d="M440,276 L440,302" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrR)"></path>
+
+      <rect x="220" y="304" width="440" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Rodzice nie są odrzucani — nadal mogą wygrać selekcję niżej, jeśli okażą się lepsi od swoich dzieci. To standardowa elitarna selekcja NSGA-II."></rect>
+      <text x="440" y="331" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">połącz: R<tspan baseline-shift="sub" font-size="9">t</tspan> = P<tspan baseline-shift="sub" font-size="9">t</tspan> ∪ Q<tspan baseline-shift="sub" font-size="9">t</tspan> — 2N w pełni ocenionych</text>
+      <path d="M440,350 L440,376" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrR)"></path>
+
+      <rect x="270" y="378" width="7" height="44" rx="3" fill="var(--accent)"></rect>
+      <rect x="280" y="378" width="320" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Standardowy szybki algorytm sortowania niezdominowanego NSGA-II — porównanie obu celów naraz, nigdy ważonej sumy. Sekcja 3.4."></rect>
+      <text x="440" y="405" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">sortowanie niezdominowane → fronty F₁, F₂, …</text>
+      <path d="M440,422 L440,448" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrR)"></path>
+
+      <rect x="140" y="450" width="600" height="120" rx="10" fill="var(--bg-sunken)" stroke="currentColor" stroke-width="1" opacity="0.9"></rect>
+      <text x="164" y="476" class="diagram-label" font-size="11" letter-spacing="0.06em" fill="currentColor" opacity="0.6">WYPEŁNIJ P<tspan baseline-shift="sub" font-size="8">t+1</tspan> FRONTAMI PO KOLEI, OD F₁</text>
+      <rect x="270" y="490" width="7" height="46" rx="3" fill="var(--accent)"></rect>
+      <rect x="280" y="490" width="420" height="46" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" pointer-events="all" tabindex="0" data-tt="Dopóki cały kolejny front się mieści, wchodzi w całości. Front, który by przepełnił N, jest docinany według crowding distance — zachowywane są punkty w rzadziej obsadzonych okolicach frontu. Sekcja 3.4."></rect>
+      <text x="490" y="518" text-anchor="middle" class="diagram-label" font-size="12" fill="var(--ink)">front mieści się w całości → wejdź; front graniczny → docinany crowding distance</text>
+
+      <path d="M440,570 L440,596" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arrR)"></path>
+      <rect x="280" y="598" width="320" height="46" rx="8" fill="none" stroke="var(--accent)" stroke-width="1.8" pointer-events="all" tabindex="0" data-tt="Dokładnie N — ani jednej architektury więcej, ani jednej mniej. Ta nowa populacja jest wejściem do kolejnej generacji."></rect>
+      <text x="440" y="626" text-anchor="middle" class="diagram-label" font-size="13" fill="var(--ink)">nowa populacja P<tspan baseline-shift="sub" font-size="9">t+1</tspan> — znów dokładnie N</text>
+
+      <path d="M600,621 C740,621 740,240 580,60" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 4" marker-end="url(#arrR)"></path>
+      <text x="705" y="360" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.7" transform="rotate(90 705 360)">kolejna generacja, g ← g+1, aż g = G</text>
+
+      <text x="440" y="670" text-anchor="middle" class="diagram-label" font-size="11" fill="var(--accent)">N i G ustalasz Ty, zanim padnie pierwsza ewaluacja — patrz sekcja 6</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> to jest cała generacja NSGA-Net, węzeł po węźle. Kolorowe znaczniki po lewej pokazują, do którego z trzech ruchomych elementów z tabeli wyżej należy dany krok. Zauważ, że pomarańczowy blok „pełny trening” nie ma żadnej gałęzi warunkowej wychodzącej wcześniej — każdy potomek go przechodzi, zawsze, niezależnie od tego, jak wygląda.</figcaption>
+  </figure>
+
+  <p>Zwróć uwagę, czego tu <em>nie ma</em>: żadnego lokalnego przeszukiwania na poziomie pojedynczego genotypu, żadnej struktury uczonej z populacji, żadnego mechanizmu, który pozwoliłby N urosnąć albo skurczyć się w trakcie biegu. Wszystko, co NSGA-Net „wie” o problemie, przechodzi przez dwa wąskie gardła: operator wariacji (3.2) i porównanie Pareto (3.4).</p>
+</section>
+
+<section id="components">
+  <h2>3&nbsp; Komponenty — rozkładanie każdego elementu na czynniki</h2>
+  <p class="subdek">Te same cztery elementy co wyżej, teraz na poziomie szczegółowości potrzebnym do ich zaimplementowania.</p>
+
+  <h3><span class="num">3.1</span>Genotyp — architektura jako wektor porównywalny gen po genie</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: architektura staje się wektorem dyskretnych decyzji projektowych — dokładnie tak samo jak w P3/P3Net, tylko bez żadnego drzewa, które wiązałoby te decyzje ze sobą.</p>
+  <p>Typowy genotyp NAS to lista operacji na krawędziach grafu komórki (np. <span class="mono">conv3×3</span>, <span class="mono">skip</span>, <span class="mono">none</span>) plus, opcjonalnie, kilka zdyskretyzowanych hiperparametrów treningowych. NSGA-Net nie narzuca nic ponad to, że genotyp da się zakodować jako wektor porównywalny locus po locus i że da się z niego zdekodować sieć, którą można wytrenować. To jest dokładnie ten sam kształt genotypu, jakiego używa P3Net — różnica zaczyna się dopiero w tym, co algorytm robi z tym wektorem dalej.</p>
+  <p>Jedna rzecz jest tu inna niż w P3/P3Net i ma konsekwencje w sekcji 3.2: NSGA-Net nigdy nie liczy, które loci mają tendencję do wspólnego przemieszczania się. Każdy gen jest dla operatora wariacji tak samo niezależny jak każdy inny — niezależnie od tego, czy w rzeczywistości dwie krawędzie działają sensownie tylko razem.</p>
+
+  <h3><span class="num">3.2</span>Wariacja — krzyżowanie jednorodne i mutacja, bez struktury</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: dla każdego genu osobno — rzut monetą decyduje, od którego rodzica pochodzi; drugi rzut decyduje, czy w ogóle zmutować go na coś losowego.</p>
+  <p>Dwóch rodziców trafia do turnieju: dwóch losowych kandydatów z populacji, wygrywa niższa ranga frontu (bliżej F₁ = lepiej), a remis rangi rozstrzyga wyższa crowding distance (patrz 3.4) — dokładniejsze zdanie na temat tego samego dostajesz w sekcji 5, w procedurze <span class="mono">TOURNAMENT</span>. Mając dwóch rodziców, krzyżowanie jednorodne przechodzi po każdym locus niezależnie i losuje, czy dziecko dostaje wartość od rodzica A, czy od rodzica B. Mutacja potem, z osobnym prawdopodobieństwem na locus, zastępuje wartość genu zupełnie nową, losową.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 260" role="img" aria-label="Krzyżowanie jednorodne: rodzic A i rodzic B mają po sześć genów; maska losowych rzutów monetą decyduje niezależnie dla każdego locus, od którego rodzica dziecko dziedziczy wartość; następnie mutacja zamienia jeden losowo wybrany gen na nową losową wartość.">
+      <g class="mono">
+        <text x="0" y="20" font-size="11" fill="currentColor" opacity="0.6">RODZIC A</text>
+        <g transform="translate(0,30)">
+          <rect x="0" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="30" y="25" text-anchor="middle" font-size="13">C</text>
+          <rect x="66" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="96" y="25" text-anchor="middle" font-size="13">S</text>
+          <rect x="132" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="162" y="25" text-anchor="middle" font-size="13">C</text>
+          <rect x="198" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="228" y="25" text-anchor="middle" font-size="13">—</text>
+          <rect x="264" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="294" y="25" text-anchor="middle" font-size="13">S</text>
+          <rect x="330" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="360" y="25" text-anchor="middle" font-size="13">C</text>
+        </g>
+
+        <text x="0" y="100" font-size="11" fill="currentColor" opacity="0.6">RODZIC B</text>
+        <g transform="translate(0,110)">
+          <rect x="0" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="30" y="25" text-anchor="middle" font-size="13">—</text>
+          <rect x="66" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="96" y="25" text-anchor="middle" font-size="13">C</text>
+          <rect x="132" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="162" y="25" text-anchor="middle" font-size="13">S</text>
+          <rect x="198" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="228" y="25" text-anchor="middle" font-size="13">C</text>
+          <rect x="264" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="294" y="25" text-anchor="middle" font-size="13">C</text>
+          <rect x="330" y="0" width="60" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="1.2"></rect>
+          <text fill="currentColor" x="360" y="25" text-anchor="middle" font-size="13">S</text>
+        </g>
+
+        <text x="0" y="182" font-size="11" fill="var(--grp-vary)">MASKA (rzut monetą, niezależnie na locus)</text>
+        <g transform="translate(0,190)" font-size="12" fill="var(--grp-vary)">
+          <text x="30" y="12" text-anchor="middle">A</text>
+          <text x="96" y="12" text-anchor="middle">B</text>
+          <text x="162" y="12" text-anchor="middle">A</text>
+          <text x="228" y="12" text-anchor="middle">B</text>
+          <text x="294" y="12" text-anchor="middle">A</text>
+          <text x="360" y="12" text-anchor="middle">B</text>
+        </g>
+
+        <text x="0" y="222" font-size="11" fill="currentColor" opacity="0.6">DZIECKO (po krzyżowaniu, przed mutacją)</text>
+        <g transform="translate(0,230)">
+          <rect x="0" y="0" width="60" height="26" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"></rect>
+          <text fill="var(--ink)" x="30" y="18" text-anchor="middle" font-size="12">C</text>
+          <rect x="66" y="0" width="60" height="26" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"></rect>
+          <text fill="var(--ink)" x="96" y="18" text-anchor="middle" font-size="12">C</text>
+          <rect x="132" y="0" width="60" height="26" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"></rect>
+          <text fill="var(--ink)" x="162" y="18" text-anchor="middle" font-size="12">C</text>
+          <rect x="198" y="0" width="60" height="26" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"></rect>
+          <text fill="var(--ink)" x="228" y="18" text-anchor="middle" font-size="12">C</text>
+          <rect x="264" y="0" width="60" height="26" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"></rect>
+          <text fill="var(--ink)" x="294" y="18" text-anchor="middle" font-size="12">S</text>
+          <rect x="330" y="0" width="60" height="26" rx="5" fill="var(--grp-train)" stroke="var(--grp-train)" stroke-width="1.6" opacity="0.85"></rect>
+          <text fill="#fff" x="360" y="18" text-anchor="middle" font-size="12">—</text>
+        </g>
+        <rect x="330" y="230" width="60" height="26" rx="5" fill="none" stroke="var(--grp-train)" stroke-width="1.8" pointer-events="all" tabindex="0" data-tt="Locus 5 dostał wartość od rodzica B (S), ale mutacja go jeszcze przestawiła — na losową wartość, niezależnie od tego, co robią sąsiednie loci. To jest właśnie brak struktury: gdyby te dwa geny musiały zmieniać się razem, żeby cokolwiek dać, ten pojedynczy przypadkowy flip by to zepsuł bez ostrzeżenia."></rect>
+        <text x="440" y="248" font-size="11" fill="var(--grp-train)">← mutacja: losowa nowa wartość, niezależnie od reszty</text>
+      </g>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> sześć niezależnych rzutów monetą tworzy dziecko, potem jeden niezależny rzut mutuje jeden gen. W przeciwieństwie do krzyżowania w P3/P3Net (które kopiuje całe klastry powiązanych genów naraz, bo wie, które z nich muszą iść razem), tu każdy gen jest osobną decyzją. Jeśli dwie krawędzie w Twoim genotypie muszą zmienić się razem, żeby cokolwiek poprawić, ten operator może je rozdzielić równie łatwo, jak połączyć.</figcaption>
+  </figure>
+
+  <h3><span class="num">3.3</span>Ocena — pełny trening, zawsze, bez wyjątku</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: zanim NSGA-Net pozna cele kandydata, ten kandydat musi zostać naprawdę wytrenowany — nie ma żadnej tańszej wersji tego kroku.</p>
+  <p>To jest miejsce, w którym NSGA-Net różni się najbardziej dotkliwie od reszty siatki ablacyjnej tego artykułu. MO-BOHB i SH-EMOA tną koszt fidelnością (krótszy trening dla słabszych kandydatów). NSGANetV2 zastępuje trening predyktorem. P3Net zastępuje go relatywnym surogatem wewnątrz krzyżowania. NSGA-Net nie robi nic z tego — każdy pojedynczy potomek z sekcji 3.2, obiecujący czy nie, dostaje pełny cykl treningu, zanim cokolwiek o nim wiadomo.</p>
+  <p>To nie jest niedopatrzenie — to jest dokładnie to, co czyni NSGA-Net użytecznym punktem odniesienia: pokazuje, ile kosztuje wielokryterialna ewolucja architektur, jeśli nie oszukujesz przy ocenie w żaden sposób. Sekcja&nbsp;4 poniżej sprawia, że ten koszt jest widoczny na żywo, jako rosnący licznik.</p>
+
+  <h3><span class="num">3.4</span>Selekcja NSGA-II — sortowanie niezdominowane i crowding distance</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: podziel połączoną pulę na warstwy niezdominowania, potem — tylko tam, gdzie trzeba docinać — zachowaj kandydatów z najrzadziej obsadzonych okolic frontu.</p>
+  <p>Kandydat <em>a</em> dominuje kandydata <em>b</em>, jeśli <em>a</em> jest nie gorszy od <em>b</em> na każdym celu i ściśle lepszy na co najmniej jednym. Front F₁ to zbiór kandydatów, których nikt nie dominuje. F₂ to ci, których dominują tylko kandydaci z F₁. I tak dalej — każdy kolejny front to „usuń poprzednie fronty, znajdź niezdominowanych wśród tego, co zostało”.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 620 260" role="img" aria-label="Wykres rozrzutu jakości i kosztu kilkunastu kandydatów, pogrupowanych w trzy zagnieżdżone fronty niezdominowania: F1 najbliżej optymalnego rogu, F2 dominowany tylko przez F1, F3 dominowany przez oba.">
+      <g class="mono">
+        <line x1="60" y1="20" x2="60" y2="220" stroke="currentColor" stroke-width="1" opacity="0.35"></line>
+        <line x1="60" y1="220" x2="580" y2="220" stroke="currentColor" stroke-width="1" opacity="0.35"></line>
+        <text x="60" y="238" font-size="10.5" fill="currentColor" opacity="0.55">jakość →</text>
+        <text x="10" y="16" font-size="10.5" fill="currentColor" opacity="0.55">koszt</text>
+        <text x="10" y="212" font-size="10.5" fill="currentColor" opacity="0.55">(niżej = taniej)</text>
+
+        <g pointer-events="all" tabindex="0" data-tt="Front F1: nikt tych punktów nie dominuje. To one wygrywają turnieje selekcji jako pierwsze i to one przechodzą do kolejnej populacji w całości, jeśli tylko się zmieszczą.">
+          <circle cx="130" cy="180" r="6" fill="var(--accent)"></circle>
+          <circle cx="230" cy="120" r="6" fill="var(--accent)"></circle>
+          <circle cx="340" cy="80" r="6" fill="var(--accent)"></circle>
+          <circle cx="470" cy="45" r="6" fill="var(--accent)"></circle>
+        </g>
+        <text x="470" y="30" text-anchor="middle" font-size="10.5" fill="var(--accent)">F1</text>
+
+        <g pointer-events="all" tabindex="0" data-tt="Front F2: każdy z tych punktów jest dominowany przez co najmniej jeden punkt z F1, ale przez żaden inny punkt spoza F1.">
+          <circle cx="160" cy="195" r="6" fill="var(--kept)"></circle>
+          <circle cx="270" cy="150" r="6" fill="var(--kept)"></circle>
+          <circle cx="390" cy="110" r="6" fill="var(--kept)"></circle>
+        </g>
+        <text x="390" y="96" text-anchor="middle" font-size="10.5" fill="var(--kept)">F2</text>
+
+        <g pointer-events="all" tabindex="0" data-tt="Front F3 i dalsze: dominowane przez punkty z wcześniejszych frontów. Wciąż mogą przetrwać do kolejnej populacji, jeśli F1 i F2 razem nie wypełniają N.">
+          <circle cx="190" cy="205" r="5.5" fill="var(--ink-faint)" opacity="0.6"></circle>
+          <circle cx="300" cy="175" r="5.5" fill="var(--ink-faint)" opacity="0.6"></circle>
+          <circle cx="220" cy="150" r="5.5" fill="var(--ink-faint)" opacity="0.6"></circle>
+        </g>
+        <text x="300" y="192" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.55">F3+</text>
+      </g>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> trzy zagnieżdżone warstwy tej samej puli kandydatów, wszystkie policzone z dwóch tych samych celów naraz — nigdy z ważonej sumy. Który front trafia w całości do nowej populacji, a który trzeba docinać, zależy tylko od tego, ile miejsca w N zostało, gdy dotrzesz do niego po kolei.</figcaption>
+  </figure>
+
+  <p>Kiedy front graniczny się nie mieści w całości, o tym, kto z niego przetrwa, decyduje <em class="term">crowding distance</em>: dla każdego punktu na froncie licz, jak daleko są jego najbliżsi sąsiedzi na tym froncie, osobno na każdym celu, i zsumuj znormalizowane odległości. Punkty brzegowe (skrajna jakość albo skrajny koszt) dostają nieskończoność — zawsze przechodzą. Punkty w gęsto obsadzonych okolicach dostają małą wartość i odpadają jako pierwsze.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 620 170" role="img" aria-label="Sześć punktów jednego frontu, posortowanych po jakości; dwa skrajne punkty mają nieskończoną crowding distance i zawsze przechodzą; punkt w gęsto obsadzonej okolicy ma małą crowding distance i odpada jako pierwszy, gdy front trzeba docinać.">
+      <g class="mono">
+        <line x1="40" y1="90" x2="580" y2="90" stroke="currentColor" stroke-width="1" opacity="0.3"></line>
+        <circle cx="60" cy="90" r="6" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Punkt brzegowy (najniższa jakość na tym froncie) — crowding distance = ∞, zawsze zachowywany."></circle>
+        <text x="60" y="70" text-anchor="middle" font-size="10" fill="var(--accent)">∞</text>
+        <circle cx="160" cy="90" r="6" fill="var(--ink-faint)" pointer-events="all" tabindex="0" data-tt="Bliscy sąsiedzi z obu stron → mała suma odległości → mała crowding distance. To ten punkt odpada jako pierwszy, jeśli front trzeba docinać."></circle>
+        <text x="160" y="70" text-anchor="middle" font-size="10" fill="currentColor" opacity="0.7">mała</text>
+        <circle cx="185" cy="90" r="6" fill="var(--ink-faint)"></circle>
+        <circle cx="320" cy="90" r="6" fill="var(--ink-faint)" pointer-events="all" tabindex="0" data-tt="Sąsiedzi dalej po obu stronach → większa suma odległości → wyższa crowding distance."></circle>
+        <text x="320" y="70" text-anchor="middle" font-size="10" fill="currentColor" opacity="0.7">większa</text>
+        <circle cx="470" cy="90" r="6" fill="var(--ink-faint)"></circle>
+        <circle cx="560" cy="90" r="6" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Punkt brzegowy (najwyższa jakość na tym froncie) — crowding distance = ∞, zawsze zachowywany."></circle>
+        <text x="560" y="70" text-anchor="middle" font-size="10" fill="var(--accent)">∞</text>
+      </g>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> ta sama logika, tylko na jednym froncie i jednym celu naraz — w pełnym algorytmie liczona osobno dla każdego celu i sumowana. To jedyny mechanizm, który utrzymuje różnorodność wzdłuż frontu; nic w NSGA-Net nie robi tego celowo w przestrzeni genotypu, tylko w przestrzeni celów.</figcaption>
+  </figure>
+</section>
+
+<section id="live">
+  <h2>4&nbsp; Zobacz to w akcji</h2>
+  <p class="subdek">Nie animacja jednego ustalonego przykładu — to naprawdę uruchomiony NSGA-II na syntetycznym problemie architektonicznym, dokładnie wg pseudokodu z sekcji&nbsp;5, licząc w Twojej przeglądarce.</p>
+
+  <h3><span class="num">4.1</span>Problem: dwa cele w napięciu</h3>
+  <p>Genotyp poniżej ma 6 loci, każdy ∈ {<span class="mono">—</span> (none), <span class="mono">S</span> (skip), <span class="mono">C</span> (conv)} — dokładnie kształt z sekcji 3.1. Trzy pierwsze loci to krawędzie, na których „conv” jest kosztowne, ale opłaca się jakością tylko powoli; trzy ostatnie to krawędzie, na których „conv” jest tanie i opłaca się szybko. Żadna z tych dwóch grup nie jest sama w sobie zwycięska — najlepsze architektury muszą wybrać, ile z drogiej grupy warto sobie kupić za dodatkową jakość. To wystarcza, żeby powstał prawdziwy, niepłaski front Pareto, zamiast jednego oczywistego optimum.</p>
+  <p>Populacja ma <strong>N&nbsp;=&nbsp;8</strong> architektur. Każdy przycisk „Krok” wykonuje dokładnie jedną fazę jednej generacji z diagramu w sekcji&nbsp;2: <span style="color:var(--grp-vary)">selekcja + wariacja</span> → <span style="color:var(--grp-train)">pełny trening</span> → połącz → sortowanie niezdominowane → selekcja crowding distance — a potem wraca do początku dla generacji <span class="mono">g+1</span>.</p>
+
+  <div class="demo-bleed-wrap">
+  <div class="demo" id="nsgaDemo">
+    <div class="demo-legend demo-map-legend">
+      <span class="demo-legend-item"><span class="swatch grp-vary"></span>Selekcja + wariacja</span>
+      <span class="demo-legend-item"><span class="swatch grp-train"></span>Pełny trening (realny koszt)</span>
+      <span class="demo-legend-item"><span class="swatch grp-select"></span>Sortowanie + crowding distance</span>
+      <span class="demo-legend-item demo-legend-phases">Jasne tło = faza, w której właśnie jesteś.</span>
+    </div>
+
+    <div class="hero-block">
+      <div class="map-strip">
+        <svg viewBox="0 0 1320 230" role="img" aria-label="Pozioma mapa jednej generacji NSGA-Net: populacja, selekcja i wariacja, pełny trening, połączenie z rodzicami, sortowanie niezdominowane, wybór nowej populacji. Aktualna faza podświetla się na żywo.">
+          <defs>
+            <marker id="arrMapN" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <path class="map-arrow" d="M1302,150 C1320,10 30,10 30,108" fill="none" stroke-width="1.3" stroke-dasharray="2 4" marker-end="url(#arrMapN)" pointer-events="all" tabindex="0" data-tt="Nowa generacja zaczyna się od nowej selekcji nad tą samą, dopiero co wybraną populacją."></path>
+          <text x="660" y="10" text-anchor="middle" class="diagram-label" font-size="11" fill="var(--accent)" opacity="0.9">kolejna generacja</text>
+
+          <rect id="mapBoxPop" class="map-box" data-node="pop" x="10" y="110" width="150" height="60" rx="8" pointer-events="all" tabindex="0" data-tt="Bieżąca populacja rodziców, rozmiar N — wszystkie już w pełni ocenione w poprzedniej generacji."></rect>
+          <text class="map-label" data-node="pop" x="85" y="136" text-anchor="middle" font-size="12">populacja P</text>
+          <text class="map-label" data-node="pop" x="85" y="152" text-anchor="middle" font-size="10" opacity="0.7">N architektur</text>
+          <path class="map-arrow" d="M160,140 L188,140" stroke-width="1.2" marker-end="url(#arrMapN)"></path>
+
+          <rect x="199" y="116" width="196" height="5" rx="2.5" fill="var(--grp-vary)"></rect>
+          <rect id="mapBoxVary" class="map-box" data-node="vary" x="192" y="110" width="210" height="60" rx="8" pointer-events="all" tabindex="0" data-tt="Turniej (ranga, potem crowding distance) wybiera rodziców; krzyżowanie jednorodne i mutacja tworzą N potomków. Sekcja 3.2."></rect>
+          <text class="map-label" data-node="vary" x="297" y="136" text-anchor="middle" font-size="11.5">selekcja + wariacja</text>
+          <text class="map-label" data-node="vary" x="297" y="152" text-anchor="middle" font-size="10" opacity="0.7">N nowych, nieocenionych</text>
+          <path class="map-arrow" d="M402,140 L430,140" stroke-width="1.2" marker-end="url(#arrMapN)"></path>
+
+          <rect x="441" y="116" width="196" height="5" rx="2.5" fill="var(--grp-train)"></rect>
+          <rect id="mapBoxTrain" class="map-box" data-node="train" x="434" y="110" width="210" height="60" rx="8" pointer-events="all" tabindex="0" data-tt="Każdy z N potomków dostaje pełny, prawdziwy trening — bez skrótów, bez surogatu. To krok, który kosztuje. Sekcja 3.3."></rect>
+          <text class="map-label" data-node="train" x="539" y="136" text-anchor="middle" font-size="11.5">pełny trening</text>
+          <text class="map-label" data-node="train" x="539" y="152" text-anchor="middle" font-size="10" opacity="0.7">realny koszt, zawsze</text>
+          <path class="map-arrow" d="M644,140 L672,140" stroke-width="1.2" marker-end="url(#arrMapN)"></path>
+
+          <rect id="mapBoxMerge" class="map-box" data-node="merge" x="676" y="110" width="150" height="60" rx="8" pointer-events="all" tabindex="0" data-tt="Rodzice i potomkowie razem tworzą pulę 2N w pełni ocenionych architektur."></rect>
+          <text class="map-label" data-node="merge" x="751" y="136" text-anchor="middle" font-size="11.5">połącz</text>
+          <text class="map-label" data-node="merge" x="751" y="152" text-anchor="middle" font-size="10" opacity="0.7">2N razem</text>
+          <path class="map-arrow" d="M826,140 L854,140" stroke-width="1.2" marker-end="url(#arrMapN)"></path>
+
+          <rect x="865" y="116" width="196" height="5" rx="2.5" fill="var(--accent)"></rect>
+          <rect id="mapBoxSort" class="map-box" data-node="sort" x="858" y="110" width="210" height="60" rx="8" pointer-events="all" tabindex="0" data-tt="Sortowanie niezdominowane dzieli pulę na fronty F1, F2, … Sekcja 3.4."></rect>
+          <text class="map-label" data-node="sort" x="963" y="136" text-anchor="middle" font-size="11.5">sortowanie niezdominowane</text>
+          <text class="map-label" data-node="sort" x="963" y="152" text-anchor="middle" font-size="10" opacity="0.7">fronty F1, F2, …</text>
+          <path class="map-arrow" d="M1068,140 L1096,140" stroke-width="1.2" marker-end="url(#arrMapN)"></path>
+
+          <rect x="1107" y="116" width="186" height="5" rx="2.5" fill="var(--accent)"></rect>
+          <rect id="mapBoxSelect" class="map-box" data-node="select" x="1100" y="110" width="200" height="60" rx="8" pointer-events="all" tabindex="0" data-tt="Fronty wypełniają nową populację po kolei; front graniczny jest docinany crowding distance. Wynik: znów dokładnie N. Sekcja 3.4."></rect>
+          <text class="map-label" data-node="select" x="1200" y="136" text-anchor="middle" font-size="11.5">wybór crowding distance</text>
+          <text class="map-label" data-node="select" x="1200" y="152" text-anchor="middle" font-size="10" opacity="0.7">z powrotem do N</text>
+        </svg>
+      </div>
+      <div class="genome-strip">
+        <span class="glabel" pointer-events="all" tabindex="0" data-tt="Przykładowy genotyp z tego kroku — koloruje się zgodnie z fazą, w której właśnie jest algorytm.">przykładowy genotyp</span>
+        <div class="demo-genome" id="genomeView"></div>
+      </div>
+    </div>
+
+    <div class="demo-phase-caption" id="phaseCaption">Kliknij „Krok” albo „Uruchom”, żeby zobaczyć algorytm w akcji — mapa powyżej podświetla dokładną fazę na żywo.</div>
+    <div class="demo-log" id="demoLog">Populacja startowa: N losowych architektur, wszystkie od razu w pełni wytrenowane. Kliknij „Krok”, żeby zacząć pierwszą generację.</div>
+
+    <div class="cost-callout">
+      <div class="cost-callout-top">
+        <span class="cost-label">W pełni wytrenowane architektury — realny koszt, bez skrótów</span>
+        <span class="cost-value" id="costValue">0</span>
+      </div>
+      <div class="cost-bar-track"><div class="cost-bar-fill" id="costBarFill"></div></div>
+      <p class="cost-note" id="costNote">Ten licznik rośnie o N przy każdej fazie „pełny trening” — nigdy się nie zatrzymuje wcześniej i nigdy nie jest zastępowany tańszym oszacowaniem. Porównaj to z piramidą P3, która rośnie tylko wtedy, gdy faktycznie się to opłaca, i z P3Net, który płaci pełną ewaluację tylko raz na całe przemiatanie krzyżowania.</p>
+    </div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Te trzy karty czerpią z całej populacji i całej historii ewaluacji zbudowanej do tej pory — nie tylko z tej jednej fazy.">③ nagromadzony wynik — front Pareto i fronty niezdominowania</div>
+    <div class="result-row">
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Wszystkie naprawdę ocenione architektury z bieżącego kroku: jakość na osi poziomej, koszt na osi pionowej (niżej = taniej). Zielone punkty to front F1 tej puli, niebieskie to F2. Sekcja 3.4.">Front Pareto (na żywo)</h4>
+        <div class="pareto-wrap">
+          <svg id="paretoSvg" viewBox="0 0 320 200" role="img" aria-label="Wykres rozrzutu ocenionych architektur: jakość na osi poziomej, koszt na osi pionowej, niżej = taniej. Zielone punkty to front F1, niebieskie F2, szare dalsze fronty.">
+            <line x1="30" y1="10" x2="30" y2="170" stroke="currentColor" stroke-width="1" opacity="0.35"></line>
+            <line x1="30" y1="170" x2="300" y2="170" stroke="currentColor" stroke-width="1" opacity="0.35"></line>
+            <text x="30" y="188" font-size="9" fill="currentColor" opacity="0.55">jakość →</text>
+            <text x="4" y="18" font-size="9" fill="currentColor" opacity="0.55">koszt</text>
+            <g id="paretoPoints"></g>
+          </svg>
+        </div>
+        <p class="demo-note">Zielony = F1 (niezdominowany), niebieski = F2, szary = dalsze fronty.</p>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Rozmiar każdego frontu w puli, którą algorytm właśnie widzi — liczony na nowo po każdej fazie sortowania. Sekcja 3.4.">Fronty niezdominowania</h4>
+        <div class="chip-row" id="frontChips"></div>
+        <p class="demo-note" id="frontNote">Fronty pojawią się po pierwszym sortowaniu.</p>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Bieżąca populacja P — dokładnie N architektur, po ostatniej selekcji crowding distance. Ranga F1 na zielono.">Bieżąca populacja P</h4>
+        <div id="popList"></div>
+      </div>
+    </div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Te dwie dotyczą sterowania i liczb podsumowujących cały dotychczasowy bieg.">④ sterowanie, statystyki</div>
+    <div class="card-row">
+      <div class="demo-panel">
+        <h4>Sterowanie</h4>
+        <div class="demo-controls">
+          <button class="demo-btn primary" id="btnStep" type="button">Krok</button>
+          <button class="demo-btn" id="btnRun" type="button">Uruchom</button>
+          <button class="demo-btn" id="btnGen" type="button">⏩ Pełna generacja</button>
+          <button class="demo-btn" id="btnFF" type="button">⏩⏩ 5 generacji</button>
+          <button class="demo-btn" id="btnReset" type="button">Reset</button>
+        </div>
+        <p class="demo-note" style="margin-top:12px;">„Pełna generacja” i „5 generacji” przewijają fazy bez animacji — same liczby wciąż liczą się naprawdę, tylko szybciej.</p>
+      </div>
+      <div class="demo-panel">
+        <h4>Statystyki</h4>
+        <div class="demo-stats">
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Ile pełnych generacji (selekcja → wariacja → trening → sortowanie → selekcja) zostało ukończonych.">
+            <div class="lbl">Generacja</div><div class="val" id="statGen">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Ile architektur jest właśnie na froncie F1 bieżącej populacji.">
+            <div class="lbl">Rozmiar F1</div><div class="val" id="statFront1">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Najwyższa jakość, jaką osiągnęła jakakolwiek w pełni wytrenowana architektura od początku tego biegu.">
+            <div class="lbl">Najlepsza jakość</div><div class="val" id="statBestQ">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Najniższy koszt spośród architektur, które są aktualnie na froncie F1 — czyli najtańsza z niezdominowanych.">
+            <div class="lbl">Najniższy koszt na F1</div><div class="val" id="statLowC">–</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section id="code">
+  <h2>5&nbsp; Pseudokod — co naprawdę trzeba by napisać</h2>
+  <p class="subdek">Pięć procedur. Nic więcej nie jest potrzebne, żeby mieć działający NSGA-Net.</p>
+
+<pre class="code"><span class="kw">procedure</span> NSGA-NET
+    P ← N losowych genotypów                    <span class="cm">// §3.1 — N ustalasz Ty, patrz §6</span>
+    EVALUATE-ALL(P)                              <span class="cm">// §3.3, pełny trening KAŻDEGO — real cost</span>
+    fronts ← FAST-NON-DOMINATED-SORT(P)
+    <span class="kw">for</span> F <span class="kw">in</span> fronts <span class="kw">do</span> ASSIGN-CROWDING-DISTANCE(F, P)
+
+    <span class="kw">for</span> g <span class="kw">in</span> 1..G <span class="kw">do</span>                             <span class="cm">// G też ustalasz Ty, z góry</span>
+        Q ← VARY(P)                              <span class="cm">// §3.2, rozmiar N, jeszcze nieoceniona</span>
+        EVALUATE-ALL(Q)                          <span class="cm">// znów pełny trening KAŻDEGO potomka</span>
+        R ← P ∪ Q                                <span class="cm">// 2N w pełni ocenionych</span>
+        fronts ← FAST-NON-DOMINATED-SORT(R)
+
+        P ← {}; i ← 0
+        <span class="kw">while</span> |P| + |fronts[i]| ≤ N <span class="kw">do</span>
+            ASSIGN-CROWDING-DISTANCE(fronts[i], R)
+            P ← P ∪ fronts[i]; i ← i + 1
+        ASSIGN-CROWDING-DISTANCE(fronts[i], R)   <span class="cm">// front graniczny — trzeba go docinać</span>
+        sort fronts[i] <span class="kw">by</span> crowding distance, descending
+        P ← P ∪ fronts[i][0 : N − |P|]            <span class="cm">// dopełnij do dokładnie N</span>
+    <span class="kw">return</span> P                                    <span class="cm">// front(y) Pareto ostatniej generacji</span></pre>
+
+<pre class="code"><span class="kw">procedure</span> VARY(P)
+    Q ← {}
+    <span class="kw">while</span> |Q| &lt; N <span class="kw">do</span>
+        p1 ← TOURNAMENT(P); p2 ← TOURNAMENT(P)
+        child ← []
+        <span class="kw">for</span> locus <span class="kw">in</span> genotyp <span class="kw">do</span>                  <span class="cm">// §3.2 — jednorodne, niezależne na locus</span>
+            gene ← p1[locus] <span class="kw">if</span> random() &lt; 0.5 <span class="kw">else</span> p2[locus]
+            <span class="kw">if</span> random() &lt; p_mut <span class="kw">then</span>
+                gene ← losowa dopuszczalna wartość      <span class="cm">// mutacja, znów niezależna na locus</span>
+            child.append(gene)
+        Q.add(child)
+    <span class="kw">return</span> Q</pre>
+
+<pre class="code"><span class="kw">procedure</span> TOURNAMENT(P)
+    a, b ← dwa losowe, niekoniecznie różne osobniki z P
+    <span class="kw">if</span> a.rank &lt; b.rank <span class="kw">then return</span> a
+    <span class="kw">if</span> b.rank &lt; a.rank <span class="kw">then return</span> b
+    <span class="kw">return</span> a <span class="kw">if</span> a.crowd &gt; b.crowd <span class="kw">else</span> b       <span class="cm">// remis rangi rozstrzyga gęstość</span></pre>
+
+<pre class="code"><span class="kw">procedure</span> FAST-NON-DOMINATED-SORT(R)
+    <span class="kw">for</span> p <span class="kw">in</span> R <span class="kw">do</span>
+        p.dominated_by ← 0; p.dominates ← {}
+        <span class="kw">for</span> q <span class="kw">in</span> R, q ≠ p <span class="kw">do</span>
+            <span class="kw">if</span> p ≻ q <span class="kw">then</span> p.dominates.add(q)         <span class="cm">// ≻: nie gorszy na obu celach, lepszy na ≥1</span>
+            <span class="kw">else if</span> q ≻ p <span class="kw">then</span> p.dominated_by += 1
+        <span class="kw">if</span> p.dominated_by == 0 <span class="kw">then</span> p.rank ← 0; F[0].add(p)
+    i ← 0
+    <span class="kw">while</span> F[i] ≠ ∅ <span class="kw">do</span>
+        <span class="kw">for</span> p <span class="kw">in</span> F[i] <span class="kw">do for</span> q <span class="kw">in</span> p.dominates <span class="kw">do</span>
+            q.dominated_by -= 1
+            <span class="kw">if</span> q.dominated_by == 0 <span class="kw">then</span> q.rank ← i + 1; F[i+1].add(q)
+        i ← i + 1
+    <span class="kw">return</span> F                                    <span class="cm">// §3.4</span></pre>
+
+<pre class="code"><span class="kw">procedure</span> ASSIGN-CROWDING-DISTANCE(F, R)
+    <span class="kw">for</span> p <span class="kw">in</span> F <span class="kw">do</span> p.crowd ← 0
+    <span class="kw">for</span> objective <span class="kw">in</span> {jakość, koszt} <span class="kw">do</span>
+        sort F <span class="kw">by</span> objective
+        F[0].crowd ← ∞; F[last].crowd ← ∞         <span class="cm">// brzegi frontu zawsze przetrwają</span>
+        <span class="kw">for</span> k <span class="kw">in</span> 1..len(F)-2 <span class="kw">do</span>
+            F[k].crowd += (F[k+1].objective − F[k-1].objective) / range(objective)</pre>
+
+  <p>To cały algorytm. Nie ma tu żadnej procedury odpowiadającej hill climberowi ani drzewu powiązań z P3/P3Net — jedyny mechanizm, który cokolwiek „uczy się” z populacji, to sam wybór, kto trafia do turnieju, poprzez rangę i crowding distance.</p>
+</section>
+
+<section id="practice">
+  <h2>6&nbsp; Co wymyślasz sam — zastosowanie NSGA-Net do rzeczywistego problemu</h2>
+  <p>Ten sam podział, co w P3 i P3Net: <em>mechanizm</em> jest ustalony przez algorytm — nie ruszasz reguły niezdominowania ani sposobu liczenia crowding distance. To, co zmienia się za każdym razem, gdy stosujesz NSGA-Net do nowego problemu, to jak Twój problem podłącza się do tego mechanizmu — i, w tym przypadku, dwie liczby, które musisz zgadnąć, zanim zobaczysz choćby jeden wynik.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:26%">Punkt decyzyjny</th><th>Ustalone przez NSGA-Net</th><th>Ty decydujesz, dla każdego problemu</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Reguła niezdominowania</strong></td>
+          <td class="fixed-col">Kandydat <em>a</em> dominuje <em>b</em>, gdy jest nie gorszy na każdym celu i ściśle lepszy na co najmniej jednym — porównanie obu celów naraz, nigdy ważona suma.</td>
+          <td class="decide-col">Nic — to jest część, którą dostajesz za darmo, wybierając ten algorytm zamiast optymalizacji jednokryterialnej ze skalaryzacją.</td>
+        </tr>
+        <tr>
+          <td><strong>Rozstrzyganie remisów rangi</strong></td>
+          <td class="fixed-col">Crowding distance — suma znormalizowanych odległości do najbliższych sąsiadów na froncie, po każdym celu osobno.</td>
+          <td class="decide-col">Nic bezpośrednio, ale to Ty decydujesz, ile masz celów i jak są znormalizowane — jeśli jeden cel ma dużo szerszy zakres wartości niż drugi, crowding distance faworyzuje go, jeśli nie znormalizujesz ich starannie.</td>
+        </tr>
+        <tr>
+          <td><strong>Rozmiar populacji N</strong></td>
+          <td class="fixed-col">Nieadresowane — algorytm zakłada, że N już masz.</td>
+          <td class="decide-col">Ustalasz raz, z góry, zanim padnie pierwsza ewaluacja. Za małe N — front Pareto zbyt rzadki, żeby cokolwiek z niego wynikało. Za duże — każda generacja kosztuje proporcjonalnie więcej pełnych treningów.</td>
+        </tr>
+        <tr>
+          <td><strong>Liczba generacji G</strong></td>
+          <td class="fixed-col">Nieadresowane.</td>
+          <td class="decide-col">Też z góry. Razem z N determinuje całkowity budżet: dokładnie N + N·G pełnych treningów, żadnego więcej i żadnego mniej, niezależnie od tego, jak szybko front przestał się poprawiać.</td>
+        </tr>
+        <tr>
+          <td><strong>Operatory wariacji</strong></td>
+          <td class="fixed-col">Nieadresowane — NSGA-II jako taki nie narzuca konkretnego krzyżowania ani mutacji.</td>
+          <td class="decide-col">Rodzaj krzyżowania (jednorodne? jednopunktowe?), prawdopodobieństwo mutacji na locus — i, dla architektur, czy uniform crossover w ogóle ma sens, jeśli niektóre geny muszą zmieniać się razem, żeby cokolwiek poprawić.</td>
+        </tr>
+        <tr>
+          <td><strong>Kodowanie genotypu</strong></td>
+          <td class="fixed-col">Nieadresowane — wymaga tylko wektora porównywalnego locus po locus.</td>
+          <td class="decide-col">Dokładnie ten sam problem co w P3/P3Net: jak Twoja architektura staje się tym wektorem, i co się dzieje z genotypami, które nie dekodują się do działającej sieci.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <span class="tag">Dwie luki, które faktycznie tworzą P3Net</span>
+    <p>NSGA-Net eksponuje dokładnie te dwa ślepe punkty, które reszta tej siatki ablacyjnej atakuje z różnych stron — i P3Net atakuje oba naraz, tym samym mechanizmem. Po pierwsze: N i G musisz zgadnąć z góry, zanim zobaczysz choć jeden wynik — dokładnie ten sam problem, który parameter-less pyramid w P3 rozwiązuje dla przypadku jednokryterialnego, pozwalając rozmiarowi „populacji" wyłonić się z tego, ile poziomów faktycznie udało się zbudować. Po drugie: NSGA-Net płaci pełną, realną ewaluację za <em>każdego</em> pojedynczego kandydata, jakiego wyprodukuje wariacja, bez żadnego relatywnego skrótu — dokładnie ten koszt, który P3Net atakuje surogatem <span class="mono">δ̂F</span> wewnątrz krzyżowania świadomego powiązań, płacąc prawdziwą ewaluację tylko raz na całe przemiatanie, zamiast raz na każdego potomka.</p>
+    <p>Innymi słowy: NSGA-Net to najbliższy krewny P3Net w tej siatce dokładnie dlatego, że różni się od niego tylko tymi dwiema rzeczami — i obie są tym, co P3Net miał w zamierzeniu rozwiązać.</p>
+  </div>
+
+  <h3 style="margin-top:32px;"><span class="num">✓</span>Checklista przy stosowaniu NSGA-Net do nowego problemu</h3>
+  <ul class="checklist">
+    <li><span class="box"></span><span>Zdefiniuj genotyp: czym jest jeden gen, ile ich jest, i czy niektóre kombinacje są nieprawidłowe.</span></li>
+    <li><span class="box"></span><span>Zdefiniuj każdy cel osobno i sposób jego pomiaru — nigdy jako jedną zważoną liczbę.</span></li>
+    <li><span class="box"></span><span>Wybierz N i G — i policz od razu, ile pełnych treningów to N + N·G kosztuje w Twoim budżecie.</span></li>
+    <li><span class="box"></span><span>Wybierz operatory krzyżowania i mutacji; sprawdź, czy uniform crossover ma sens dla Twojego kodowania, czy niszczy zależności między genami.</span></li>
+    <li><span class="box"></span><span>Znormalizuj cele przed liczeniem crowding distance, żeby żaden z nich nie zdominował doboru różnorodności tylko dlatego, że ma szerszy zakres.</span></li>
+    <li><span class="box"></span><span>Jeśli N + N·G pełnych treningów się nie mieści w budżecie, to jest sygnał, żeby rozważyć surogat albo metodę, która nie ustala N i G z góry — nie parametr NSGA-Net do podkręcenia, tylko inny punkt w siatce ablacyjnej.</span></li>
+  </ul>
+
+</section>
+
+</main>
+
+<footer class="page-end">
+  Źródło: Z. Lu i in., „NSGA-Net: Neural Architecture Search Using Multi-Objective Genetic Algorithm”, GECCO 2019 — oraz K. Deb i in., „A Fast and Elitist Multi-Objective Genetic Algorithm: NSGA-II”, IEEE TEVC 2002, dla mechanizmu selekcji opisanego w sekcji 3.4.
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ hover / focus detail tooltips ============ */
+  var tip = document.createElement("div");
+  tip.className = "p3-tooltip";
+  tip.setAttribute("role", "tooltip");
+  document.body.appendChild(tip);
+  var ttCurrent = null;
+  function ttShow(el) {
+    var text = el.getAttribute("data-tt");
+    if (!text) return;
+    tip.textContent = text;
+    tip.style.display = "block";
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var x = r.left + r.width / 2 - tw / 2;
+    var y = r.top - th - 10;
+    if (y < 8) y = r.bottom + 10;
+    x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+    tip.style.left = (x + window.scrollX) + "px";
+    tip.style.top = (y + window.scrollY) + "px";
+    ttCurrent = el;
+  }
+  function ttHide() { tip.style.display = "none"; ttCurrent = null; }
+  document.addEventListener("mouseover", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("mouseout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  document.addEventListener("focusin", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("focusout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  window.addEventListener("scroll", ttHide, { passive: true });
+
+  /* ============ real NSGA-Net, run on a synthetic 2-objective architecture problem ============ */
+  var N = 8;              // population size
+  var GENE_COUNT = 6;     // 3 "expensive" edges + 3 "cheap" edges
+  var GENE_VALS = [0, 1, 2];
+  var MUT_P = 0.22;
+  var LETTERS = ["—", "S", "C"]; // none, skip, conv
+
+  // loci 0-2: quality grows slowly, cost grows fast ("expensive" group)
+  // loci 3-5: quality grows fast, cost grows slowly ("cheap" group)
+  var LOCI = [
+    { q: [0, 1, 3], c: [0, 2, 5] },
+    { q: [0, 1, 3], c: [0, 2, 5] },
+    { q: [0, 1, 3], c: [0, 2, 5] },
+    { q: [0, 2, 3], c: [0, 1, 2] },
+    { q: [0, 2, 3], c: [0, 1, 2] },
+    { q: [0, 2, 3], c: [0, 1, 2] }
+  ];
+  var MAX_Q = LOCI.reduce(function (s, l) { return s + l.q[2]; }, 0);
+  var MAX_C = LOCI.reduce(function (s, l) { return s + l.c[2]; }, 0);
+
+  function randomGenome() {
+    var g = [];
+    for (var i = 0; i < GENE_COUNT; i++) g.push(GENE_VALS[Math.floor(Math.random() * 3)]);
+    return g;
+  }
+  function qualityOf(g) { var s = 0; for (var i = 0; i < GENE_COUNT; i++) s += LOCI[i].q[g[i]]; return s; }
+  function costOf(g) { var s = 0; for (var i = 0; i < GENE_COUNT; i++) s += LOCI[i].c[g[i]]; return s; }
+
+  function dominates(a, b) {
+    var geQ = a.quality >= b.quality, leC = a.cost <= b.cost;
+    var gtQ = a.quality > b.quality, ltC = a.cost < b.cost;
+    return geQ && leC && (gtQ || ltC);
+  }
+
+  function fastNonDominatedSort(pool) {
+    var n = pool.length;
+    var S = new Array(n), dom = new Array(n).fill(0);
+    var fronts = [[]];
+    for (var i = 0; i < n; i++) {
+      S[i] = [];
+      for (var j = 0; j < n; j++) {
+        if (i === j) continue;
+        if (dominates(pool[i], pool[j])) S[i].push(j);
+        else if (dominates(pool[j], pool[i])) dom[i]++;
+      }
+      if (dom[i] === 0) { pool[i].rank = 0; fronts[0].push(i); }
+    }
+    var k = 0;
+    while (fronts[k] && fronts[k].length > 0) {
+      var next = [];
+      for (var a = 0; a < fronts[k].length; a++) {
+        var pi = fronts[k][a];
+        for (var b = 0; b < S[pi].length; b++) {
+          var qi = S[pi][b];
+          dom[qi]--;
+          if (dom[qi] === 0) { pool[qi].rank = k + 1; next.push(qi); }
+        }
+      }
+      k++;
+      fronts.push(next);
+    }
+    if (fronts.length && fronts[fronts.length - 1].length === 0) fronts.pop();
+    return fronts;
+  }
+
+  function assignCrowding(frontIdx, pool) {
+    var l = frontIdx.length;
+    for (var i = 0; i < l; i++) pool[frontIdx[i]].crowd = 0;
+    if (l === 0) return;
+    if (l <= 2) { for (var i2 = 0; i2 < l; i2++) pool[frontIdx[i2]].crowd = Infinity; return; }
+    ["quality", "cost"].forEach(function (obj) {
+      var byObj = frontIdx.slice().sort(function (x, y) { return pool[x][obj] - pool[y][obj]; });
+      pool[byObj[0]].crowd = Infinity;
+      pool[byObj[l - 1]].crowd = Infinity;
+      var range = pool[byObj[l - 1]][obj] - pool[byObj[0]][obj] || 1;
+      for (var k = 1; k < l - 1; k++) {
+        pool[byObj[k]].crowd += (pool[byObj[k + 1]][obj] - pool[byObj[k - 1]][obj]) / range;
+      }
+    });
+  }
+
+  function tournament(pop) {
+    var a = pop[Math.floor(Math.random() * pop.length)];
+    var b = pop[Math.floor(Math.random() * pop.length)];
+    if (a.rank !== b.rank) return a.rank < b.rank ? a : b;
+    if (a.crowd !== b.crowd) return a.crowd > b.crowd ? a : b;
+    return Math.random() < 0.5 ? a : b;
+  }
+
+  var trainedCount = 0;
+  function trainAndCount(genome) {
+    trainedCount++;
+    return { genome: genome, quality: qualityOf(genome), cost: costOf(genome), rank: 0, crowd: 0 };
+  }
+
+  var parentPop = [], offspringGenomes = [], offspringPop = [], pool = [], fronts = [];
+  var generation = 0;
+  var bestQualityEver = 0;
+  var PHASES = ["vary", "train", "merge", "sort", "select"];
+  var phaseIdx = 0;
+  var lastRepresentative = null; // {genome, tag}
+
+  function init() {
+    trainedCount = 0; generation = 0; phaseIdx = 0; bestQualityEver = 0;
+    parentPop = [];
+    for (var i = 0; i < N; i++) parentPop.push(trainAndCount(randomGenome()));
+    fronts = fastNonDominatedSort(parentPop);
+    fronts.forEach(function (f) { assignCrowding(f, parentPop); });
+    bestQualityEver = Math.max.apply(null, parentPop.map(function (x) { return x.quality; }));
+    offspringGenomes = []; offspringPop = []; pool = [];
+    lastRepresentative = { genome: parentPop[0].genome, tag: "pop" };
+    log("Populacja startowa: " + N + " losowych architektur, wszystkie od razu w pełni wytrenowane (" + trainedCount + " ewaluacji). Kliknij „Krok”, żeby zacząć pierwszą generację.");
+    caption("Start: populacja P₀ zbudowana i w pełni oceniona.");
+    render();
+  }
+
+  function doVary() {
+    offspringGenomes = [];
+    for (var i = 0; i < N; i++) {
+      var p1 = tournament(parentPop), p2 = tournament(parentPop);
+      var child = [];
+      for (var j = 0; j < GENE_COUNT; j++) {
+        var gene = Math.random() < 0.5 ? p1.genome[j] : p2.genome[j];
+        if (Math.random() < MUT_P) gene = GENE_VALS[Math.floor(Math.random() * 3)];
+        child.push(gene);
+      }
+      offspringGenomes.push(child);
+    }
+    lastRepresentative = { genome: offspringGenomes[0], tag: "vary" };
+    log("Generacja " + (generation + 1) + ": selekcja turniejowa (ranga, potem crowding distance) wybiera rodziców; krzyżowanie jednorodne i mutacja tworzą " + N + " nowych genotypów potomków — jeszcze bez ocenionych celów.");
+    caption("Selekcja + wariacja: " + N + " nowych potomków utworzonych, żaden jeszcze nieoceniony.");
+  }
+
+  function doTrain() {
+    offspringPop = offspringGenomes.map(trainAndCount);
+    lastRepresentative = { genome: offspringPop[0].genome, tag: "train" };
+    log("Każdy z " + N + " potomków przechodzi PEŁNY, prawdziwy trening — bez skrótów, bez surogatu. W pełni wytrenowane architektury od początku biegu: " + trainedCount + " (+" + N + ").");
+    caption("Pełny trening: +" + N + " prawdziwych ewaluacji, realny koszt.");
+  }
+
+  function doMerge() {
+    pool = parentPop.concat(offspringPop);
+    lastRepresentative = { genome: pool[0].genome, tag: "merge" };
+    log("Rodzice i potomkowie łączą się w jedną pulę " + pool.length + " w pełni ocenionych architektur.");
+    caption("Połączono: R = P ∪ Q, " + pool.length + " kandydatów.");
+  }
+
+  function doSort() {
+    fronts = fastNonDominatedSort(pool);
+    lastRepresentative = { genome: pool[0].genome, tag: "sort" };
+    var sizes = fronts.map(function (f) { return f.length; }).join(", ");
+    log("Sortowanie niezdominowane dzieli pulę na fronty: " + sizes + " osobników na kolejny front.");
+    caption("Sortowanie niezdominowane: " + fronts.length + " fronty(ów) znalezione.");
+  }
+
+  function doSelect() {
+    fronts.forEach(function (f) { assignCrowding(f, pool); });
+    var next = [];
+    var i = 0;
+    while (i < fronts.length && next.length + fronts[i].length <= N) {
+      for (var a = 0; a < fronts[i].length; a++) next.push(pool[fronts[i][a]]);
+      i++;
+    }
+    if (next.length < N && i < fronts.length) {
+      var remaining = fronts[i].slice().sort(function (x, y) { return pool[y].crowd - pool[x].crowd; });
+      var need = N - next.length;
+      for (var k = 0; k < need; k++) next.push(pool[remaining[k]]);
+    }
+    parentPop = next;
+    bestQualityEver = Math.max(bestQualityEver, Math.max.apply(null, parentPop.map(function (x) { return x.quality; })));
+    generation++;
+    lastRepresentative = { genome: parentPop[0].genome, tag: "select" };
+    log("Fronty wypełniają nową populację po kolei; ostatni, który się nie mieści, jest docinany według crowding distance. Nowa populacja P" + generation + ": " + N + " architektur.");
+    caption("Nowa populacja P" + generation + " wybrana — z powrotem dokładnie N.");
+  }
+
+  var PHASE_FN = { vary: doVary, train: doTrain, merge: doMerge, sort: doSort, select: doSelect };
+
+  function log(text) { var el = document.getElementById("demoLog"); el.innerHTML = text; }
+  function caption(text) { var el = document.getElementById("phaseCaption"); el.textContent = text; }
+
+  function updateMap(phase) {
+    var boxes = document.querySelectorAll(".map-box, .map-label");
+    boxes.forEach(function (el) {
+      var node = el.getAttribute("data-node");
+      var active = node === phase || (phase === "vary" && node === "pop");
+      el.classList.toggle("map-active", !!active);
+    });
+  }
+
+  function renderGenomeStrip() {
+    var el = document.getElementById("genomeView");
+    el.innerHTML = "";
+    if (!lastRepresentative) return;
+    var g = lastRepresentative.genome;
+    var group = document.createElement("div");
+    group.className = "trap-group";
+    for (var i = 0; i < g.length; i++) {
+      var box = document.createElement("div");
+      box.className = "gene-box " + (i < 3 ? "type-a" : "type-b") + (lastRepresentative.tag === "vary" || lastRepresentative.tag === "train" ? " vary" : "");
+      box.textContent = LETTERS[g[i]];
+      box.title = (i < 3 ? "krawędź kosztowna" : "krawędź tania") + " · locus " + i;
+      group.appendChild(box);
+    }
+    el.appendChild(group);
+    var meta = document.createElement("span");
+    meta.className = "glabel";
+    meta.style.marginLeft = "4px";
+    meta.textContent = "jakość " + qualityOf(g) + "/" + MAX_Q + " · koszt " + costOf(g) + "/" + MAX_C;
+    el.appendChild(meta);
+  }
+
+  function renderPareto() {
+    var g = document.getElementById("paretoPoints");
+    g.innerHTML = "";
+    var data = pool.length ? pool : parentPop;
+    var x0 = 30, x1 = 300, y0 = 170, y1 = 10;
+    data.forEach(function (ind) {
+      var px = x0 + (ind.quality / MAX_Q) * (x1 - x0);
+      var py = y0 - (ind.cost / MAX_C) * (y0 - y1);
+      var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", px.toFixed(1));
+      c.setAttribute("cy", py.toFixed(1));
+      c.setAttribute("r", 5);
+      var cls = "pareto-pt";
+      if (ind.rank === 0) cls += " front0"; else if (ind.rank === 1) cls += " front1";
+      c.setAttribute("class", cls);
+      g.appendChild(c);
+    });
+  }
+
+  function renderFrontChips() {
+    var wrap = document.getElementById("frontChips");
+    wrap.innerHTML = "";
+    if (!fronts.length) return;
+    fronts.forEach(function (f, idx) {
+      var chip = document.createElement("span");
+      chip.className = "chip" + (idx === 0 ? " front0" : "");
+      chip.textContent = "F" + (idx + 1) + ": " + f.length;
+      wrap.appendChild(chip);
+    });
+    document.getElementById("frontNote").textContent = fronts.length + " fronty(ów) w bieżącej puli (" + (pool.length || parentPop.length) + " kandydatów).";
+  }
+
+  function renderPopList() {
+    var wrap = document.getElementById("popList");
+    wrap.innerHTML = "";
+    var sorted = parentPop.slice().sort(function (a, b) { return (a.rank - b.rank) || (b.quality - a.quality); });
+    sorted.forEach(function (ind) {
+      var row = document.createElement("div");
+      row.className = "pop-row";
+      var genomeStr = ind.genome.map(function (v) { return LETTERS[v]; }).join("");
+      var metrics = document.createElement("span");
+      metrics.className = "metrics";
+      metrics.innerHTML = (ind.rank === 0 ? '<span class="r0">F1</span>' : "F" + (ind.rank + 1)) + " · q=" + ind.quality + " c=" + ind.cost;
+      var g = document.createElement("span");
+      g.className = "mono";
+      g.textContent = genomeStr;
+      row.appendChild(g);
+      row.appendChild(metrics);
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderStats() {
+    document.getElementById("statGen").textContent = generation;
+    var f1 = parentPop.filter(function (x) { return x.rank === 0; });
+    document.getElementById("statFront1").textContent = f1.length;
+    document.getElementById("statBestQ").textContent = bestQualityEver + " / " + MAX_Q;
+    if (f1.length) {
+      var lowC = Math.min.apply(null, f1.map(function (x) { return x.cost; }));
+      document.getElementById("statLowC").textContent = lowC;
+    } else {
+      document.getElementById("statLowC").textContent = "–";
+    }
+  }
+
+  function renderCost() {
+    document.getElementById("costValue").textContent = trainedCount;
+    var refMax = N * 12; // illustrative full-run reference scale
+    var pct = Math.min(100, (trainedCount / refMax) * 100);
+    document.getElementById("costBarFill").style.width = pct + "%";
+  }
+
+  function render() {
+    renderGenomeStrip();
+    renderPareto();
+    renderFrontChips();
+    renderPopList();
+    renderStats();
+    renderCost();
+  }
+
+  function step() {
+    var phase = PHASES[phaseIdx];
+    PHASE_FN[phase]();
+    updateMap(phase);
+    render();
+    phaseIdx = (phaseIdx + 1) % PHASES.length;
+  }
+
+  function runPhasesSilently(count) {
+    for (var i = 0; i < count; i++) {
+      var phase = PHASES[phaseIdx];
+      PHASE_FN[phase]();
+      phaseIdx = (phaseIdx + 1) % PHASES.length;
+    }
+    updateMap(PHASES[(phaseIdx + PHASES.length - 1) % PHASES.length]);
+    render();
+  }
+
+  var runTimer = null;
+  function setRunning(on) {
+    var btn = document.getElementById("btnRun");
+    if (on) {
+      btn.textContent = "Zatrzymaj";
+      btn.classList.add("primary");
+      runTimer = setInterval(step, 850);
+    } else {
+      btn.textContent = "Uruchom";
+      btn.classList.remove("primary");
+      if (runTimer) { clearInterval(runTimer); runTimer = null; }
+    }
+  }
+
+  document.getElementById("btnStep").addEventListener("click", function () { setRunning(false); step(); });
+  document.getElementById("btnRun").addEventListener("click", function () { setRunning(!runTimer); });
+  document.getElementById("btnGen").addEventListener("click", function () { setRunning(false); runPhasesSilently(5); });
+  document.getElementById("btnFF").addEventListener("click", function () { setRunning(false); runPhasesSilently(25); });
+  document.getElementById("btnReset").addEventListener("click", function () {
+    setRunning(false);
+    init();
+    updateMap("none");
+  });
+
+  init();
+})();
+</script>

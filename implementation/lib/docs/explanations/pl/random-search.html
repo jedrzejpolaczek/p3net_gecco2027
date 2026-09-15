@@ -1,0 +1,1159 @@
+<title>Jak naprawdę działa Random search</title>
+<style>
+  :root {
+    --bg: #eef0ec;
+    --bg-raised: #ffffff;
+    --bg-sunken: #e4e7e0;
+    --ink: #1b1f27;
+    --ink-muted: #565f6b;
+    --ink-faint: #8b929c;
+    --line: #d7dad3;
+    --line-strong: #b9bdb2;
+    --accent: #5b6472;
+    --accent-ink: #ffffff;
+    --accent-soft: #e5e7ea;
+    --accent-soft-line: #c8ccd1;
+    --kept: #3e6b4f;
+    --kept-soft: #dbe9df;
+    --revert-line: #b9bdb2;
+    --code-bg: #1b1f27;
+    --code-ink: #eef0ec;
+    --code-accent: #9aa5b1;
+    --shadow: 0 1px 2px rgba(27,31,39,.06), 0 8px 24px rgba(27,31,39,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c;
+      --bg-raised: #1b1f27;
+      --bg-sunken: #101317;
+      --ink: #edeeea;
+      --ink-muted: #9ba3ad;
+      --ink-faint: #6b7280;
+      --line: #2c313b;
+      --line-strong: #3a4048;
+      --accent: #9aa5b1;
+      --accent-ink: #14171c;
+      --accent-soft: #262b33;
+      --accent-soft-line: #3a4048;
+      --kept: #7fbf98;
+      --kept-soft: #1c2b21;
+      --revert-line: #3a4048;
+      --code-bg: #0d0f12;
+      --code-ink: #e8e9e4;
+      --code-accent: #9aa5b1;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c;
+    --bg-raised: #1b1f27;
+    --bg-sunken: #101317;
+    --ink: #edeeea;
+    --ink-muted: #9ba3ad;
+    --ink-faint: #6b7280;
+    --line: #2c313b;
+    --line-strong: #3a4048;
+    --accent: #9aa5b1;
+    --accent-ink: #14171c;
+    --accent-soft: #262b33;
+    --accent-soft-line: #3a4048;
+    --kept: #7fbf98;
+    --kept-soft: #1c2b21;
+    --revert-line: #3a4048;
+    --code-bg: #0d0f12;
+    --code-ink: #e8e9e4;
+    --code-accent: #9aa5b1;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  }
+
+  a { color: var(--accent); }
+
+  /* ---------- top nav ---------- */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    overflow-x: auto;
+  }
+  .topnav-mark {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--accent);
+    white-space: nowrap;
+    padding-right: 6px;
+    border-right: 1px solid var(--line);
+  }
+  .topnav a {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--ink-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+  }
+  .topnav a:hover { color: var(--ink); border-bottom-color: var(--line-strong); }
+
+  /* ---------- layout shell ---------- */
+  main { max-width: 720px; margin: 0 auto; padding: 0 24px 120px; }
+  .wide { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  section { padding-top: 64px; }
+  section:first-of-type { padding-top: 8px; }
+
+  .eyebrow {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .eyebrow .lvl {
+    color: var(--ink-faint);
+    letter-spacing: .1em;
+  }
+
+  h1, h2, h3 { font-family: inherit; text-wrap: balance; color: var(--ink); }
+  h1 {
+    font-size: clamp(32px, 5vw, 46px);
+    font-weight: 700;
+    line-height: 1.08;
+    margin: 4px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.005em;
+  }
+  h3 {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 40px 0 10px;
+  }
+  h3 .num {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 14px;
+    color: var(--accent);
+    margin-right: 8px;
+  }
+
+  p { margin: 14px 0; color: var(--ink); max-width: 68ch; }
+  .lede {
+    font-size: 20px;
+    color: var(--ink-muted);
+    max-width: 60ch;
+    margin: 0 0 8px;
+  }
+  .subdek { color: var(--ink-muted); font-size: 16px; margin-top: -4px; }
+
+  strong { color: var(--ink); }
+  em.term { font-style: normal; color: var(--accent); }
+
+  hr.rule {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 64px 0 0;
+  }
+
+  /* ---------- figure / diagram card ---------- */
+  figure {
+    margin: 28px 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  figure.bleed { margin-left: calc(50% - 50vw + 12px); margin-right: calc(50% - 50vw + 12px); max-width: 1120px; margin-left: auto; margin-right: auto; }
+  figure svg { display: block; width: 100%; height: auto; padding: 20px; }
+  figcaption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+    padding: 10px 20px 16px;
+    border-top: 1px solid var(--line);
+    line-height: 1.5;
+  }
+  figcaption .k { color: var(--accent); }
+
+  /* ---------- callouts ---------- */
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-soft-line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 24px 0;
+  }
+  .callout .tag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout p { margin: 6px 0; max-width: none; }
+
+  /* ---------- code blocks ---------- */
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "SF Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    box-shadow: var(--shadow);
+    margin: 20px 0;
+  }
+  pre.code .kw { color: var(--code-accent); }
+  pre.code .cm { color: #8b929c; font-style: italic; }
+
+  /* ---------- tables ---------- */
+  .tablewrap { overflow-x: auto; margin: 24px 0; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; background: var(--bg-raised); font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.fixed-col { color: var(--ink-muted); }
+  td.decide-col strong { color: var(--accent); }
+
+  /* ---------- checklist ---------- */
+  .checklist { list-style: none; margin: 20px 0; padding: 0; display: grid; gap: 10px; }
+  .checklist li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .checklist .box {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+    margin-top: 4px;
+  }
+
+  /* ---------- hover/focus detail tooltips ---------- */
+  [data-tt] { cursor: help; }
+  [data-tt]:hover, [data-tt]:focus-visible { filter: brightness(1.12); }
+  [data-tt]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rs-tooltip {
+    position: absolute;
+    z-index: 100;
+    display: none;
+    max-width: 280px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 9px 11px;
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+    pointer-events: none;
+  }
+  .tt-hint {
+    display: inline-block;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    letter-spacing: .04em;
+    margin: 2px 0 0;
+  }
+
+  /* ---------- live demo (section 4) ---------- */
+  .demo-bleed-wrap {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
+    padding: 0 12px;
+    box-sizing: border-box;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+  .demo {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px 24px;
+    max-width: min(1680px, 100%);
+    margin-left: auto; margin-right: auto;
+  }
+  .hero-block { margin-bottom: 8px; }
+  .map-strip {
+    border: 1.5px solid var(--line-strong); border-radius: 10px 10px 0 0;
+    background: var(--bg-sunken); padding: 10px 16px 0;
+  }
+  .map-strip svg { display: block; width: 100%; height: auto; }
+  .genome-strip {
+    border: 1.5px solid var(--line-strong); border-top: none; border-radius: 0 0 10px 10px;
+    background: var(--bg-raised); padding: 14px 18px 16px;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .genome-strip .glabel {
+    font-family: "SF Mono", Consolas, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); white-space: nowrap;
+  }
+  .map-box { fill: none; stroke: currentColor; stroke-width: 1.4; transition: fill .3s ease, stroke .3s ease, stroke-width .3s ease; }
+  .map-box.map-active { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.8; }
+  .map-label { fill: currentColor; font-family: "SF Mono", Consolas, monospace; transition: fill .3s ease; }
+  .map-label.map-active { fill: var(--ink); font-weight: 700; }
+  .map-arrow { stroke: currentColor; opacity: .6; }
+
+  .demo-phase-caption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0 18px;
+    min-height: 20px;
+  }
+  .demo-phase-caption strong { color: var(--accent); }
+
+  .zone-caption {
+    margin: 22px 0 12px; font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-faint);
+    display: flex; align-items: center; gap: 10px; cursor: help;
+  }
+  .zone-caption::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .result-row { display: grid; grid-template-columns: 1.3fr 0.9fr 1fr 0.9fr; gap: 16px; }
+  @media (max-width: 1000px) { .result-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .result-row { grid-template-columns: 1fr; } }
+  .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .card-row { grid-template-columns: 1fr; } }
+  .demo-panel {
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px;
+  }
+
+  .demo-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+  .demo-btn {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    background: var(--bg-sunken);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .demo-btn:hover { border-color: var(--accent); }
+  .demo-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .demo-btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .demo-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11.5px; color: var(--ink-muted);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+  }
+  .demo-legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .demo-legend .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex: none; }
+  .demo-legend .swatch.active { background: var(--accent-soft); border: 1.4px solid var(--accent); }
+  .demo-legend .swatch.kept { background: var(--kept-soft); border: 1.4px solid var(--kept); }
+  .demo-legend .swatch.neutral { background: var(--bg-sunken); border: 1.4px solid var(--line-strong); }
+  .demo-legend-phases { white-space: normal; color: var(--ink-faint); flex-basis: 100%; }
+  .demo-legend-phases strong { color: var(--ink-muted); }
+
+  .demo-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .demo-stat {
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .demo-stat .lbl { font-family: "SF Mono", Consolas, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+  .demo-stat .val { font-family: "SF Mono", Consolas, monospace; font-size: 20px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .demo-genome { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 6px; }
+  .trap-group { display: flex; gap: 3px; padding: 5px; border-radius: 7px; background: var(--bg-sunken); }
+  .gene-box {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px;
+    border: 1.4px solid var(--line-strong);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    background: var(--bg-raised);
+    color: var(--ink);
+  }
+  .gene-box.active { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+  .gene-box.kept { border-color: var(--kept); background: var(--kept-soft); }
+  .gene-box.faint { opacity: .5; }
+
+  .demo-log {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 14px 0;
+    min-height: 20px;
+  }
+  .demo-log strong { color: var(--accent); }
+  .demo-log .rec { color: var(--kept); font-weight: 700; }
+
+  .demo-panel h4 {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 10px;
+  }
+  .demo-note {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11.5px; color: var(--ink-faint);
+    margin-top: 14px; line-height: 1.6;
+  }
+
+  .demo-absent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .demo-absent-list li {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .demo-absent-list .x { color: var(--ink-faint); opacity: .8; }
+
+  .chart-svg { display: block; width: 100%; height: auto; }
+  .chart-grid { stroke: var(--line); stroke-width: 1; }
+  .chart-line { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .chart-dot { fill: var(--accent); }
+  .chart-cap-line { stroke: var(--revert-line); stroke-width: 1; stroke-dasharray: 3 3; }
+
+  .pair-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .pair-col { flex: 1 1 auto; min-width: 130px; }
+  .pair-col .plabel { font-family: "SF Mono", Consolas, monospace; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+  .pair-arrow { font-family: "SF Mono", Consolas, monospace; font-size: 18px; color: var(--ink-faint); }
+
+  /* ---------- misc ---------- */
+  .diagram-label { font-family: "SF Mono", Consolas, monospace; }
+  ::selection { background: var(--accent-soft); }
+
+  footer.page-end {
+    max-width: 720px; margin: 80px auto 0; padding: 24px 24px 40px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+  }
+</style>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <span class="topnav-mark">Random search / przewodnik</span>
+    <a href="#context">1&nbsp;Kontekst</a>
+    <a href="#bigpicture">2&nbsp;Ogólny obraz</a>
+    <a href="#components">3&nbsp;Komponenty</a>
+    <a href="#live">4&nbsp;Zobacz na żywo</a>
+    <a href="#code">5&nbsp;Pseudokod</a>
+    <a href="#practice">6&nbsp;Co wymyślasz sam</a>
+  </div>
+</div>
+
+<main>
+
+<section id="top">
+  <div class="eyebrow"><span>Random search — punkt odniesienia</span></div>
+  <h1>Jak naprawdę działa Random search</h1>
+  <p class="lede">Nie sprytniejszy kuzyn P3 — jego przeciwieństwo. Zero struktury, zero pamięci, zero uczenia się z historii. Od jednej idei, przez dwie procedury wystarczające, by go zaimplementować, po pytanie, które ta prostota zadaje każdemu bardziej wyrafinowanemu algorytmowi, jaki się z nią porównuje.</p>
+  <p class="subdek">Ułożone jak diagram C4: kontekst, potem duże ruchome elementy (jest ich niewiele), potem każdy z nich rozłożony na czynniki pierwsze, potem kod, na końcu praktyczna checklista.</p>
+</section>
+
+<hr class="rule">
+
+<section id="context">
+  <h3><span class="num">1</span>Kontekst — dlaczego w ogóle porównywać się z czymś tak prostym</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: random search losuje punkty z przestrzeni przeszukiwania niezależnie od siebie, zapamiętuje najlepszy wynik widziany do tej pory, i dosłownie nic więcej nie robi.</p>
+  <p>Żadnego modelu gęstości, żadnej populacji, żadnego drzewa powiązań, żadnej fidelity. Każda ewaluacja jest ślepa na wszystkie poprzednie — ani na to, gdzie już próbkowano, ani na to, co tam znaleziono. To czyni go najtańszym możliwym punktem odniesienia: jeśli jakaś metoda nie potrafi go pokonać przy tym samym budżecie ewaluacji, cała jej dodatkowa maszyneria — surogat, populacja, harmonogram fidelity — nie zarabia na swój koszt.</p>
+
+  <p>W tym miejscu ta strona różni się od reszty serii: pozostałe strony opisują metody, które <em>coś</em> budują — model, populację, drzewo. Ta opisuje metodę, która nic nie buduje, i właśnie dlatego jest punktem zerowym artykułu GECCO 2027 o P3Net. Praca porównuje P3Net w dziewięcioramiennej siatce ablacyjnej z sześcioma innymi metodami — NSGA-Net, NSGANetV2, SH-EMOA, MO-BOHB, TPE i właśnie random search — na JAHS-Bench-201 i NAS-HPO-Bench-II. Random search stoi na jednym końcu tej siatki jako podłoga: brak struktury, brak uczenia się, brak fidelity. Wszystko po prawej stronie tej strony w serii dokłada dokładnie jeden z tych trzech elementów naraz.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 900 230" role="img" aria-label="Siedem metod z siatki ablacyjnej ułożonych na osi od braku struktury po pełną strukturę: random search po lewej bez żadnej pamięci, TPE i MO-BOHB z modelem sekwencyjnym, SH-EMOA i NSGA-Net z populacją, NSGANetV2 z tanim predyktorem, P3Net po prawej z pełnym drzewem powiązań i relatywnym surogatem.">
+      <text x="20" y="24" class="diagram-label" font-size="11" fill="currentColor" opacity="0.6">SIATKA ABLACYJNA — „ile struktury i pamięci dokłada każda metoda”</text>
+      <line x1="30" y1="140" x2="870" y2="140" stroke="currentColor" stroke-width="1.2" opacity="0.35"></line>
+
+      <g pointer-events="all" tabindex="0" data-tt="Zero pamięci między ewaluacjami. Każdy punkt losowany niezależnie od wszystkich poprzednich — dokładnie ta metoda, którą opisuje ta strona.">
+        <rect x="30" y="112" width="90" height="56" rx="7" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.7"></rect>
+        <text x="75" y="145" text-anchor="middle" class="diagram-label" font-size="11.5" fill="var(--ink)">Random</text>
+        <text x="75" y="160" text-anchor="middle" class="diagram-label" font-size="11.5" fill="var(--ink)">search</text>
+      </g>
+
+      <g pointer-events="all" tabindex="0" data-tt="Sekwencyjny model gęstości nad surowymi konfiguracjami — dzieli obserwacje na dobre/złe i próbkuje z ich ilorazu. Pamięć jest, ale nie ma pojęcia o powiązaniach między zmiennymi.">
+        <rect x="150" y="120" width="90" height="48" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+        <text x="195" y="149" text-anchor="middle" class="diagram-label" font-size="11.5">TPE</text>
+      </g>
+
+      <g pointer-events="all" tabindex="0" data-tt="TPE plus pasma fidelity w stylu Hyperband — próbkowanie modelowe, ale tnie koszt przez tanie, wczesne ewaluacje zamiast przez uczenie się struktury problemu.">
+        <rect x="270" y="112" width="110" height="56" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+        <text x="325" y="145" text-anchor="middle" class="diagram-label" font-size="11.5">MO-BOHF</text>
+        <text x="325" y="160" text-anchor="middle" class="diagram-label" font-size="10" opacity="0.6">MO-BOHB</text>
+      </g>
+
+      <g pointer-events="all" tabindex="0" data-tt="Populacja plus niezdominowane sortowanie plus wczesne cięcia fidelity — ewolucja z budżetowaniem, ale krzyżowanie i mutacja pozostają ślepe na strukturę genotypu.">
+        <rect x="400" y="100" width="110" height="68" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+        <text x="455" y="133" text-anchor="middle" class="diagram-label" font-size="11.5">SH-EMOA</text>
+      </g>
+
+      <g pointer-events="all" tabindex="0" data-tt="Klasyczne NSGA-II na genotypach architektur, każdy kandydat trenowany w pełni — populacja i front Pareto, ale zero fidelity i zero linkage.">
+        <rect x="530" y="92" width="110" height="76" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+        <text x="585" y="126" text-anchor="middle" class="diagram-label" font-size="11.5">NSGA-Net</text>
+      </g>
+
+      <g pointer-events="all" tabindex="0" data-tt="Ta sama pętla NSGA-II, ale prawdziwy trening zastąpiony tanim predyktorem/supersiecią — surogat, lecz nie relatywny i nie świadomy powiązań.">
+        <rect x="660" y="84" width="115" height="84" rx="7" fill="none" stroke="currentColor" stroke-width="1.3"></rect>
+        <text x="717" y="122" text-anchor="middle" class="diagram-label" font-size="11.5">NSGANetV2</text>
+      </g>
+
+      <g pointer-events="all" tabindex="0" data-tt="Drzewo powiązań, piramida populacji i relatywny, świadomy powiązań surogat δ̂F — pełna struktura i pełna pamięć. Metoda, którą reszta tej strony rozlicza.">
+        <rect x="795" y="72" width="80" height="96" rx="7" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 3"></rect>
+        <text x="835" y="118" text-anchor="middle" class="diagram-label" font-size="11.5" fill="var(--accent)">P3Net</text>
+      </g>
+
+      <text x="75" y="200" text-anchor="middle" class="diagram-label" font-size="10.5" fill="var(--accent)">brak struktury</text>
+      <text x="835" y="200" text-anchor="middle" class="diagram-label" font-size="10.5" fill="var(--accent)">pełna struktura</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> siedem metod z siatki ablacyjnej artykułu, ułożone od lewej (brak pamięci, brak modelu) do prawej (pełne drzewo powiązań i relatywny surogat P3Net). Wysokość pudełka to tylko wizualny skrót „ile maszynerii" — im wyżej, tym więcej struktury dana metoda dokłada do gołego próbkowania. Najedź na dowolne pudełko po szczegóły.</figcaption>
+  </figure>
+
+  <p>Reszta tej strony rozkłada tę lewą krawędź diagramu — dokładnie te dwa elementy, z których random search się składa, i nic ponad to.</p>
+</section>
+
+<section id="bigpicture">
+  <h3><span class="num">2</span>Ogólny obraz — jedna pętla, dwa elementy</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: losuj punkt, oceń go, porównaj z najlepszym dotąd, powtórz — bez żadnego kroku, który zaglądałby wstecz.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Element</th><th>Zadanie</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Sampler przestrzeni przeszukiwania</strong></td><td>Losuje jeden punkt, ciągnąc każdy wymiar niezależnie i jednostajnie z jego dziedziny. Nie zna historii poprzednich prób.</td></tr>
+        <tr><td><strong>Śledzenie najlepszego dotąd</strong></td><td>Porównuje świeżo oceniony punkt z dotychczasowym rekordzistą i zatrzymuje lepszego z dwóch. To cała „pamięć” algorytmu.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>To wszystko. W sekcji 3 nie ma nic więcej do rozłożenia na czynniki poza tymi dwoma punktami — żadnego trzeciego składnika nie ma, bo żaden nie istnieje.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 900 260" role="img" aria-label="Pętla random search: losuj punkt, oceń go, porównaj z najlepszym dotąd, wróć do losowania kolejnego punktu niezależnie od tego, co się właśnie wydarzyło. Osobna, przekreślona strzałka pokazuje nieistniejące sprzężenie zwrotne z powrotem do samplera.">
+      <defs>
+        <marker id="arrRS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <rect x="30" y="80" width="220" height="60" rx="9" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Każdy wymiar losowany jednostajnie i niezależnie od pozostałych wymiarów i od wszystkich poprzednich punktów. Pełny szczegół w 3.1.">
+      </rect>
+      <text x="140" y="115" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">Losuj punkt</text>
+      <path d="M250,110 L300,110" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrRS)"></path>
+
+      <rect x="300" y="80" width="220" height="60" rx="9" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Jedna prawdziwa ewaluacja funkcji celu na tym punkcie. Random search nie ma żadnego skrótu ani surogatu — każdy punkt kosztuje pełną ewaluację.">
+      </rect>
+      <text x="410" y="115" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">Oceń</text>
+      <path d="M520,110 L570,110" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrRS)"></path>
+
+      <rect x="570" y="80" width="240" height="60" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" pointer-events="all" tabindex="0" data-tt="Ścisłe porównanie z dotychczasowym rekordzistą. To jedyny fragment algorytmu, który cokolwiek pamięta — jedną liczbę (i punkt, który ją osiągnął), nic poza tym. Pełny szczegół w 3.2.">
+      </rect>
+      <text x="690" y="115" text-anchor="middle" class="diagram-label" font-size="13" fill="var(--ink)">Porównaj z najlepszym</text>
+
+      <path d="M690,140 C690,210 140,210 140,142" fill="none" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrRS)"></path>
+      <text x="415" y="222" text-anchor="middle" class="diagram-label" font-size="11" fill="currentColor" opacity="0.75">kolejna iteracja — punkt losowany od zera, niezależnie od tego, co powyżej</text>
+
+      <path d="M690,80 C560,-10 260,-10 140,78" fill="none" stroke="var(--ink-faint)" stroke-width="1.3" stroke-dasharray="2 4" opacity="0.7" pointer-events="all" tabindex="0" data-tt="Ta strzałka NIE ISTNIEJE w random search. W metodach modelowych (np. TPE) informacja z tego kroku wracałaby tutaj, wpływając na kolejny punkt. Tu nic nie wraca."></path>
+      <text x="415" y="34" text-anchor="middle" class="diagram-label" font-size="11" fill="var(--ink-faint)">brak: sprzężenie zwrotne do samplera</text>
+      <text x="690" y="60" text-anchor="middle" class="diagram-label" font-size="16" fill="var(--ink-faint)">✕</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> pełna pętla to trzy pudełka, nie więcej. Przerywana, przekreślona strzałka u góry to celowa nieobecność — dokładnie ta, którą metody modelowe (TPE, MO-BOHB) i strukturalne (P3, P3Net) domykają, każda po swojemu. Tutaj ta strzałka po prostu nie istnieje.</figcaption>
+  </figure>
+</section>
+
+<section id="components">
+  <h2>3&nbsp; Komponenty — rozkładanie tego, co jest, na czynniki</h2>
+  <p class="subdek">Dwa elementy z tabeli wyżej, teraz na poziomie szczegółowości potrzebnym do ich zaimplementowania. Celowo krótko — bo tyle właśnie tego jest.</p>
+
+  <h3><span class="num">3.1</span>Sampler przestrzeni przeszukiwania</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: dla każdego wymiaru osobno wylosuj wartość jednostajnie z jego dziedziny, złóż w jeden punkt, gotowe.</p>
+  <p>Żadnej zależności między wymiarami, żadnej zależności od tego, jakie punkty były próbkowane wcześniej, żadnej zależności od tego, jak dobre czy złe były ich wyniki. Kategoryczny wymiar losuje jedną z dopuszczalnych wartości z równym prawdopodobieństwem; ciągły — jednostajnie z przedziału (albo z innego rozkładu, jeśli akurat taki wybierzesz, ale wciąż bez pamięci). To jedyne miejsce w całym algorytmie, gdzie w ogóle pojawia się losowość specyficzna dla problemu.</p>
+
+  <div class="callout">
+    <span class="tag">To, czego tu nie ma</span>
+    <p>Żadnego <span class="mono">l(x)</span> ani <span class="mono">g(x)</span> jak w TPE, żadnej tabeli częstości par genów jak w drzewie powiązań P3, żadnej populacji, z której losować rodzica. Sampler nie utrzymuje żadnego stanu między wywołaniami poza generatorem liczb losowych. Wywołaj go milion razy — millionowe wywołanie nie wie nic więcej o problemie niż pierwsze.</p>
+  </div>
+
+  <h3><span class="num">3.2</span>Śledzenie najlepszego dotąd</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: po każdej ewaluacji porównaj wynik z rekordzistą; jeśli jest ściśle lepszy, zastąp rekordzistę.</p>
+  <p>To jedna zmienna (albo, przy wielu celach, jeden front Pareto) i jedno porównanie na iterację. Żadnego mechanizmu selekcji, żadnej presji na różnorodność, żadnego usuwania gorszych rozwiązań z jakiejkolwiek struktury — bo nie ma żadnej struktury, z której można by je usunąć. Punkty, które nie pobiją rekordu, są po prostu porzucane: nie trafiają do żadnej populacji, nie wpływają na kolejne próbkowanie, nie zostawiają śladu poza tym, że zostały policzone w budżecie.</p>
+
+  <p>Dla wielu celów naraz jedyna zmiana to reguła porównania: zamiast pojedynczej ścisłej nierówności używasz niezdominowania Pareto, a „najlepszy dotąd” staje się frontem punktów niezdominowanych zamiast jednym punktem. Sam sampler nie zmienia się wcale.</p>
+</section>
+
+<section id="live">
+  <h2>4&nbsp; Zobacz na żywo</h2>
+  <p class="subdek">Nie animacja jednego ustalonego przykładu — to naprawdę działający random search, dokładnie wg pseudokodu z sekcji&nbsp;5, licząc w Twojej przeglądarce.</p>
+
+  <h3><span class="num">4.1</span>Problem: ten sam zwodniczy genotyp, inny algorytm</h3>
+  <p>Poniższy demonstrator próbkuje ten sam rodzaj genotypu, jaki spotkasz na innych stronach tej serii: <strong>4 niezależne „pułapki” po 4 geny każda</strong> (16 genów łącznie). W obrębie jednej pułapki cel to komplet czterech jedynek — ale każdy krok w tamtą stronę, dopóki nie jest zmianą wszystkich czterech naraz, jest karany, nie nagradzany. Maksymalne możliwe dopasowanie to 16 (wszystkie cztery pułapki na <span class="mono">1111</span>).</p>
+  <p>Metody, które uczą się, które geny trzymać razem, mogą to celowo wykorzystać — skopiować cały klaster naraz od kogoś, kto już ma go rozwiązany. Random search nie ma takiej opcji: każdy punkt to niezależny rzut monetą na każdym z 16 genów osobno. Obserwuj, jak wolno rośnie krzywa najlepszego wyniku poniżej — i jak rzadko w ogóle dotyka górnej granicy.</p>
+
+  <div class="demo-bleed-wrap">
+  <div class="demo" id="rsdemo">
+    <div class="demo-legend">
+      <span class="demo-legend-item"><span class="swatch active"></span>aktualny krok</span>
+      <span class="demo-legend-item"><span class="swatch neutral"></span>próbkowany punkt (bez znaczenia „dobry/zły” w chwili losowania)</span>
+      <span class="demo-legend-item"><span class="swatch kept"></span>nowy rekord</span>
+      <span class="demo-legend-item demo-legend-phases">Jasne tło = krok, w którym właśnie jesteś. Żaden gen nigdy nie jest „kopiowany od dawcy" — tu dawcy nie ma.</span>
+    </div>
+
+    <div class="hero-block">
+      <div class="demo-map-wrap map-strip">
+        <svg viewBox="0 0 900 260" role="img" aria-label="Pozioma mapa jednej iteracji random search: losuj punkt, oceń, porównaj z najlepszym, wróć do losowania kolejnego punktu niezależnie od poprzedniego. Aktualny krok podświetla się na żywo.">
+          <defs>
+            <marker id="arrMapRS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <path class="map-arrow" d="M690,138 C690,208 140,208 140,140" fill="none" stroke-width="1.3" stroke-dasharray="2 4" marker-end="url(#arrMapRS)" pointer-events="all" tabindex="0" data-tt="Nowa iteracja, zupełnie nowy losowy punkt — nic z poprzedniej iteracji nie wpływa na ten wybór."></path>
+          <text x="415" y="222" text-anchor="middle" class="diagram-label" font-size="11" fill="var(--accent)" opacity="0.9">kolejna iteracja, niezależny punkt</text>
+
+          <rect id="mapBoxSample" class="map-box" data-node="sample" x="30" y="80" width="220" height="60" rx="9" pointer-events="all" tabindex="0" data-tt="Każdy z 16 genów losowany niezależnie, jednostajnie z {0,1}. Sekcja 3.1."></rect>
+          <text id="mapLabelSample" class="map-label" data-node="sample" x="140" y="115" text-anchor="middle" font-size="13">Losuj punkt</text>
+          <path class="map-arrow" d="M250,110 L300,110" stroke-width="1.2" marker-end="url(#arrMapRS)"></path>
+
+          <rect id="mapBoxEvaluate" class="map-box" data-node="evaluate" x="300" y="80" width="220" height="60" rx="9" pointer-events="all" tabindex="0" data-tt="Jedna prawdziwa ewaluacja funkcji pułapek — bez skrótu, bez surogatu."></rect>
+          <text id="mapLabelEvaluate" class="map-label" data-node="evaluate" x="410" y="115" text-anchor="middle" font-size="13">Oceń</text>
+          <path class="map-arrow" d="M520,110 L570,110" stroke-width="1.2" marker-end="url(#arrMapRS)"></path>
+
+          <rect id="mapBoxCompare" class="map-box" data-node="compare" x="570" y="80" width="220" height="60" rx="9" pointer-events="all" tabindex="0" data-tt="Ścisłe porównanie z dotychczasowym rekordzistą. Sekcja 3.2."></rect>
+          <text id="mapLabelCompare" class="map-label" data-node="compare" x="680" y="115" text-anchor="middle" font-size="13">Porównaj z najlepszym</text>
+        </svg>
+      </div>
+      <div class="genome-strip">
+        <span class="glabel" pointer-events="all" tabindex="0" data-tt="Punkt właśnie próbkowany przez sampler — nie ma żadnego koloru „testowane/zachowane/cofnięte", bo w random search nic z tego nie istnieje. Jest tylko: wylosowany, oceniony.">obecna próbka</span>
+        <div class="demo-genome" id="genomeView"></div>
+      </div>
+    </div>
+
+    <div class="demo-phase-caption" id="phaseCaption">Kliknij „Krok” albo „Uruchom”, żeby zobaczyć algorytm w akcji.</div>
+    <div class="demo-log" id="demoLog">Kliknij „Krok” albo „Uruchom”, żeby zacząć.</div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Te cztery karty czerpią z całej historii przebiegu do tej pory.">③ nagromadzony wynik — z całego przebiegu do tej pory</div>
+    <div class="result-row">
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Wartość najlepszego dotąd punktu po każdej iteracji. Rośnie skokowo tylko wtedy, gdy trafi się nowy rekord — między rekordami linia jest płaska, bo nic nowego się nie dzieje.">Krzywa: najlepszy dotąd</h4>
+        <svg class="chart-svg" id="chartSvg" viewBox="0 0 480 160" role="img" aria-label="Wykres liniowy najlepszego dotąd dopasowania w funkcji iteracji.">
+          <line class="chart-cap-line" x1="0" y1="10" x2="480" y2="10"></line>
+          <text x="4" y="22" class="diagram-label" font-size="9" fill="currentColor" opacity="0.5">max = 16</text>
+          <line class="chart-grid" x1="0" y1="150" x2="480" y2="150"></line>
+          <polyline class="chart-line" id="chartLine" points=""></polyline>
+          <circle class="chart-dot" id="chartDot" cx="0" cy="150" r="3"></circle>
+        </svg>
+        <p class="demo-note">Oś pozioma: iteracje (ostatnie 120). Oś pionowa: 0–16.</p>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="To, co inne strony tej serii nazywają swoim modelem, populacją albo drzewem. Tutaj tego nie ma — to jest cały punkt tej strony.">Czego tu nie ma</h4>
+        <ul class="demo-absent-list">
+          <li><span class="x">✕</span> model gęstości l(x) / g(x)</li>
+          <li><span class="x">✕</span> drzewo powiązań / klastry genów</li>
+          <li><span class="x">✕</span> populacja lub piramida poziomów</li>
+          <li><span class="x">✕</span> krzyżowanie lub dawca</li>
+        </ul>
+        <p class="demo-note">Każdy punkt w tej pętli jest losowany tak, jakby żaden wcześniejszy punkt nigdy nie istniał.</p>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Dwie kolejne próbki obok siebie, żeby było widać na oczy: nowa próbka nie jest wariantem starej, nie dziedziczy po niej żadnego genu, nie „wie", jaki wynik osiągnęła poprzedniczka.">Poprzedni punkt vs nowy punkt</h4>
+        <div class="pair-row">
+          <div class="pair-col">
+            <div class="plabel">poprzedni</div>
+            <div class="demo-genome" id="prevGenomeView"></div>
+          </div>
+          <div class="pair-arrow" pointer-events="all" tabindex="0" data-tt="Ta strzałka nie oznacza żadnej zależności — to tylko upływ czasu. Wartości po prawej nie są funkcją wartości po lewej.">≠→</div>
+          <div class="pair-col">
+            <div class="plabel">nowy</div>
+            <div class="demo-genome" id="currGenomeView"></div>
+          </div>
+        </div>
+        <p class="demo-note" id="pairNote">Brak związku — nowy punkt nie został wybrany na podstawie poprzedniego ani jego wyniku.</p>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Najlepszy genotyp znaleziony od początku tego uruchomienia. To jedyna rzecz, którą random search pamięta z całej swojej historii.">Najlepszy dotąd</h4>
+        <div class="demo-genome" id="bestGenomeView"></div>
+        <p class="demo-note" id="bestNote">Brak jeszcze wyniku.</p>
+      </div>
+    </div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Te dwie dotyczą sterowania demonstratorem i bieżących liczników.">④ sterowanie i statystyki</div>
+    <div class="card-row">
+      <div class="demo-panel">
+        <h4>Sterowanie</h4>
+        <div class="demo-controls">
+          <button class="demo-btn primary" id="btnStep" type="button">Krok</button>
+          <button class="demo-btn" id="btnRun" type="button">Uruchom</button>
+          <button class="demo-btn" id="btnFF" type="button">⏩ 20 iteracji</button>
+          <button class="demo-btn" id="btnReset" type="button">Reset</button>
+        </div>
+        <p class="demo-note">„Uruchom" powtarza pętlę automatycznie w tempie widocznym na mapie u góry; „⏩" przelicza 20 iteracji naraz i pokazuje sam wynik.</p>
+      </div>
+      <div class="demo-panel">
+        <h4>Statystyki</h4>
+        <div class="demo-stats">
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Ile razy pętla LOSUJ-OCEŃ-PORÓWNAJ wystartowała od nowego losowego punktu.">
+            <div class="lbl">Iteracja</div><div class="val" id="statIter">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Łączna liczba wywołań funkcji dopasowania — w random search zawsze równa liczbie iteracji.">
+            <div class="lbl">Ewaluacje</div><div class="val" id="statEval">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="16 to globalne optimum: wszystkie 4 pułapki na 1111.">
+            <div class="lbl">Najlepsze</div><div class="val" id="statBest">0 / 16</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Ile razy padł nowy rekord od początku przebiegu — na tym problemie zwykle rzadko, po gęstym początku.">
+            <div class="lbl">Rekordy</div><div class="val" id="statRecords">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+</section>
+
+<section id="code">
+  <h2>5&nbsp; Pseudokod — co naprawdę trzeba by napisać</h2>
+  <p class="subdek">Dwie procedury. Krótsze niż cokolwiek innego w tej serii — i to jest właśnie clou, nie niedopatrzenie.</p>
+
+<pre class="code"><span class="kw">procedure</span> RANDOM-SEARCH(budget)
+    best ← null
+    <span class="kw">for</span> i <span class="kw">in</span> 1..budget <span class="kw">do</span>
+        x ← SAMPLE()                         <span class="cm">// §3.1, niezależnie od wszystkich poprzednich x</span>
+        f ← fitness(x)                        <span class="cm">// jedna prawdziwa ewaluacja, bez skrótu</span>
+        <span class="kw">if</span> best <span class="kw">is</span> null <span class="kw">or</span> f &gt; fitness(best) <span class="kw">then</span>
+            best ← x                          <span class="cm">// §3.2, ścisłe porównanie</span>
+    <span class="kw">return</span> best</pre>
+
+<pre class="code"><span class="kw">procedure</span> SAMPLE()
+    x ← empty vector
+    <span class="kw">for</span> <span class="kw">each</span> dimension d <span class="kw">in</span> search_space <span class="kw">do</span>
+        x[d] ← losowa wartość jednostajnie z dziedziny(d)   <span class="cm">// §5.a: TY definiujesz tę dziedzinę</span>
+    <span class="kw">return</span> x</pre>
+
+  <p>To cały algorytm. Nie ma procedury mutacji, krzyżowania, budowania drzewa ani żadnej struktury pomocniczej — <span class="mono">RANDOM-SEARCH</span> woła <span class="mono">SAMPLE</span> raz na iterację, a <span class="mono">SAMPLE</span> nie odwołuje się do niczego poza dziedziną każdego wymiaru. Cała reszta tej serii to opis tego, co dokłada się do tych dwóch procedur — i za jaką cenę.</p>
+</section>
+
+<section id="practice">
+  <h2>6&nbsp; Co wymyślasz sam — zastosowanie random search do rzeczywistego problemu</h2>
+  <p>Ten sam podział, co na pozostałych stronach tej serii: <em>mechanizm</em> jest ustalony przez algorytm i mieści się w dwóch krótkich procedurach z sekcji 5. To, co zmienia się za każdym razem, to jak Twój problem podłącza się do tego mechanizmu — i, w tym wypadku, ile budżetu w ogóle jesteś w stanie mu dać.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:26%">Punkt decyzyjny</th><th>Ustalone przez algorytm</th><th>Ty decydujesz, dla każdego problemu</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Próbkowanie</strong></td>
+          <td class="fixed-col">Jednostajne, niezależne losowanie każdego wymiaru z jego dziedziny, bez żadnej pamięci między próbami.</td>
+          <td class="decide-col">Kodowanie przestrzeni przeszukiwania i dekoder — jak Twój problem staje się wektorem wymiarów, które w ogóle da się jednostajnie losować.</td>
+        </tr>
+        <tr>
+          <td><strong>Śledzenie najlepszego</strong></td>
+          <td class="fixed-col">Proste <span class="mono">argmax</span> po dopasowaniu; remisy nie zastępują rekordzisty.</td>
+          <td class="decide-col">Definicja fitness/celu — i, przy wielu celach, reguła niezdominowania, według której porównujesz punkty.</td>
+        </tr>
+        <tr>
+          <td><strong>Budżet ewaluacji</strong></td>
+          <td class="fixed-col">Pętla zatrzymuje się dokładnie po zadanej liczbie ewaluacji — żadnego innego warunku stopu.</td>
+          <td class="decide-col">Sam budżet: ile ewaluacji Cię stać. To jedyny parametr algorytmu, i musisz go wybrać sam za każdym razem.</td>
+        </tr>
+        <tr>
+          <td><strong>Nieprawidłowe punkty</strong></td>
+          <td class="fixed-col">Brak wbudowanej obsługi — sampler nie wie, że coś takiego jak „nieprawidłowy punkt" istnieje.</td>
+          <td class="decide-col">Co zrobić z próbką spoza dopuszczalnego zbioru: odrzucić i losować ponownie, naprawić, czy ukarać w funkcji celu.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <span class="tag">Ślepy punkt, który ta strona wystawia P3Net</span>
+    <p>Random search nie wygrywa na żadnym problemie ze strukturą — dokładnie to pokazuje demonstrator w sekcji 4: bez sposobu na skopiowanie całego klastra pułapki naraz, prawdopodobieństwo trafienia globalnego optimum spada wykładniczo z liczbą pułapek. To nie jest zaskoczenie. Pytanie, na które ta strona faktycznie odpowiada, brzmi inaczej: <strong>czy dodatkowa struktura i koszt P3Net — drzewo powiązań, relatywny surogat, piramida populacji — faktycznie zarabiają na swoje utrzymanie przy danym budżecie, czy ślepe, jednostajne próbkowanie osiągnęłoby porównywalny wynik taniej?</strong></p>
+    <p>To pytanie nie ma z góry znanej odpowiedzi dla każdego problemu — zależy od tego, ile faktycznej struktury (powiązań między genami architektury i hiperparametrami) dany benchmark w ogóle ma do wykorzystania, i jak drogo kosztuje jedna prawdziwa ewaluacja. Random search jest tym, co musisz pokonać, żeby odpowiedź na to pytanie brzmiała „tak" — nie dlatego, że jest dobrym algorytmem, tylko dlatego, że jest najtańszym uczciwym testem.</p>
+  </div>
+
+  <h3 style="margin-top:32px;"><span class="num">✓</span>Checklista przy stosowaniu random search do nowego problemu</h3>
+  <ul class="checklist">
+    <li><span class="box"></span><span>Zdefiniuj dziedzinę każdego wymiaru: skończony zbiór wartości albo przedział, z którego da się losować jednostajnie.</span></li>
+    <li><span class="box"></span><span>Zdefiniuj dopasowanie jako pojedyncze, ścisłe porównanie (lub regułę niezdominowania, jeśli celów jest więcej niż jeden).</span></li>
+    <li><span class="box"></span><span>Zdecyduj, co się dzieje z próbkami, które nie dekodują się do prawidłowego rozwiązania.</span></li>
+    <li><span class="box"></span><span>Ustal budżet ewaluacji z góry — to jedyny parametr, który w ogóle trzeba wybrać.</span></li>
+    <li><span class="box"></span><span>Uruchom go jako punkt odniesienia, zanim uwierzysz, że bardziej wyrafinowana metoda faktycznie pomaga na Twoim problemie.</span></li>
+  </ul>
+
+</section>
+
+</main>
+
+<footer class="page-end">
+  Źródło: J. Bergstra i Y. Bengio, „Random Search for Hyper-Parameter Optimization”, JMLR 2012 — klasyczny argument za random search jako punktem odniesienia, na którym opiera się rola tej metody w siatce ablacyjnej powyżej.
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ hover / focus detail tooltips ============ */
+  var tip = document.createElement("div");
+  tip.className = "rs-tooltip";
+  tip.setAttribute("role", "tooltip");
+  document.body.appendChild(tip);
+  var ttCurrent = null;
+  function ttShow(el) {
+    var text = el.getAttribute("data-tt");
+    if (!text) return;
+    tip.textContent = text;
+    tip.style.display = "block";
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var x = r.left + r.width / 2 - tw / 2;
+    var y = r.top - th - 10;
+    if (y < 8) y = r.bottom + 10;
+    x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+    tip.style.left = (x + window.scrollX) + "px";
+    tip.style.top = (y + window.scrollY) + "px";
+    ttCurrent = el;
+  }
+  function ttHide() { tip.style.display = "none"; ttCurrent = null; }
+  document.addEventListener("mouseover", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("mouseout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  document.addEventListener("focusin", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("focusout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  window.addEventListener("scroll", ttHide, { passive: true });
+
+  /* ============ real random search, run on a 4x4 trap function ============ */
+  var K = 4;         // trap size
+  var NTRAPS = 4;
+  var N = K * NTRAPS; // 16 genes
+  var MAXFIT = K * NTRAPS; // 16
+
+  function trapValue(bits) {
+    var t = 0;
+    for (var i = 0; i < bits.length; i++) t += bits[i];
+    return t < K ? (K - 1 - t) : K;
+  }
+  function fitness(genome) {
+    var f = 0;
+    for (var i = 0; i < NTRAPS; i++) f += trapValue(genome.slice(i * K, (i + 1) * K));
+    return f;
+  }
+  function sample() {
+    var g = new Array(N);
+    for (var i = 0; i < N; i++) g[i] = Math.random() < 0.5 ? 0 : 1;
+    return g;
+  }
+
+  /* ============ state ============ */
+  var state = {
+    iter: 0,
+    evals: 0,
+    records: 0,
+    best: null,
+    bestFit: -1,
+    prev: null,
+    curr: null,
+    currFit: null,
+    history: [],   // best-so-far per iteration, capped display window
+    running: false,
+    runTimer: null
+  };
+
+  var HISTORY_CAP = 120;
+
+  /* ============ DOM refs ============ */
+  var el = {
+    genomeView: document.getElementById("genomeView"),
+    prevGenomeView: document.getElementById("prevGenomeView"),
+    currGenomeView: document.getElementById("currGenomeView"),
+    bestGenomeView: document.getElementById("bestGenomeView"),
+    pairNote: document.getElementById("pairNote"),
+    bestNote: document.getElementById("bestNote"),
+    phaseCaption: document.getElementById("phaseCaption"),
+    demoLog: document.getElementById("demoLog"),
+    statIter: document.getElementById("statIter"),
+    statEval: document.getElementById("statEval"),
+    statBest: document.getElementById("statBest"),
+    statRecords: document.getElementById("statRecords"),
+    chartLine: document.getElementById("chartLine"),
+    chartDot: document.getElementById("chartDot"),
+    btnStep: document.getElementById("btnStep"),
+    btnRun: document.getElementById("btnRun"),
+    btnFF: document.getElementById("btnFF"),
+    btnReset: document.getElementById("btnReset")
+  };
+
+  var mapNodes = ["sample", "evaluate", "compare"];
+
+  function setActiveNode(node) {
+    mapNodes.forEach(function (n) {
+      var box = document.getElementById("mapBox" + n.charAt(0).toUpperCase() + n.slice(1));
+      var lbl = document.getElementById("mapLabel" + n.charAt(0).toUpperCase() + n.slice(1));
+      var on = n === node;
+      if (box) box.classList.toggle("map-active", on);
+      if (lbl) lbl.classList.toggle("map-active", on);
+    });
+  }
+
+  function renderGenome(container, genome, cls) {
+    container.innerHTML = "";
+    if (!genome) {
+      var span = document.createElement("span");
+      span.className = "demo-note";
+      span.textContent = "—";
+      container.appendChild(span);
+      return;
+    }
+    for (var t = 0; t < NTRAPS; t++) {
+      var grp = document.createElement("div");
+      grp.className = "trap-group";
+      for (var k = 0; k < K; k++) {
+        var box = document.createElement("div");
+        box.className = "gene-box" + (cls ? " " + cls : "");
+        box.textContent = genome[t * K + k];
+        grp.appendChild(box);
+      }
+      container.appendChild(grp);
+    }
+  }
+
+  function renderChart() {
+    var w = 480, h = 160, padTop = 12, padBottom = 10;
+    var hist = state.history;
+    var n = hist.length;
+    if (n === 0) {
+      el.chartLine.setAttribute("points", "");
+      el.chartDot.setAttribute("cx", "0");
+      el.chartDot.setAttribute("cy", h - padBottom);
+      return;
+    }
+    var start = Math.max(0, n - HISTORY_CAP);
+    var visible = hist.slice(start);
+    var m = visible.length;
+    var xStep = m > 1 ? w / (m - 1) : 0;
+    var pts = [];
+    for (var i = 0; i < m; i++) {
+      var x = m > 1 ? i * xStep : 0;
+      var frac = visible[i] / MAXFIT;
+      var y = (h - padBottom) - frac * (h - padBottom - padTop);
+      pts.push(x.toFixed(1) + "," + y.toFixed(1));
+    }
+    el.chartLine.setAttribute("points", pts.join(" "));
+    var last = pts[pts.length - 1].split(",");
+    el.chartDot.setAttribute("cx", last[0]);
+    el.chartDot.setAttribute("cy", last[1]);
+  }
+
+  function refreshStats() {
+    el.statIter.textContent = state.iter;
+    el.statEval.textContent = state.evals;
+    el.statBest.textContent = (state.bestFit < 0 ? 0 : state.bestFit) + " / " + MAXFIT;
+    el.statRecords.textContent = state.records;
+  }
+
+  function refreshPanels() {
+    renderGenome(el.genomeView, state.curr, "active");
+    renderGenome(el.prevGenomeView, state.prev, "faint");
+    renderGenome(el.currGenomeView, state.curr, "active");
+    renderGenome(el.bestGenomeView, state.best, "kept");
+    if (state.prev && state.curr) {
+      el.pairNote.textContent = "Brak związku — nowy punkt nie został wybrany na podstawie poprzedniego (" + state.prev.join("") + ") ani jego wyniku.";
+    }
+    if (state.best) {
+      el.bestNote.textContent = "Dopasowanie: " + state.bestFit + " / " + MAXFIT + " — zapamiętane jako jedyna informacja, jaka przetrwała z całej historii przebiegu.";
+    }
+    refreshStats();
+    renderChart();
+  }
+
+  /* ============ one full iteration (pure computation) ============ */
+  function doIteration() {
+    state.prev = state.curr;
+    var x = sample();
+    var f = fitness(x);
+    state.curr = x;
+    state.currFit = f;
+    state.evals += 1;
+    state.iter += 1;
+
+    var isRecord = state.best === null || f > state.bestFit;
+    if (isRecord) {
+      state.best = x.slice();
+      state.bestFit = f;
+      state.records += 1;
+    }
+    state.history.push(state.bestFit);
+    return { genome: x, fitness: f, isRecord: isRecord };
+  }
+
+  /* ============ animated single step (for "Krok" and "Uruchom") ============ */
+  var stepPhaseTimer = null;
+  function clearPhaseTimer() {
+    if (stepPhaseTimer) { clearTimeout(stepPhaseTimer); stepPhaseTimer = null; }
+  }
+
+  function animatedStep(done) {
+    clearPhaseTimer();
+    setActiveNode("sample");
+    el.phaseCaption.innerHTML = "<strong>Losuj punkt</strong> — każdy z " + N + " genów niezależnie, jednostajnie z {0,1}.";
+    stepPhaseTimer = setTimeout(function () {
+      var info = doIteration();
+      renderGenome(el.genomeView, info.genome, "active");
+      setActiveNode("evaluate");
+      el.phaseCaption.innerHTML = "<strong>Oceń</strong> — dopasowanie tego punktu: " + info.fitness + " / " + MAXFIT + ".";
+      stepPhaseTimer = setTimeout(function () {
+        setActiveNode("compare");
+        if (info.isRecord) {
+          el.phaseCaption.innerHTML = "<strong>Porównaj z najlepszym</strong> — nowy rekord: " + info.fitness + " / " + MAXFIT + ".";
+          el.demoLog.innerHTML = "Iteracja " + state.iter + ": punkt " + info.genome.join("") + " → dopasowanie " + info.fitness + ". <span class=\"rec\">Nowy rekord.</span>";
+        } else {
+          el.phaseCaption.innerHTML = "<strong>Porównaj z najlepszym</strong> — bez poprawy, rekordzista (" + state.bestFit + ") zostaje bez zmian.";
+          el.demoLog.innerHTML = "Iteracja " + state.iter + ": punkt " + info.genome.join("") + " → dopasowanie " + info.fitness + ". Rekord (" + state.bestFit + ") bez zmian.";
+        }
+        refreshPanels();
+        stepPhaseTimer = setTimeout(function () {
+          setActiveNode(null);
+          if (done) done();
+        }, 260);
+      }, 260);
+    }, 260);
+  }
+
+  /* ============ controls ============ */
+  function stopRun() {
+    state.running = false;
+    if (state.runTimer) { clearInterval(state.runTimer); state.runTimer = null; }
+    el.btnRun.textContent = "Uruchom";
+  }
+
+  el.btnStep.addEventListener("click", function () {
+    stopRun();
+    animatedStep();
+  });
+
+  el.btnRun.addEventListener("click", function () {
+    if (state.running) { stopRun(); return; }
+    state.running = true;
+    el.btnRun.textContent = "Zatrzymaj";
+    var busy = false;
+    state.runTimer = setInterval(function () {
+      if (busy) return;
+      busy = true;
+      animatedStep(function () { busy = false; });
+    }, 900);
+  });
+
+  el.btnFF.addEventListener("click", function () {
+    stopRun();
+    clearPhaseTimer();
+    for (var i = 0; i < 20; i++) doIteration();
+    setActiveNode(null);
+    el.phaseCaption.innerHTML = "<strong>⏩ 20 iteracji</strong> przeliczone naraz — rekordzista i krzywa poniżej odzwierciedlają wszystkie naraz.";
+    el.demoLog.innerHTML = "Przeliczono 20 kolejnych, niezależnych punktów. Aktualny rekord: " + state.bestFit + " / " + MAXFIT + ".";
+    refreshPanels();
+  });
+
+  el.btnReset.addEventListener("click", function () {
+    stopRun();
+    clearPhaseTimer();
+    state.iter = 0;
+    state.evals = 0;
+    state.records = 0;
+    state.best = null;
+    state.bestFit = -1;
+    state.prev = null;
+    state.curr = null;
+    state.currFit = null;
+    state.history = [];
+    setActiveNode(null);
+    el.phaseCaption.textContent = "Kliknij „Krok” albo „Uruchom”, żeby zobaczyć algorytm w akcji.";
+    el.demoLog.textContent = "Kliknij „Krok” albo „Uruchom”, żeby zacząć.";
+    el.pairNote.textContent = "Brak związku — nowy punkt nie został wybrany na podstawie poprzedniego ani jego wyniku.";
+    el.bestNote.textContent = "Brak jeszcze wyniku.";
+    renderGenome(el.genomeView, null);
+    renderGenome(el.prevGenomeView, null);
+    renderGenome(el.currGenomeView, null);
+    renderGenome(el.bestGenomeView, null);
+    refreshStats();
+    renderChart();
+  });
+
+  /* initial paint */
+  refreshStats();
+  renderChart();
+})();
+</script>

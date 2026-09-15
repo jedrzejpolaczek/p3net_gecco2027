@@ -1,0 +1,1460 @@
+<title>Jak naprawdę działa SH-EMOA</title>
+<style>
+  :root {
+    --bg: #eef0ec;
+    --bg-raised: #ffffff;
+    --bg-sunken: #e4e7e0;
+    --ink: #1b1f27;
+    --ink-muted: #565f6b;
+    --ink-faint: #8b929c;
+    --line: #d7dad3;
+    --line-strong: #b9bdb2;
+    --accent: #a13a5e;
+    --accent-ink: #ffffff;
+    --accent-soft: #f5dbe4;
+    --accent-soft-line: #e0a8bc;
+    --kept: #3e6b4f;
+    --kept-soft: #dbe9df;
+    --revert-line: #b9bdb2;
+    --grp-climb: #386693;
+    --grp-tree: #7c5a9e;
+    --code-bg: #1b1f27;
+    --code-ink: #eef0ec;
+    --code-accent: #e8a15c;
+    --shadow: 0 1px 2px rgba(27,31,39,.06), 0 8px 24px rgba(27,31,39,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c;
+      --bg-raised: #1b1f27;
+      --bg-sunken: #101317;
+      --ink: #edeeea;
+      --ink-muted: #9ba3ad;
+      --ink-faint: #6b7280;
+      --line: #2c313b;
+      --line-strong: #3a4048;
+      --accent: #e08ab0;
+      --accent-ink: #241019;
+      --accent-soft: #3a1f29;
+      --accent-soft-line: #5c3547;
+      --kept: #7fbf98;
+      --kept-soft: #1c2b21;
+      --revert-line: #3a4048;
+      --grp-climb: #7aa7d9;
+      --grp-tree: #b89ee0;
+      --code-bg: #0d0f12;
+      --code-ink: #e8e9e4;
+      --code-accent: #e8a15c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c;
+    --bg-raised: #1b1f27;
+    --bg-sunken: #101317;
+    --ink: #edeeea;
+    --ink-muted: #9ba3ad;
+    --ink-faint: #6b7280;
+    --line: #2c313b;
+    --line-strong: #3a4048;
+    --accent: #e08ab0;
+    --accent-ink: #241019;
+    --accent-soft: #3a1f29;
+    --accent-soft-line: #5c3547;
+    --kept: #7fbf98;
+    --kept-soft: #1c2b21;
+    --revert-line: #3a4048;
+    --grp-climb: #7aa7d9;
+    --grp-tree: #b89ee0;
+    --code-bg: #0d0f12;
+    --code-ink: #e8e9e4;
+    --code-accent: #e8a15c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  }
+
+  a { color: var(--accent); }
+
+  /* ---------- top nav ---------- */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    overflow-x: auto;
+  }
+  .topnav-mark {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--accent);
+    white-space: nowrap;
+    padding-right: 6px;
+    border-right: 1px solid var(--line);
+  }
+  .topnav a {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--ink-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+  }
+  .topnav a:hover { color: var(--ink); border-bottom-color: var(--line-strong); }
+
+  /* ---------- layout shell ---------- */
+  main { max-width: 720px; margin: 0 auto; padding: 0 24px 120px; }
+  .wide { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  section { padding-top: 64px; }
+  section:first-of-type { padding-top: 8px; }
+
+  .eyebrow {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .eyebrow .lvl {
+    color: var(--ink-faint);
+    letter-spacing: .1em;
+  }
+
+  h1, h2, h3 { font-family: inherit; text-wrap: balance; color: var(--ink); }
+  h1 {
+    font-size: clamp(32px, 5vw, 46px);
+    font-weight: 700;
+    line-height: 1.08;
+    margin: 4px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.005em;
+  }
+  h3 {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 40px 0 10px;
+  }
+  h3 .num {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 14px;
+    color: var(--accent);
+    margin-right: 8px;
+  }
+
+  p { margin: 14px 0; color: var(--ink); max-width: 68ch; }
+  .lede {
+    font-size: 20px;
+    color: var(--ink-muted);
+    max-width: 60ch;
+    margin: 0 0 8px;
+  }
+  .subdek { color: var(--ink-muted); font-size: 16px; margin-top: -4px; }
+
+  strong { color: var(--ink); }
+  em.term { font-style: normal; color: var(--accent); }
+
+  hr.rule {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 64px 0 0;
+  }
+
+  /* ---------- figure / diagram card ---------- */
+  figure {
+    margin: 28px 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  figure.bleed { margin-left: calc(50% - 50vw + 12px); margin-right: calc(50% - 50vw + 12px); max-width: 1120px; margin-left: auto; margin-right: auto; }
+  figure svg { display: block; width: 100%; height: auto; padding: 20px; }
+  figcaption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+    padding: 10px 20px 16px;
+    border-top: 1px solid var(--line);
+    line-height: 1.5;
+  }
+  figcaption .k { color: var(--accent); }
+
+  /* ---------- callouts ---------- */
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-soft-line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 24px 0;
+  }
+  .callout .tag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout p { margin: 6px 0; max-width: none; }
+
+  /* ---------- code blocks ---------- */
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "SF Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    box-shadow: var(--shadow);
+    margin: 20px 0;
+  }
+  pre.code .kw { color: var(--code-accent); }
+  pre.code .cm { color: #8b929c; font-style: italic; }
+
+  /* ---------- tables ---------- */
+  .tablewrap { overflow-x: auto; margin: 24px 0; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; background: var(--bg-raised); font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.fixed-col { color: var(--ink-muted); }
+  td.decide-col strong { color: var(--accent); }
+
+  /* ---------- checklist ---------- */
+  .checklist { list-style: none; margin: 20px 0; padding: 0; display: grid; gap: 10px; }
+  .checklist li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .checklist .box {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+    margin-top: 4px;
+  }
+
+  /* ---------- hover/focus detail tooltips ---------- */
+  [data-tt] { cursor: help; }
+  [data-tt]:hover, [data-tt]:focus-visible { filter: brightness(1.12); }
+  [data-tt]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sh-tooltip {
+    position: absolute;
+    z-index: 100;
+    display: none;
+    max-width: 280px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 9px 11px;
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+    pointer-events: none;
+  }
+  .tt-hint {
+    display: inline-block;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    letter-spacing: .04em;
+    margin: 2px 0 0;
+  }
+
+  /* ---------- live demo (section 4) ---------- */
+  .demo-bleed-wrap {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
+    padding: 0 12px;
+    box-sizing: border-box;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+  .demo {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px 24px;
+    max-width: min(1680px, 100%);
+    margin-left: auto; margin-right: auto;
+  }
+  .hero-block { margin-bottom: 8px; }
+  .map-strip {
+    border: 1.5px solid var(--line-strong); border-radius: 10px;
+    background: var(--bg-sunken); padding: 14px 16px;
+  }
+  .map-strip svg { display: block; width: 100%; height: auto; }
+
+  .demo-phase-caption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0 18px;
+    min-height: 20px;
+  }
+  .demo-phase-caption strong { color: var(--accent); }
+
+  .zone-caption {
+    margin: 22px 0 12px; font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-faint);
+    display: flex; align-items: center; gap: 10px; cursor: help;
+  }
+  .zone-caption::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .result-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 1000px) { .result-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .result-row { grid-template-columns: 1fr; } }
+  .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .card-row { grid-template-columns: 1fr; } }
+  .demo-panel {
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px;
+  }
+
+  .demo-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+  .demo-btn {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    background: var(--bg-sunken);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .demo-btn:hover { border-color: var(--accent); }
+  .demo-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .demo-btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .demo-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11.5px; color: var(--ink-muted);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+  }
+  .demo-legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .demo-legend .swatch { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; border: 1.4px solid currentColor; }
+  .demo-legend .swatch.sw-parent { background: var(--ink-faint); border-color: var(--ink-faint); }
+  .demo-legend .swatch.sw-offspring { background: none; border-color: var(--ink-muted); border-style: dashed; }
+  .demo-legend .swatch.sw-elim { background: none; border-color: var(--revert-line); opacity: .55; }
+  .demo-legend .swatch.sw-survivor { background: var(--accent); border-color: var(--accent); }
+  .demo-legend .swatch.sw-f1 { background: var(--accent); border-color: var(--accent); }
+  .demo-legend .swatch.sw-f2 { background: var(--grp-climb); border-color: var(--grp-climb); }
+  .demo-legend .swatch.sw-f3 { background: var(--grp-tree); border-color: var(--grp-tree); }
+  .demo-legend .swatch.sw-cut { background: none; border-color: var(--revert-line); opacity: .5; }
+  .demo-legend .swatch.sw-keep { background: var(--kept); border-color: var(--kept); }
+  .demo-legend-phases { white-space: normal; color: var(--ink-faint); flex-basis: 100%; }
+  .demo-legend-phases strong { color: var(--ink-muted); }
+
+  .demo-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .demo-stat {
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .demo-stat .lbl { font-family: "SF Mono", Consolas, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+  .demo-stat .val { font-family: "SF Mono", Consolas, monospace; font-size: 20px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .demo-log {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 14px 0;
+    min-height: 20px;
+  }
+  .demo-log strong { color: var(--accent); }
+
+  .demo-panel h4 {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 10px;
+  }
+  .demo-note {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11.5px; color: var(--ink-faint);
+    margin-top: 14px; line-height: 1.6;
+  }
+
+  /* rung ladder mini-bars */
+  .rung-list { display: flex; flex-direction: column; gap: 6px; }
+  .rung-row { display: flex; align-items: center; gap: 10px; font-family: "SF Mono", Consolas, monospace; font-size: 11.5px; }
+  .rung-row .rname { width: 78px; color: var(--ink-muted); flex: none; }
+  .rung-row .rbar-wrap { flex: 1; background: var(--bg-sunken); border-radius: 5px; height: 20px; overflow: hidden; position: relative; }
+  .rung-row .rbar { height: 100%; background: var(--line-strong); transition: width .3s ease, background-color .3s ease; }
+  .rung-row.active .rbar { background: var(--accent); }
+  .rung-row .rcount { width: 46px; text-align: right; color: var(--ink-faint); flex: none; }
+
+  /* ranking list for current rung */
+  .rank-list { display: flex; flex-direction: column; gap: 4px; max-height: 210px; overflow-y: auto; }
+  .rank-item {
+    display: grid; grid-template-columns: 20px 1fr 56px; gap: 8px; align-items: center;
+    font-family: "SF Mono", Consolas, monospace; font-size: 11px;
+    padding: 5px 8px; border-radius: 6px; background: var(--bg-sunken);
+    color: var(--ink-muted);
+  }
+  .rank-item .ridx { color: var(--ink-faint); }
+  .rank-item .rbarwrap { background: var(--bg-raised); border-radius: 4px; height: 8px; overflow: hidden; border: 1px solid var(--line); }
+  .rank-item .rbarfill { height: 100%; background: var(--ink-faint); }
+  .rank-item.kept { color: var(--ink); background: var(--accent-soft); }
+  .rank-item.kept .rbarfill { background: var(--accent); }
+  .rank-item.cut { opacity: .45; text-decoration: line-through; }
+
+  .gene-bars { display: flex; align-items: flex-end; gap: 3px; height: 40px; margin: 4px 0 2px; }
+  .gene-bars .gbar { flex: 1; background: var(--accent-soft); border: 1.2px solid var(--accent-soft-line); border-radius: 2px 2px 0 0; min-width: 8px; }
+  .gene-bars .gbar.f1gene { background: var(--bg-sunken); border-color: var(--line-strong); }
+  .gene-caption { font-family: "SF Mono", Consolas, monospace; font-size: 10px; color: var(--ink-faint); display: flex; justify-content: space-between; }
+
+  .front-list { display: flex; flex-direction: column; gap: 6px; }
+  .front-row { display: flex; align-items: center; gap: 8px; font-family: "SF Mono", Consolas, monospace; font-size: 11.5px; color: var(--ink-muted); }
+  .front-row .fdot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+  /* ---------- misc ---------- */
+  .diagram-label { font-family: "SF Mono", Consolas, monospace; }
+  ::selection { background: var(--accent-soft); }
+
+  footer.page-end {
+    max-width: 720px; margin: 80px auto 0; padding: 24px 24px 40px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+  }
+</style>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <span class="topnav-mark">SH-EMOA / przewodnik</span>
+    <a href="#context">1&nbsp;Kontekst</a>
+    <a href="#bigpicture">2&nbsp;Ogólny obraz</a>
+    <a href="#components">3&nbsp;Komponenty</a>
+    <a href="#live">4&nbsp;Zobacz na żywo</a>
+    <a href="#code">5&nbsp;Pseudokod</a>
+    <a href="#practice">6&nbsp;Co wymyślasz sam</a>
+  </div>
+</div>
+
+<main>
+
+<section id="top">
+  <div class="eyebrow"><span>SH-EMOA — Successive Halving Evolutionary Multi-Objective Algorithm</span></div>
+  <h1>Jak naprawdę działa SH-EMOA</h1>
+  <p class="lede">Jeden z siedmiu ramion w tabeli ablacji z artykułu o P3Net — zwykła wielokryterialna ewolucja (sortowanie Pareto + crowding distance), do której dołożono jedną rzecz: budżet ewaluacji jest cięty <em class="term">wewnątrz</em> każdego pokolenia, falami redukcji wierności, zanim ktokolwiek w ogóle trafi do sortowania Pareto.</p>
+  <p class="subdek">Ułożone jak diagram C4: kontekst, potem duże ruchome elementy, potem każdy z nich rozłożony na czynniki pierwsze, potem kod, na końcu praktyczna checklista.</p>
+</section>
+
+<hr class="rule">
+
+<section id="context">
+  <h3><span class="num">1</span>Kontekst — dwa problemy naraz, jednym algorytmem</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: SH-EMOA to NSGA-II-podobna ewolucja wielokryterialna, w której każda ewaluacja potomka jest najpierw testowana tanio, a dopiero przetrwali dostają pełną, kosztowną ocenę.</p>
+  <p>Weź dowolny standardowy EMOA (evolutionary multi-objective algorithm) — populacja, potomstwo przez mutację i krzyżowanie, selekcja do następnego pokolenia oparta o niezdominowanie Pareto i crowding distance, dokładnie jak w NSGA-II. Teraz załóż, że pojedyncza ewaluacja jest droga — dla nas: pełny trening sieci neuronowej. Pełna ewaluacja <em>każdego</em> potomka w <em>każdym</em> pokoleniu szybko staje się nie do udźwignięcia. SH-EMOA odpowiada na to dokładnie tak samo, jak Hyperband odpowiada na ten sam problem w kontekście jednokryterialnym: zamiast trenować każdego kandydata w pełni, trenuj tanio, zatrzymaj słabszą połowę, trenuj przetrwałych trochę dłużej, powtórz — aż zostanie garstka, która zasługuje na pełny budżet.</p>
+
+  <div class="callout">
+    <span class="tag">Miejsce w tabeli ablacji</span>
+    <p>W dziewięcioramiennej siatce porównawczej z artykułu o P3Net (JAHS-Bench-201, NAS-HPO-Bench-II; zobacz <span class="mono">implementation/lib/README.md</span>) SH-EMOA stoi obok NSGA-Net, NSGANetV2, MO-BOHB, TPE i losowego przeszukiwania. To ramię, które łączy <strong>ewolucję z cięciem budżetu</strong> — ale bez uczenia się struktury. Mutacja i krzyżowanie zostają naiwne: żadnej informacji o tym, które geny genotypu architektury są ze sobą funkcjonalnie powiązane. To dokładnie ta luka, w którą celuje drzewo powiązań P3Net — algorytm poniżej pokazuje, jak wygląda multi-objective search, który tnie koszt ewaluacji tak samo sprytnie jak P3Net, ale wciąż rekombinuje na ślepo.</p>
+  </div>
+
+  <p>Innymi słowy: SH-EMOA to iloczyn dwóch osobnych, dobrze znanych idei — <strong>selekcja Pareto</strong> (skąd wiadomo, co jest „lepsze”, gdy celów jest więcej niż jeden) i <strong>drabinka wierności</strong> (skąd wiadomo, kogo w ogóle warto ocenić w pełni). Reszta tej strony rozkłada obie na czynniki pierwsze, osobno i razem.</p>
+</section>
+
+<section id="bigpicture">
+  <h3><span class="num">2</span>Ogólny obraz — jedna pętla, dwa mechanizmy</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: każde pokolenie generuje potomstwo naiwnie, przesiewa je drabinką wierności, a dopiero to, co przetrwa do pełnej oceny, konkuruje o miejsce w następnej populacji przez sortowanie Pareto i crowding distance.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Element</th><th>Zadanie</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Naiwna wariacja</strong></td><td>Krzyżowanie i mutacja bez żadnej wiedzy o strukturze genotypu — każdy gen traktowany niezależnie od pozostałych.</td></tr>
+        <tr><td><strong>Drabinka wierności</strong></td><td>Kolejne, coraz droższe poziomy oceny; po każdym poziomie odpada połowa kandydatów, zanim ktokolwiek dostanie pełny budżet treningowy.</td></tr>
+        <tr><td><strong>Selekcja Pareto</strong></td><td>Ci, którzy dotrwali do pełnej oceny, wchodzą do wspólnej puli z rodzicami; sortowanie po niezdominowaniu i crowding distance wybiera następną populację.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 900 460" role="img" aria-label="Jedna pętla SH-EMOA: populacja rodzicielska generuje potomstwo przez naiwne krzyżowanie i mutację, potomstwo przechodzi przez drabinkę wierności (fale eliminacji od najtańszego poziomu), przetrwali łączą się z rodzicami, a sortowanie Pareto z crowding distance wybiera nową populację, po czym pętla się powtarza.">
+      <defs>
+        <marker id="arrBP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <rect x="300" y="10" width="300" height="52" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" pointer-events="all" tabindex="0" data-tt="μ osobników, każdy już w pełni oceniony na obu celach. Wynik selekcji z poprzedniego pokolenia — albo losowa inicjalizacja, jeśli to pierwsze pokolenie."></rect>
+      <text x="450" y="42" text-anchor="middle" class="diagram-label" font-size="13" fill="var(--ink)">Populacja rodzicielska P (pełna wierność)</text>
+      <path d="M450,62 L450,90" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrBP)"></path>
+
+      <rect x="300" y="92" width="300" height="52" rx="9" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Krzyżowanie jednolite + niezależna mutacja na gen — żadnej informacji o tym, które geny są ze sobą powiązane. Szczegóły w 3.1."></rect>
+      <text x="450" y="123" text-anchor="middle" class="diagram-label" font-size="13">Naiwne krzyżowanie + mutacja</text>
+      <path d="M450,144 L450,172" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrBP)"></path>
+
+      <rect x="140" y="174" width="620" height="150" rx="10" fill="var(--bg-sunken)" stroke="currentColor" stroke-width="1" opacity="0.9"></rect>
+      <text x="164" y="198" class="diagram-label" font-size="11" letter-spacing="0.06em" fill="currentColor" opacity="0.6">DRABINKA WIERNOŚCI — od najtańszego poziomu w górę</text>
+
+      <rect x="170" y="212" width="170" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" pointer-events="all" tabindex="0" data-tt="Najtańszy poziom: ocena z dużą wariancją, np. trening na małym podzbiorze danych albo z małą liczbą epok. Szczegóły w 3.2."></rect>
+      <text x="255" y="238" text-anchor="middle" class="diagram-label" font-size="11.5">tani poziom</text>
+      <path d="M340,234 L385,234" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrBP)"></path>
+      <text x="362" y="222" text-anchor="middle" class="diagram-label" font-size="9.5" fill="currentColor" opacity="0.65">odrzuć połowę</text>
+
+      <rect x="387" y="212" width="170" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" pointer-events="all" tabindex="0" data-tt="Średni poziom: dokładniejsza, wciąż niepełna ocena tylko dla tych, którzy przetrwali pierwszą falę."></rect>
+      <text x="472" y="238" text-anchor="middle" class="diagram-label" font-size="11.5">średni poziom</text>
+      <path d="M557,234 L602,234" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrBP)"></path>
+      <text x="579" y="222" text-anchor="middle" class="diagram-label" font-size="9.5" fill="currentColor" opacity="0.65">odrzuć połowę</text>
+
+      <rect x="604" y="212" width="140" height="44" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.7" pointer-events="all" tabindex="0" data-tt="Pełna wierność — dopiero teraz kandydat dostaje prawdziwy, kosztowny wynik na obu celach. To jedyny etap, który wolno bezpośrednio porównywać z rodzicami w sortowaniu Pareto."></rect>
+      <text x="674" y="238" text-anchor="middle" class="diagram-label" font-size="11.5" fill="var(--ink)">pełna wierność</text>
+
+      <text x="450" y="298" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.65">tylko garstka potomków, która przetrwała każdą falę, dociera tutaj — reszta budżetu poszła na tanie odsiewanie</text>
+      <path d="M674,256 L674,290" stroke="var(--accent)" stroke-width="1.3" marker-end="url(#arrBP)"></path>
+      <text x="702" y="278" class="diagram-label" font-size="10.5" fill="var(--accent)">przetrwali</text>
+
+      <rect x="300" y="330" width="300" height="52" rx="9" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Pula do selekcji: rodzice (już ocenieni w pełni) plus potomkowie, którzy dotrwali do pełnej wierności. Rozmiar tej puli jest zwykle mniejszy niż μ+λ, bo większość potomstwa odpadła po drodze."></rect>
+      <text x="450" y="362" text-anchor="middle" class="diagram-label" font-size="13">Połącz: rodzice ∪ przetrwali</text>
+
+      <path d="M300,356 L165,320 L165,234" fill="none" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="2 4" marker-end="url(#arrBP)"></path>
+
+      <path d="M450,382 L450,410" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrBP)"></path>
+      <rect x="300" y="412" width="300" height="42" rx="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" pointer-events="all" tabindex="0" data-tt="Niezdominowane sortowanie na fronty + crowding distance jako tie-break wewnątrz frontu granicznego. Szczegóły w 3.3."></rect>
+      <text x="450" y="438" text-anchor="middle" class="diagram-label" font-size="12.5" fill="var(--ink)">Sortowanie Pareto + crowding → nowa P</text>
+
+      <path d="M600,433 C820,433 820,36 600,36" fill="none" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrBP)"></path>
+      <text x="700" y="20" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.7">kolejne pokolenie</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> szara ramka w środku to jedyna część, której nie ma w zwykłym NSGA-II: zanim potomek w ogóle dostanie prawo wystąpić w sortowaniu Pareto, musi przetrwać kolejne, coraz droższe fale oceny. Wszystko poza tą ramką to dokładnie ten sam szkielet, co w dowolnym EMOA. Najedź na dowolne pudełko po szczegóły.</figcaption>
+  </figure>
+</section>
+
+<section id="components">
+  <h2>3&nbsp; Komponenty — rozkładanie każdego elementu na czynniki</h2>
+  <p class="subdek">Te same trzy elementy co wyżej, teraz na poziomie szczegółowości potrzebnym do ich zaimplementowania.</p>
+
+  <h3><span class="num">3.1</span>Naiwne operatory wariacji — krzyżowanie i mutacja bez struktury</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: każdy gen jest traktowany tak, jakby nie miał nic wspólnego z żadnym innym genem — bo dla tych operatorów faktycznie nie ma.</p>
+  <p>Krzyżowanie jest zwykle jednolite (uniform crossover): dla każdej pozycji genu niezależnie wylosuj, czy wartość pochodzi od rodzica A, czy od rodzica B. Mutacja jest zwykle niezależna na gen: z ustalonym prawdopodobieństwem <span class="mono">p_m</span> zaburz wartość tego jednego locus, bez patrzenia na resztę genotypu. Żaden z tych operatorów nie wie ani nie próbuje się dowiedzieć, które geny mają tendencję do wspólnego przemieszczania się — nie ma tabeli częstości, nie ma drzewa powiązań, nie ma klastrów.</p>
+  <p>To działa dobrze, dopóki funkcja celu jest w przybliżeniu separowalna — poprawa jednego genu z osobna faktycznie przybliża do lepszego rozwiązania. Zawodzi dokładnie tam, gdzie kilka genów trzeba zmienić <em>razem</em>, żeby zobaczyć jakąkolwiek poprawę (dokładnie ten sam problem, który ilustruje funkcja pułapki w przewodniku po P3) — jednolite krzyżowanie z szansą 50% na gen prawie nigdy nie skopiuje całej takiej grupy naraz, więc korzystna kombinacja praktycznie nigdy nie powstaje.</p>
+
+  <div class="callout">
+    <span class="tag">To jest dokładnie ta luka, którą P3Net atakuje</span>
+    <p>W genotypie architektury sieci neuronowej geny opisujące np. dwie krawędzie tej samej komórki obliczeniowej często muszą zmienić się razem, żeby dać sensowną, lepszą architekturę — pojedyncza zmiana jednej krawędzi bywa neutralna albo szkodliwa. Jednolite krzyżowanie nie ma pojęcia, że te dwa geny są powiązane; P3Net uczy się tego jawnie drzewem powiązań i rekombinuje całymi wyuczonymi klastrami naraz. Sekcja 6 wraca do tego z konkretnym porównaniem.</p>
+  </div>
+
+  <h3><span class="num">3.2</span>Drabinka wierności — reguła halvingu</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: oceń tanio, zatrzymaj gorszą połowę, powtórz na droższym poziomie, aż zostanie tylko tylu kandydatów, ilu stać Cię ocenić w pełni.</p>
+  <p>Drabinka to ciąg poziomów wierności o rosnącym koszcie — np. trening na 1/9, potem 1/3, potem całości danych treningowych; albo 10, potem 30, potem 100 epok. Na każdym poziomie każdy wciąż żywy kandydat dostaje ocenę na tym poziomie, kandydaci są rankowani, a górna połowa (stąd „successive halving") przechodzi na kolejny, droższy poziom. Reszta jest odrzucana — nie dostanie już żadnej kolejnej szansy w tym pokoleniu.</p>
+  <p>Kluczowa decyzja projektowa: <strong>czym jest ranking na pośrednim poziomie</strong>, skoro cele mamy dwa (albo więcej), a pełne sortowanie Pareto ma sens tylko na w pełni ocenionych punktach. Typowe rozwiązanie — użyte też w demie sekcji 4 — to prosty skalarny wynik zastępczy (np. suma znormalizowanych celów albo wkład do hiperwolumenu) tylko na potrzeby jednej fali eliminacji; właściwe, pełne sortowanie Pareto z crowding distance jest zarezerwowane dla momentu, gdy kandydaci mają już prawdziwe, pełne oceny.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 210" role="img" aria-label="Drabinka wierności o trzech poziomach: 12 kandydatów wchodzi na poziom tani, 6 przechodzi na poziom średni, 3 dochodzi do poziomu pełnego — na każdym przejściu odpada dokładnie połowa.">
+      <defs>
+        <marker id="arrLad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+      <g class="mono">
+        <rect x="20" y="60" width="180" height="90" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" pointer-events="all" tabindex="0" data-tt="12 świeżo utworzonych potomków, jeszcze bez żadnej oceny. Wysokość słupka ∝ liczba kandydatów."></rect>
+        <text x="110" y="46" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.7">tani poziom</text>
+        <text x="110" y="110" text-anchor="middle" font-size="20" fill="currentColor">12</text>
+
+        <path d="M200,105 L250,105" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrLad)"></path>
+        <text x="225" y="93" text-anchor="middle" font-size="10" fill="currentColor" opacity="0.6">−50%</text>
+
+        <rect x="260" y="85" width="180" height="65" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" pointer-events="all" tabindex="0" data-tt="6 kandydatów, którzy wygrali ranking na poziomie tanim. Każdy z nich dostaje teraz droższą, dokładniejszą ocenę."></rect>
+        <text x="350" y="71" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.7">średni poziom</text>
+        <text x="350" y="122" text-anchor="middle" font-size="20" fill="currentColor">6</text>
+
+        <path d="M440,117 L490,117" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrLad)"></path>
+        <text x="465" y="105" text-anchor="middle" font-size="10" fill="currentColor" opacity="0.6">−50%</text>
+
+        <rect x="500" y="103" width="180" height="47" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.7" pointer-events="all" tabindex="0" data-tt="3 finaliści tej fali halvingu. Dopiero oni dostają pełną, prawdziwą ocenę — dokładnie ta liczba wchodzi potem do sortowania Pareto razem z rodzicami."></rect>
+        <text x="590" y="89" text-anchor="middle" font-size="12" fill="var(--accent)">pełny poziom</text>
+        <text x="590" y="132" text-anchor="middle" font-size="20" fill="var(--ink)">3</text>
+
+        <text x="760" y="105" text-anchor="middle" font-size="20" fill="currentColor" opacity="0.35">→</text>
+        <text x="820" y="60" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.6">do puli</text>
+        <text x="820" y="76" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.6">selekcji</text>
+        <text x="820" y="92" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.6">(§3.3)</text>
+      </g>
+      <text x="20" y="185" class="diagram-label" font-size="11" fill="currentColor" opacity="0.6">12 → 6 → 3: 4 pełne ewaluacje kosztowałoby 12 kandydatów wprost; ta sama garstka finalistów kosztowała tu tylko 3 pełne + 12 tanich + 6 średnich.</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> to dokładnie liczby, których użyje demo w sekcji 4: 12 potomków na start, halving do 6, potem do 3. Każda strzałka to jedna fala eliminacji rankingiem zastępczym, nie sortowaniem Pareto — pełne sortowanie czeka na koniec drabinki.</figcaption>
+  </figure>
+
+  <h3><span class="num">3.3</span>Selekcja — sortowanie po niezdominowaniu i crowding distance</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: buduj nową populację front po froncie od najlepszego, a gdy front nie mieści się w całości, zatrzymaj z niego osobniki najdalej rozstawione w przestrzeni celów.</p>
+  <p>Osobnik <em>x</em> dominuje osobnika <em>y</em>, jeśli <em>x</em> nie jest gorszy od <em>y</em> na żadnym celu i ściśle lepszy na przynajmniej jednym. <strong>Front 1</strong> to zbiór osobników niezdominowanych przez nikogo w puli. Usuń go, policz dominację od nowa na tym, co zostało — to <strong>front 2</strong>. Powtarzaj. Nowa populacja wypełnia się frontami od pierwszego, dopóki cały kolejny front się mieści.</p>
+  <p>Problem pojawia się, gdy front graniczny <em>nie</em> mieści się w całości — trzeba wybrać część jego osobników i odrzucić resztę, mimo że formalnie są sobie równi (żaden nie dominuje żadnego). <strong>Crowding distance</strong> rozstrzyga ten remis: dla każdego celu osobno posortuj front po wartości tego celu, brzegi frontu (najmniejsza i największa wartość) dostają dystans nieskończony (zawsze zachowywane), a każdy środkowy osobnik dostaje sumę znormalizowanych odległości do swoich sąsiadów na każdym celu. Wyższy dystans = mniej zatłoczona okolica = pierwszeństwo w selekcji. To utrzymuje front rozłożony równomiernie wzdłuż całej krzywej kompromisu, zamiast zbijać się w jednym miejscu.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 260" role="img" aria-label="Front graniczny pięciu punktów w przestrzeni dwóch celów; punkty brzegowe dostają nieskończony crowding distance, punkty środkowe dostają sumę odległości do sąsiadów po obu celach, a z pięciu trzeba wybrać trzech o największym dystansie.">
+      <g class="mono">
+        <line x1="60" y1="220" x2="820" y2="220" stroke="currentColor" stroke-width="1.1" opacity="0.35"></line>
+        <line x1="60" y1="220" x2="60" y2="30" stroke="currentColor" stroke-width="1.1" opacity="0.35"></line>
+        <text fill="currentColor" x="440" y="242" text-anchor="middle" font-size="11" opacity="0.6">cel f₁ (mniej = lepiej) →</text>
+        <text fill="currentColor" x="30" y="120" text-anchor="middle" font-size="11" opacity="0.6" transform="rotate(-90 30 120)">cel f₂ ↑</text>
+
+        <circle cx="100" cy="60" r="7" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Skrajny na osi f₂ — brzeg frontu. Crowding distance = ∞, zawsze zachowywany."></circle>
+        <text x="100" y="44" text-anchor="middle" font-size="10.5" fill="var(--accent)">∞</text>
+
+        <circle cx="260" cy="110" r="7" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Sąsiedzi po obu stronach są blisko (mały prostokąt otaczający) → mała suma znormalizowanych odległości → niski crowding distance."></circle>
+        <text x="260" y="94" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.8">0,18</text>
+
+        <circle cx="430" cy="150" r="7" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Też ciasno otoczony sąsiadami po obu stronach na obu celach — niski dystans, kandydat do odrzucenia przy remisie."></circle>
+        <text x="430" y="134" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.8">0,15</text>
+
+        <circle cx="620" cy="185" r="7" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Wyraźna luka do najbliższych sąsiadów po obu celach → duży prostokąt → wysoki crowding distance, wypełnia rzadko obsadzoną część frontu."></circle>
+        <text x="620" y="169" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.9">0,52</text>
+
+        <circle cx="780" cy="205" r="7" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Skrajny na osi f₁ — drugi brzeg frontu. Crowding distance = ∞, zawsze zachowywany."></circle>
+        <text x="780" y="189" text-anchor="middle" font-size="10.5" fill="var(--accent)">∞</text>
+
+        <path d="M100,60 L260,110 L430,150 L620,185 L780,205" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="3 3" opacity="0.4"></path>
+
+        <rect x="60" y="242" width="16" height="10" rx="2" fill="var(--kept)"></rect>
+        <text x="84" y="251" font-size="10.5" fill="currentColor" opacity="0.75">zachowany przy limicie 3 z 5 (dwa brzegi + najrzadszy środek)</text>
+      </g>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> pięć punktów tego samego frontu, wszystkie formalnie nierozróżnialne przez samo niezdominowanie. Gdyby trzeba było wybrać z nich tylko trzech, crowding distance zachowa oba brzegi (∞) i punkt środkowy z największą luką do sąsiadów (0,52) — odrzucając dwa punkty najbardziej stłoczone (0,18 i 0,15).</figcaption>
+  </figure>
+</section>
+
+<section id="live">
+  <h2>4&nbsp; Zobacz to w akcji</h2>
+  <p class="subdek">Nie animacja jednego ustalonego przykładu — to naprawdę uruchomiony SH-EMOA, licząc w Twojej przeglądarce, na dwucelowej funkcji testowej podobnej do ZDT1.</p>
+
+  <h3><span class="num">4.1</span>Problem: na czym SH-EMOA właściwie ma się wykazać</h3>
+  <p>Genotyp to sześć genów rzeczywistych w przedziale [0, 1]: <span class="mono">x₀</span> i pięć „genów dystansu" <span class="mono">x₁…x₅</span>. Pierwszy cel to po prostu <span class="mono">f₁ = x₀</span> — im mniejszy, tym lepiej. Drugi cel zależy od tego, jak blisko zera są geny dystansu: <span class="mono">g = 1 + 9 · średnia(x₁…x₅)</span>, <span class="mono">f₂ = g · (1 − √(f₁/g))</span> — też im mniejszy, tym lepiej. Prawdziwy front Pareto leży tam, gdzie wszystkie geny dystansu są bliskie zeru (<span class="mono">g ≈ 1</span>); każdy gen dystansu, który zostaje wysoki, ściąga cały front w górę i w prawo, czyli w stronę gorszych rozwiązań.</p>
+  <p>Sztuczka drabinki wierności: <strong>niska wierność liczy <span class="mono">g</span> tylko z jednego losowo wybranego genu dystansu zamiast wszystkich pięciu</strong> — dokładnie tak, jak tania ocena architektury mogłaby trenować na małym podzbiorze danych zamiast na całości. Średnia wierność używa trzech genów. Pełna wierność używa wszystkich pięciu i daje prawdziwą wartość. Im mniej genów widzi dany poziom, tym bardziej hałaśliwe (ale wciąż skorelowane) jest jego oszacowanie — to jest właśnie ten kompromis koszt/dokładność, który cała drabinka ma wykorzystać.</p>
+
+  <h3><span class="num">4.2</span>Rozwiązanie: SH-EMOA naprawdę uruchomiony na tym problemie</h3>
+  <p>Populacja rodzicielska liczy 8 osobników. Każde pokolenie tworzy 12 potomków przez jednolite krzyżowanie (losowa para rodziców, każdy gen niezależnie od jednego z nich) i niezależną mutację na gen. Drabinka wierności przesiewa ich 12→6→3 (dokładnie jak w diagramie 3.2), a 3 finalistów w pełnej wierności łączy się z 8 rodzicami w pulę 11 kandydatów. Stamtąd sortowanie Pareto i crowding distance wybierają 8 osobników nowej populacji.</p>
+  <p>Krok po kroku widać oba mechanizmy osobno: <strong>fala eliminacji</strong> (kto odpada, zanim ktokolwiek zapłaci pełną cenę) i <strong>selekcja Pareto</strong> (kto zostaje w populacji, gdy wszyscy już mają prawdziwe wyniki). To dwa różne pytania, rozwiązywane dwoma różnymi mechanizmami tego samego algorytmu.</p>
+
+  <div class="demo-bleed-wrap">
+  <div class="demo" id="shdemo">
+    <div class="demo-legend" id="legendMain">
+      <span class="demo-legend-item"><span class="swatch sw-parent"></span>rodzic</span>
+      <span class="demo-legend-item"><span class="swatch sw-offspring"></span>potomek (nieoceniony)</span>
+      <span class="demo-legend-item"><span class="swatch sw-elim"></span>odrzucony w fali</span>
+      <span class="demo-legend-item"><span class="swatch sw-survivor"></span>przetrwał do pełnej wierności</span>
+      <span class="demo-legend-item"><span class="swatch sw-f1"></span>front 1</span>
+      <span class="demo-legend-item"><span class="swatch sw-f2"></span>front 2</span>
+      <span class="demo-legend-item"><span class="swatch sw-f3"></span>front 3+</span>
+      <span class="demo-legend-item demo-legend-phases">Kliknij „Krok" albo „Uruchom" — wykres poniżej pokazuje bieżący stan populacji na żywo.</span>
+    </div>
+
+    <div class="hero-block">
+      <div class="map-strip">
+        <svg id="plotSvg" viewBox="0 0 900 480" role="img" aria-label="Wykres przestrzeni dwóch celów: oś pozioma f1, oś pionowa f2, oba minimalizowane, więc lepiej = bliżej lewego dolnego rogu. Punkty reprezentują osobników populacji i potomstwa w bieżącym kroku demonstracji.">
+          <defs>
+            <marker id="arrPlot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <line x1="70" y1="420" x2="860" y2="420" stroke="currentColor" stroke-width="1.2" opacity="0.35" marker-end="url(#arrPlot)"></line>
+          <line x1="70" y1="420" x2="70" y2="20" stroke="currentColor" stroke-width="1.2" opacity="0.35" marker-end="url(#arrPlot)"></line>
+          <text x="465" y="452" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor" opacity="0.65">cel f₁ — mniejsze = lepsze</text>
+          <text x="40" y="220" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor" opacity="0.65" transform="rotate(-90 40 220)">cel f₂ — mniejsze = lepsze</text>
+          <text x="90" y="404" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.5">0</text>
+          <text x="840" y="404" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.5" text-anchor="end">1</text>
+          <text x="76" y="34" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.5">10</text>
+          <g id="plotPoints"></g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="demo-phase-caption" id="phaseCaption">Kliknij „Krok" albo „Uruchom", żeby zobaczyć algorytm w akcji.</div>
+    <div class="demo-log" id="demoLog">Kliknij „Krok" albo „Uruchom", żeby zacząć.</div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Cztery panele pokazujące szczegóły bieżącego kroku: drabinkę wierności, ranking na aktualnym poziomie, fronty Pareto obecnej puli oraz genotyp aktywnego osobnika.">③ szczegóły bieżącego kroku</div>
+    <div class="result-row">
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Ile kandydatów wciąż żyje na każdym poziomie wierności w tym pokoleniu. Podświetlony wiersz = poziom, na którym właśnie jesteś. Sekcja 3.2.">Drabinka wierności</h4>
+        <div class="rung-list" id="rungView"></div>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Ranking kandydatów na aktualnym poziomie wierności (skalarny wynik zastępczy — nie pełne sortowanie Pareto). Górna połowa przechodzi dalej.">Ranking na tym poziomie</h4>
+        <div class="rank-list" id="rankView"></div>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Rozmiary frontów Pareto w bieżącej puli selekcyjnej (rodzice + przetrwali do pełnej wierności). Front 1 = niezdominowani. Sekcja 3.3.">Fronty Pareto (pula selekcji)</h4>
+        <div class="front-list" id="frontView"></div>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Sześć genów aktywnego osobnika: pierwszy słupek to x₀ (steruje f₁), pozostałe pięć to geny dystansu (im niższe, tym bliżej prawdziwego frontu Pareto).">Genotyp aktywnego osobnika</h4>
+        <div class="gene-bars" id="geneBars"></div>
+        <div class="gene-caption"><span>x₀ (f₁)</span><span>x₁…x₅ (dystans)</span></div>
+      </div>
+    </div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Sterowanie demem i statystyki skumulowane od resetu.">④ sterowanie, statystyki</div>
+    <div class="card-row">
+      <div class="demo-panel">
+        <h4>Sterowanie</h4>
+        <div class="demo-controls">
+          <button class="demo-btn primary" id="btnStep" type="button">Krok</button>
+          <button class="demo-btn" id="btnRun" type="button">Uruchom</button>
+          <button class="demo-btn" id="btnFF" type="button">⏩ 5 pokoleń</button>
+          <button class="demo-btn" id="btnReset" type="button">Reset</button>
+        </div>
+      </div>
+      <div class="demo-panel">
+        <h4>Statystyki</h4>
+        <div class="demo-stats">
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Ile razy pętla główna SH-EMOA wystartowała od nowego pokolenia rodzicielskiego.">
+            <div class="lbl">Pokolenie</div><div class="val" id="statGen">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Łączna liczba ewaluacji na poziomie pełnej wierności — to jest prawdziwy koszt, który drabinka ma zminimalizować.">
+            <div class="lbl">Pełne ewaluacje</div><div class="val" id="statFull">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Łączna liczba ewaluacji na poziomach tanim i średnim razem — dużo tańszych niż pełna, ale wciąż niezerowy koszt.">
+            <div class="lbl">Tanie + średnie</div><div class="val" id="statCheap">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Rozmiar frontu 1 (niezdominowanych) w bieżącej populacji rodzicielskiej.">
+            <div class="lbl">|Front 1|</div><div class="val" id="statFront1">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="demo-note">Gdyby SH-EMOA trenowało w pełni wszystkich 12 potomków w każdym pokoleniu (tak jak NSGA-Net, sekcja 6), koszt pełnych ewaluacji rósłby 4× szybciej niż licznik powyżej.</p>
+  </div>
+  </div>
+</section>
+
+<section id="code">
+  <h2>5&nbsp; Pseudokod — co naprawdę trzeba by napisać</h2>
+  <p class="subdek">Cztery procedury. Pierwsze dwie to zwykły NSGA-II; trzecia to jedyna rzecz, którą SH-EMOA dokłada.</p>
+
+<pre class="code"><span class="kw">procedure</span> SH-EMOA
+    P ← INIT-POPULATION(μ)                    <span class="cm">// μ losowych genotypów</span>
+    EVALUATE-FULL(P)                           <span class="cm">// każdy osobnik oceniony w pełnej wierności</span>
+    (F1, F2, …) ← NON-DOMINATED-SORT(P)        <span class="cm">// §3.3</span>
+    <span class="kw">while</span> budżet ewaluacji <span class="kw">not</span> wyczerpany <span class="kw">do</span>
+        O ← ∅
+        <span class="kw">for</span> i <span class="kw">in</span> 1..λ <span class="kw">do</span>
+            pa, pb ← wybierz 2 rodziców z P (turniej po (rank, crowding))
+            child ← CROSSOVER(pa, pb)          <span class="cm">// §3.1, jednolite, bez struktury</span>
+            child ← MUTATE(child)              <span class="cm">// §3.1, niezależna na gen</span>
+            O.add(child)
+        O ← FIDELITY-LADDER(O)                 <span class="cm">// §3.2 — tu dzieje się halving</span>
+        Q ← P ∪ O                              <span class="cm">// rodzice + ci, którzy dotrwali do pełnej wierności</span>
+        (F1, F2, …) ← NON-DOMINATED-SORT(Q)
+        P ← ∅; i ← 1
+        <span class="kw">while</span> |P| + |Fi| ≤ μ <span class="kw">do</span>
+            ASSIGN-CROWDING-DISTANCE(Fi)
+            P ← P ∪ Fi; i ← i + 1
+        <span class="kw">if</span> |P| &lt; μ <span class="kw">then</span>
+            ASSIGN-CROWDING-DISTANCE(Fi)
+            posortuj Fi malejąco po crowding distance
+            P ← P ∪ pierwsze (μ − |P|) z Fi     <span class="cm">// dogęszczenie po granicy frontu</span>
+    <span class="kw">return</span> F1                                  <span class="cm">// niezdominowany front populacji końcowej</span></pre>
+
+<pre class="code"><span class="kw">procedure</span> FIDELITY-LADDER(O)
+    <span class="kw">for</span> rung r <span class="kw">in</span> [tani, średni, …, pełny] <span class="kw">do</span>
+        <span class="kw">for</span> x <span class="kw">in</span> O <span class="kw">do</span>
+            score(x) ← EVALUATE-AT(x, r)        <span class="cm">// tańsza, obciążona ocena; TY definiujesz ten koszt</span>
+        <span class="kw">if</span> r ≠ pełny <span class="kw">then</span>
+            O ← górna połowa O wg score(r)      <span class="cm">// halving — skalarny ranking, nie pełne Pareto</span>
+        <span class="kw">else</span>
+            EVALUATE-FULL(O)                    <span class="cm">// dopiero teraz prawdziwe (f1, f2, …)</span>
+    <span class="kw">return</span> O                                   <span class="cm">// ci, którzy dotrwali do pełnej wierności</span></pre>
+
+<pre class="code"><span class="kw">procedure</span> NON-DOMINATED-SORT(Q)
+    <span class="kw">for</span> x <span class="kw">in</span> Q <span class="kw">do</span> x.dominatedBy ← 0; x.dominates ← ∅
+    <span class="kw">for</span> x, y <span class="kw">in</span> Q × Q, x ≠ y <span class="kw">do</span>
+        <span class="kw">if</span> x ≺ y <span class="kw">then</span> y.dominatedBy += 1; x.dominates.add(y)
+    F1 ← { x ∈ Q : x.dominatedBy = 0 }
+    i ← 1
+    <span class="kw">while</span> Fi ≠ ∅ <span class="kw">do</span>
+        Fi+1 ← ∅
+        <span class="kw">for</span> x <span class="kw">in</span> Fi <span class="kw">do</span>
+            <span class="kw">for</span> y <span class="kw">in</span> x.dominates <span class="kw">do</span>
+                y.dominatedBy −= 1
+                <span class="kw">if</span> y.dominatedBy = 0 <span class="kw">then</span> Fi+1.add(y)
+        i ← i + 1
+    <span class="kw">return</span> (F1, F2, …)</pre>
+
+<pre class="code"><span class="kw">procedure</span> ASSIGN-CROWDING-DISTANCE(F)
+    <span class="kw">for</span> x <span class="kw">in</span> F <span class="kw">do</span> x.crowd ← 0
+    <span class="kw">for</span> każdy cel m <span class="kw">do</span>
+        posortuj F rosnąco po wartości celu m
+        F[pierwszy].crowd ← F[ostatni].crowd ← ∞      <span class="cm">// brzegi frontu zawsze preferowane</span>
+        <span class="kw">for</span> i <span class="kw">in</span> 2..|F|−1 <span class="kw">do</span>
+            F[i].crowd += (F[i+1].m − F[i−1].m) / (max_m − min_m)
+    <span class="kw">return</span> F                                        <span class="cm">// posortowane malejąco po crowd przy selekcji</span></pre>
+
+  <p>To cały algorytm. Nie ma tu żadnej procedury uczącej się struktury genotypu — <span class="mono">CROSSOVER</span> i <span class="mono">MUTATE</span> działają identycznie niezależnie od tego, czy geny są ze sobą powiązane, czy nie.</p>
+</section>
+
+<section id="practice">
+  <h2>6&nbsp; Co wymyślasz sam — zastosowanie SH-EMOA do rzeczywistego problemu</h2>
+  <p>Mechanizm selekcji (Pareto + crowding) i mechanizm cięcia budżetu (halving) są ustalone przez algorytm. To, co zmienia się za każdym razem, gdy podłączasz to do nowego problemu, to genotyp, operatory wariacji i sama drabinka.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:26%">Punkt decyzyjny</th><th>Ustalone przez SH-EMOA</th><th>Ty decydujesz, dla każdego problemu</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Reguła niezdominowania</strong></td>
+          <td class="fixed-col">x dominuje y, jeśli x nie jest gorsze na żadnym celu i ściśle lepsze na przynajmniej jednym; fronty budowane iteracyjnie od F1.</td>
+          <td class="decide-col">Które cele w ogóle wchodzą do porównania i czy każdy jest minimalizowany czy maksymalizowany (np. dokładność do maksymalizacji, koszt do minimalizacji — trzeba to ujednolicić przed porównaniem).</td>
+        </tr>
+        <tr>
+          <td><strong>Tie-break przy remisie na froncie</strong></td>
+          <td class="fixed-col">Crowding distance: suma znormalizowanych odległości do sąsiadów po każdym celu, brzegi frontu zawsze zachowywane.</td>
+          <td class="decide-col">Nic — to jedyny punkt w tabeli, który zwykle zostawia się bez zmian nawet między problemami.</td>
+        </tr>
+        <tr>
+          <td><strong>Reguła promocji w drabince</strong></td>
+          <td class="fixed-col">Górna połowa rankingu na danym poziomie przechodzi na kolejny, droższy poziom; reszta odpada bez dalszych szans w tym pokoleniu.</td>
+          <td class="decide-col">Czym jest ranking zastępczy na poziomie pośrednim, skoro pełne Pareto tam jeszcze nie działa — skalar, hiperwolumen, coś innego.</td>
+        </tr>
+        <tr>
+          <td><strong>Genotyp</strong></td>
+          <td class="fixed-col">Wektor wartości, porównywanych wyłącznie przez wynik ewaluacji.</td>
+          <td class="decide-col">Jak Twój problem staje się tym wektorem — dla architektury sieci: geny na krawędzie grafu komórki plus geny na hiperparametry treningowe.</td>
+        </tr>
+        <tr>
+          <td><strong>Krzyżowanie i mutacja</strong></td>
+          <td class="fixed-col">Jednolite krzyżowanie, niezależna mutacja na gen — schemat, nie konkretne parametry.</td>
+          <td class="decide-col">Prawdopodobieństwo mutacji, siła zaburzenia, ewentualnie inny operator krzyżowania — ale bez żadnej wersji „świadomej struktury" bez wyjścia poza sam algorytm.</td>
+        </tr>
+        <tr>
+          <td><strong>Budżety drabinki i współczynnik halvingu</strong></td>
+          <td class="fixed-col">Liczba poziomów i to, że każdy odrzuca połowę, jest schematem — konkretne liczby nie.</td>
+          <td class="decide-col">Ile poziomów, jakim kosztem każdy (epoki, podzbiór danych, rozmiar sieci-proxy) i czy współczynnik redukcji rzeczywiście musi wynosić 2.</td>
+        </tr>
+        <tr>
+          <td><strong>Rozmiar populacji μ i potomstwa λ</strong></td>
+          <td class="fixed-col">Nieustalone przez algorytm — w przeciwieństwie do P3, SH-EMOA ich nie wyprowadza automatycznie.</td>
+          <td class="decide-col">Oba trzeba dobrać z góry, tak jak w zwykłym GA — SH-EMOA nie rozwiązuje tego problemu, tylko ten z kosztem ewaluacji.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <span class="tag">Ślepy punkt, który ta strona odsłania</span>
+    <p>SH-EMOA tnie koszt ewaluacji dokładnie tym samym sposobem co MO-BOHB — drabinką wierności — i robi selekcję wielokryterialną poprawnie, z pełnym sortowaniem Pareto i crowding distance. Ale operatory wariacji (§3.1) nie mają żadnego pojęcia, które geny genotypu są ze sobą funkcjonalnie powiązane. Jednolite krzyżowanie rekombinuje geny pojedynczo i na ślepo — jeśli dobra architektura wymaga zmiany trzech konkretnych krawędzi razem, prawdopodobieństwo, że jednolite krzyżowanie skopiuje akurat te trzy naraz od tego samego rodzica, spada wykładniczo z liczbą genów.</p>
+    <p>To dokładnie ta luka, w którą celuje P3Net: drzewo powiązań uczy się, które geny zwykle zmieniają wartość razem, a krzyżowanie sterowane powiązaniami rekombinuje <em>całymi wyuczonymi klastrami</em> naraz, zamiast pojedynczymi genami. SH-EMOA i P3Net mogą ciąć koszt ewaluacji tym samym rodzajem sztuczki (fidelity ladder vs. relatywny surogat) — różnica, która naprawdę decyduje o jakości znalezionych architektur, leży w tym, czy rekombinacja w ogóle wie, co ze sobą zmieniać naraz.</p>
+  </div>
+
+  <h3 style="margin-top:32px;"><span class="num">✓</span>Checklista przy stosowaniu SH-EMOA do nowego problemu</h3>
+  <ul class="checklist">
+    <li><span class="box"></span><span>Zdefiniuj genotyp i przestrzeń przeszukiwania, tak jak dla dowolnego GA.</span></li>
+    <li><span class="box"></span><span>Zdefiniuj wszystkie cele i ujednolić kierunek optymalizacji (minimalizacja albo maksymalizacja) dla każdego z nich.</span></li>
+    <li><span class="box"></span><span>Zaprojektuj drabinkę wierności: ile poziomów, jakim realnym kosztem każdy, i czy różnica kosztu między poziomami faktycznie przekłada się na oszczędność.</span></li>
+    <li><span class="box"></span><span>Zdecyduj, czym jest ranking zastępczy na poziomach pośrednich, skoro pełne sortowanie Pareto tam jeszcze nie ma sensu.</span></li>
+    <li><span class="box"></span><span>Dobierz μ, λ i współczynnik halvingu — SH-EMOA nie zgadnie tego za Ciebie.</span></li>
+    <li><span class="box"></span><span>Jeśli podejrzewasz silne powiązania między genami (a w genotypach architektur zwykle są), to jest faktyczny problem projektowy, nie parametr do dostrojenia — odpowiedź P3Net: drzewo powiązań i krzyżowanie nim sterowane.</span></li>
+  </ul>
+
+</section>
+
+</main>
+
+<footer class="page-end">
+  Kontekst: dziewięcioramienna tabela ablacji artykułu o P3Net (GECCO 2027) — SH-EMOA jako jedno z siedmiu ramion porównawczych, zob. <span class="mono">implementation/lib/README.md</span>, „Relationship to the experiments repository".
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ hover / focus detail tooltips ============ */
+  var tip = document.createElement("div");
+  tip.className = "sh-tooltip";
+  tip.setAttribute("role", "tooltip");
+  document.body.appendChild(tip);
+  var ttCurrent = null;
+  function ttShow(el) {
+    var text = el.getAttribute("data-tt");
+    if (!text) return;
+    tip.textContent = text;
+    tip.style.display = "block";
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var x = r.left + r.width / 2 - tw / 2;
+    var y = r.top - th - 10;
+    if (y < 8) y = r.bottom + 10;
+    x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+    tip.style.left = (x + window.scrollX) + "px";
+    tip.style.top = (y + window.scrollY) + "px";
+    ttCurrent = el;
+  }
+  function ttHide() { tip.style.display = "none"; ttCurrent = null; }
+  document.addEventListener("mouseover", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("mouseout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  document.addEventListener("focusin", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("focusout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  window.addEventListener("scroll", ttHide, { passive: true });
+
+  /* ============ real SH-EMOA, run on a ZDT1-like 2-objective problem ============ */
+  var NGENES = 6;      // x0 (drives f1) + 5 distance genes
+  var NDIST = 5;
+  var MU = 8;           // parent population size
+  var LAMBDA = 12;       // offspring per generation
+  var PM = 0.35;         // per-gene mutation probability
+  var F2MAX = 10;         // fixed plot scale for f2 (theoretical max)
+
+  var uid = 0;
+  function newInd(genes) { return { id: ++uid, genes: genes, f1: null, f2: null, front: null, crowd: 0, state: "parent" }; }
+
+  function randomGenes() {
+    var g = new Array(NGENES);
+    for (var i = 0; i < NGENES; i++) g[i] = Math.random();
+    return g;
+  }
+
+  function gValue(genes, m) {
+    // uses only the first m distance genes (x1..x1+m-1) -- cheaper fidelity = fewer genes sampled
+    var sum = 0;
+    for (var i = 1; i <= m; i++) sum += genes[i];
+    return 1 + 9 * (sum / m);
+  }
+  function evalAt(ind, m) {
+    var f1 = ind.genes[0];
+    var g = gValue(ind.genes, m);
+    var h = (f1 <= g) ? (1 - Math.sqrt(f1 / g)) : 0;
+    var f2 = g * h;
+    return { f1: f1, f2: f2 };
+  }
+  function evalFull(ind) {
+    var r = evalAt(ind, NDIST);
+    ind.f1 = r.f1; ind.f2 = r.f2;
+  }
+
+  function uniformCrossover(pa, pb) {
+    var g = new Array(NGENES);
+    for (var i = 0; i < NGENES; i++) g[i] = Math.random() < 0.5 ? pa.genes[i] : pb.genes[i];
+    return g;
+  }
+  function mutate(genes) {
+    var g = genes.slice();
+    for (var i = 0; i < NGENES; i++) {
+      if (Math.random() < PM) {
+        var v = g[i] + (Math.random() - 0.5) * 0.32;
+        g[i] = Math.max(0, Math.min(1, v));
+      }
+    }
+    return g;
+  }
+
+  function dominates(a, b) {
+    var notWorse = a.f1 <= b.f1 && a.f2 <= b.f2;
+    var strictlyBetter = a.f1 < b.f1 || a.f2 < b.f2;
+    return notWorse && strictlyBetter;
+  }
+
+  function nonDominatedSort(pool) {
+    var fronts = [];
+    var dominatedBy = new Map(), dominatesList = new Map();
+    pool.forEach(function (x) { dominatedBy.set(x, 0); dominatesList.set(x, []); });
+    for (var i = 0; i < pool.length; i++) {
+      for (var j = 0; j < pool.length; j++) {
+        if (i === j) continue;
+        if (dominates(pool[i], pool[j])) {
+          dominatesList.get(pool[i]).push(pool[j]);
+          dominatedBy.set(pool[j], dominatedBy.get(pool[j]) + 1);
+        }
+      }
+    }
+    var current = pool.filter(function (x) { return dominatedBy.get(x) === 0; });
+    var rank = 1;
+    while (current.length) {
+      current.forEach(function (x) { x.front = rank; });
+      fronts.push(current);
+      var next = [];
+      current.forEach(function (x) {
+        dominatesList.get(x).forEach(function (y) {
+          dominatedBy.set(y, dominatedBy.get(y) - 1);
+          if (dominatedBy.get(y) === 0) next.push(y);
+        });
+      });
+      current = next;
+      rank++;
+    }
+    return fronts;
+  }
+
+  function assignCrowding(front) {
+    front.forEach(function (x) { x.crowd = 0; });
+    if (front.length <= 2) { front.forEach(function (x) { x.crowd = Infinity; }); return; }
+    ["f1", "f2"].forEach(function (key) {
+      var sorted = front.slice().sort(function (a, b) { return a[key] - b[key]; });
+      var mn = sorted[0][key], mx = sorted[sorted.length - 1][key];
+      sorted[0].crowd = Infinity;
+      sorted[sorted.length - 1].crowd = Infinity;
+      var span = (mx - mn) || 1;
+      for (var i = 1; i < sorted.length - 1; i++) {
+        if (sorted[i].crowd === Infinity) continue;
+        sorted[i].crowd += (sorted[i + 1][key] - sorted[i - 1][key]) / span;
+      }
+    });
+  }
+
+  // scalar proxy score used only inside a halving rung (lower = better)
+  function rungScore(f1, f2) { return f1 + f2; }
+
+  /* ---- generator implementing SH-EMOA, yielding one micro-step per .next() ---- */
+  function* runSHEMOA() {
+    var parents = [];
+    for (var i = 0; i < MU; i++) parents.push(newInd(randomGenes()));
+    parents.forEach(function (x) { evalFull(x); x.state = "parent"; });
+    var poolFronts = nonDominatedSort(parents);
+    poolFronts.forEach(function (fr) { assignCrowding(fr); });
+
+    var statFull = MU, statCheap = 0, genNum = 0;
+
+    yield { type: "init", parents: parents, offspring: [], rung: null, rankInfo: null,
+      fronts: poolFronts, active: null, statFull: statFull, statCheap: statCheap, genNum: genNum,
+      caption: "Inicjalizacja: " + MU + " losowych genotypów, każdy od razu oceniony w pełnej wierności.",
+      log: "Populacja startowa gotowa. Front 1 zawiera " + poolFronts[0].length + " osobników." };
+
+    while (true) {
+      genNum++;
+      yield { type: "gen-start", parents: parents, offspring: [], rung: null, rankInfo: null,
+        fronts: poolFronts, active: null, statFull: statFull, statCheap: statCheap, genNum: genNum,
+        caption: "Pokolenie " + genNum + ": populacja rodzicielska P (" + parents.length + " osobników, wszyscy już w pełnej wierności).",
+        log: "Start pokolenia " + genNum + " — każdy rodzic ma już prawdziwe (f1, f2)." };
+
+      // --- generate offspring: naive uniform crossover + mutation ---
+      var offspring = [];
+      for (var k = 0; k < LAMBDA; k++) {
+        var pa = parents[Math.floor(Math.random() * parents.length)];
+        var pb = parents[Math.floor(Math.random() * parents.length)];
+        var childGenes = mutate(uniformCrossover(pa, pb));
+        var child = newInd(childGenes);
+        child.state = "offspring";
+        offspring.push(child);
+      }
+      yield { type: "offspring", parents: parents, offspring: offspring, rung: null, rankInfo: null,
+        fronts: poolFronts, active: null, statFull: statFull, statCheap: statCheap, genNum: genNum,
+        caption: LAMBDA + " potomków przez jednolite krzyżowanie + niezależną mutację na gen — bez żadnej wiedzy o tym, które geny są powiązane.",
+        log: "Wygenerowano " + LAMBDA + " potomków. Jeszcze żaden nie został oceniony." };
+
+      // --- fidelity ladder: two halving waves, then full evaluation ---
+      var rungs = [{ name: "tani", m: 1 }, { name: "średni", m: 3 }, { name: "pełny", m: NDIST }];
+      var alive = offspring.slice();
+      for (var ri = 0; ri < rungs.length; ri++) {
+        var rung = rungs[ri];
+        var isFull = rung.name === "pełny";
+        alive.forEach(function (x) {
+          var r = evalAt(x, rung.m);
+          x._score = rungScore(r.f1, r.f2);
+          x._rungF1 = r.f1; x._rungF2 = r.f2;
+        });
+        if (isFull) statFull += alive.length; else statCheap += alive.length;
+
+        var ranked = alive.slice().sort(function (a, b) { return a._score - b._score; });
+        var keepN = isFull ? ranked.length : Math.max(1, Math.ceil(ranked.length / 2));
+        var keptSet = new Set(ranked.slice(0, keepN));
+
+        yield { type: "rung-eval", parents: parents, offspring: offspring, alive: alive.slice(),
+          rung: { name: rung.name, idx: ri, keepN: keepN }, rankInfo: ranked, fronts: poolFronts,
+          active: alive[0] || null, statFull: statFull, statCheap: statCheap, genNum: genNum,
+          caption: "Poziom „" + rung.name + "”: każdy z " + alive.length + " żywych kandydatów dostaje ocenę korzystającą z " + rung.m + " z " + NDIST + " genów dystansu.",
+          log: "Oceniono " + alive.length + " kandydatów na poziomie „" + rung.name + "”." };
+
+        if (!isFull) {
+          alive.forEach(function (x) { x.state = keptSet.has(x) ? "offspring" : "eliminated"; });
+          var eliminated = ranked.slice(keepN);
+          yield { type: "rung-elim", parents: parents, offspring: offspring, alive: alive.slice(),
+            rung: { name: rung.name, idx: ri, keepN: keepN }, rankInfo: ranked, fronts: poolFronts,
+            active: null, statFull: statFull, statCheap: statCheap, genNum: genNum,
+            caption: "Fala eliminacji na poziomie „" + rung.name + "”: odpada " + eliminated.length + " z " + alive.length + " (gorsza połowa rankingu zastępczego).",
+            log: "Przetrwało " + keepN + " kandydatów. Odrzucono " + eliminated.length + " bez dalszych szans w tym pokoleniu." };
+          alive = ranked.slice(0, keepN);
+        } else {
+          alive.forEach(function (x) { evalFull(x); x.state = "survivor"; });
+          yield { type: "survivors", parents: parents, offspring: offspring, alive: alive.slice(),
+            rung: { name: rung.name, idx: ri, keepN: keepN }, rankInfo: null, fronts: poolFronts,
+            active: null, statFull: statFull, statCheap: statCheap, genNum: genNum,
+            caption: alive.length + " finalistów drabinki dostało prawdziwą, pełną ocenę (f1, f2).",
+            log: alive.length + " kandydatów dotrwało do pełnej wierności z " + LAMBDA + " wygenerowanych potomków." };
+        }
+      }
+      var survivors = alive;
+
+      // --- merge parents + survivors ---
+      var pool = parents.concat(survivors);
+      yield { type: "merge", parents: parents, offspring: offspring, alive: survivors, mergedPool: pool,
+        rung: null, rankInfo: null, fronts: poolFronts, active: null,
+        statFull: statFull, statCheap: statCheap, genNum: genNum,
+        caption: "Pula selekcji: " + parents.length + " rodziców + " + survivors.length + " przetrwałych = " + pool.length + " kandydatów, wszyscy z prawdziwą oceną.",
+        log: "Połączono rodziców i przetrwałych. Gotowe do sortowania Pareto." };
+
+      // --- non-dominated sort ---
+      var fronts = nonDominatedSort(pool);
+      yield { type: "sort", parents: parents, offspring: offspring, mergedPool: pool,
+        rung: null, rankInfo: null, fronts: fronts, active: null,
+        statFull: statFull, statCheap: statCheap, genNum: genNum,
+        caption: "Sortowanie Pareto na puli " + pool.length + " kandydatów: " + fronts.length + " fronty(ów), front 1 ma " + fronts[0].length + " osobników.",
+        log: "Fronty: " + fronts.map(function (f) { return f.length; }).join(" / ") + " (od F1)." };
+
+      // --- crowding + fill next generation ---
+      var nextPop = [];
+      var fi = 0;
+      var boundaryFront = null, boundarySelected = null, boundaryCut = null;
+      while (fi < fronts.length && nextPop.length + fronts[fi].length <= MU) {
+        assignCrowding(fronts[fi]);
+        nextPop = nextPop.concat(fronts[fi]);
+        fi++;
+      }
+      if (nextPop.length < MU && fi < fronts.length) {
+        assignCrowding(fronts[fi]);
+        var need = MU - nextPop.length;
+        var sortedByCrowd = fronts[fi].slice().sort(function (a, b) {
+          var ca = a.crowd === Infinity ? 1e18 : a.crowd, cb = b.crowd === Infinity ? 1e18 : b.crowd;
+          return cb - ca;
+        });
+        boundaryFront = fronts[fi];
+        boundarySelected = sortedByCrowd.slice(0, need);
+        boundaryCut = sortedByCrowd.slice(need);
+        nextPop = nextPop.concat(boundarySelected);
+      }
+
+      yield { type: "crowd", parents: parents, offspring: offspring, mergedPool: pool,
+        rung: null, rankInfo: null, fronts: fronts, active: null,
+        boundaryFront: boundaryFront, boundarySelected: boundarySelected, boundaryCut: boundaryCut,
+        statFull: statFull, statCheap: statCheap, genNum: genNum,
+        caption: boundaryFront ? ("Front graniczny ma " + boundaryFront.length + " osobników na " + (MU - (nextPop.length - (boundarySelected ? boundarySelected.length : 0))) + " wolnych miejsc — crowding distance wybiera " + (boundarySelected ? boundarySelected.length : 0) + ".") : "Kolejne pełne fronty zmieściły się dokładnie w limicie μ — crowding distance nie musiał nic rozstrzygać w tym pokoleniu.",
+        log: boundaryFront ? ("Crowding distance zachował " + boundarySelected.length + " z " + boundaryFront.length + " na froncie granicznym.") : "Brak remisu do rozstrzygnięcia w tym pokoleniu." };
+
+      nextPop.forEach(function (x) { x.state = "parent"; });
+      parents = nextPop;
+      poolFronts = nonDominatedSort(parents);
+      poolFronts.forEach(function (fr) { assignCrowding(fr); });
+
+      yield { type: "next-gen", parents: parents, offspring: [], rung: null, rankInfo: null,
+        fronts: poolFronts, active: null, statFull: statFull, statCheap: statCheap, genNum: genNum,
+        caption: "Nowa populacja P zebrana: " + parents.length + " osobników, front 1 ma teraz " + poolFronts[0].length + ".",
+        log: "Pokolenie " + genNum + " zakończone. Kolejne pokolenie zacznie się od tej populacji." };
+    }
+  }
+
+  /* ============ rendering ============ */
+  var el = {
+    plot: document.getElementById("plotPoints"),
+    phase: document.getElementById("phaseCaption"),
+    log: document.getElementById("demoLog"),
+    rung: document.getElementById("rungView"),
+    rank: document.getElementById("rankView"),
+    front: document.getElementById("frontView"),
+    genes: document.getElementById("geneBars"),
+    statGen: document.getElementById("statGen"),
+    statFull: document.getElementById("statFull"),
+    statCheap: document.getElementById("statCheap"),
+    statFront1: document.getElementById("statFront1"),
+    step: document.getElementById("btnStep"),
+    run: document.getElementById("btnRun"),
+    ff: document.getElementById("btnFF"),
+    reset: document.getElementById("btnReset")
+  };
+
+  var PLOT_X0 = 70, PLOT_X1 = 860, PLOT_Y0 = 420, PLOT_Y1 = 20;
+  function px(f1) { return PLOT_X0 + f1 * (PLOT_X1 - PLOT_X0); }
+  function py(f2) { var t = Math.max(0, Math.min(1, f2 / F2MAX)); return PLOT_Y0 + t * (PLOT_Y1 - PLOT_Y0); }
+
+  var frontColorVar = ["--accent", "--grp-climb", "--grp-tree"];
+  function frontColor(rank) {
+    var idx = Math.min(rank - 1, frontColorVar.length - 1);
+    return "var(" + frontColorVar[idx] + ")";
+  }
+
+  function svgNS(tag) { return document.createElementNS("http://www.w3.org/2000/svg", tag); }
+
+  function renderPlot(step) {
+    while (el.plot.firstChild) el.plot.removeChild(el.plot.firstChild);
+    var boundarySelected = step.boundarySelected || [];
+    var boundaryCut = step.boundaryCut || [];
+
+    function drawPoint(ind, opts) {
+      if (ind.f1 === null && ind._rungF1 === undefined) return; // truly unevaluated -> skip on plot
+      var f1 = (ind.f1 !== null && ind.f1 !== undefined) ? ind.f1 : ind._rungF1;
+      var f2 = (ind.f2 !== null && ind.f2 !== undefined) ? ind.f2 : ind._rungF2;
+      var c = svgNS("circle");
+      c.setAttribute("cx", px(f1).toFixed(1));
+      c.setAttribute("cy", py(f2).toFixed(1));
+      var r = opts.r || 7;
+      c.setAttribute("r", r);
+      c.setAttribute("fill", opts.fill || "none");
+      c.setAttribute("stroke", opts.stroke || "currentColor");
+      c.setAttribute("stroke-width", opts.sw || 1.6);
+      if (opts.dash) c.setAttribute("stroke-dasharray", opts.dash);
+      if (opts.opacity !== undefined) c.setAttribute("opacity", opts.opacity);
+      el.plot.appendChild(c);
+    }
+
+    // parents: colored by front rank from current poolFronts context (step.fronts refers to whichever pool applies)
+    var frontOf = new Map();
+    if (step.fronts) {
+      step.fronts.forEach(function (fr, idx) { fr.forEach(function (x) { frontOf.set(x, idx + 1); }); });
+    }
+
+    (step.parents || []).forEach(function (x) {
+      var rank = frontOf.get(x);
+      if (rank) {
+        drawPoint(x, { fill: frontColor(rank), stroke: frontColor(rank), r: 7 });
+      } else {
+        drawPoint(x, { fill: "var(--ink-faint)", stroke: "var(--ink-faint)", r: 6, opacity: 0.8 });
+      }
+    });
+
+    (step.offspring || []).forEach(function (x) {
+      if (x.state === "eliminated") {
+        drawPoint(x, { fill: "none", stroke: "var(--revert-line)", r: 5, opacity: 0.5, dash: "2 2" });
+      } else if (x.state === "survivor") {
+        drawPoint(x, { fill: "var(--accent)", stroke: "var(--accent)", r: 7 });
+      } else if (x.f1 === null && x._rungF1 === undefined) {
+        drawPoint(x, { fill: "none", stroke: "var(--ink-muted)", r: 5, dash: "2 2" });
+      } else {
+        drawPoint(x, { fill: "none", stroke: "var(--ink-muted)", r: 5, dash: "2 2" });
+      }
+    });
+
+    // boundary crowding highlight ring
+    boundarySelected.forEach(function (x) {
+      var c = svgNS("circle");
+      c.setAttribute("cx", px(x.f1).toFixed(1));
+      c.setAttribute("cy", py(x.f2).toFixed(1));
+      c.setAttribute("r", 11);
+      c.setAttribute("fill", "none");
+      c.setAttribute("stroke", "var(--kept)");
+      c.setAttribute("stroke-width", 2);
+      el.plot.appendChild(c);
+    });
+    boundaryCut.forEach(function (x) {
+      var c = svgNS("circle");
+      c.setAttribute("cx", px(x.f1).toFixed(1));
+      c.setAttribute("cy", py(x.f2).toFixed(1));
+      c.setAttribute("r", 11);
+      c.setAttribute("fill", "none");
+      c.setAttribute("stroke", "var(--revert-line)");
+      c.setAttribute("stroke-width", 1.6);
+      c.setAttribute("stroke-dasharray", "2 3");
+      el.plot.appendChild(c);
+    });
+  }
+
+  function renderRungs(step) {
+    el.rung.innerHTML = "";
+    var rungs = [{ name: "tani", key: 0 }, { name: "średni", key: 1 }, { name: "pełny", key: 2 }];
+    var counts = [LAMBDA, Math.ceil(LAMBDA / 2), Math.ceil(Math.ceil(LAMBDA / 2) / 2)];
+    var activeIdx = step.rung ? step.rung.idx : -1;
+    rungs.forEach(function (r, i) {
+      var row = document.createElement("div");
+      row.className = "rung-row" + (i === activeIdx ? " active" : "");
+      var name = document.createElement("span"); name.className = "rname"; name.textContent = r.name;
+      var wrap = document.createElement("div"); wrap.className = "rbar-wrap";
+      var bar = document.createElement("div"); bar.className = "rbar";
+      var pct = Math.round((counts[i] / LAMBDA) * 100);
+      bar.style.width = pct + "%";
+      wrap.appendChild(bar);
+      var count = document.createElement("span"); count.className = "rcount"; count.textContent = counts[i];
+      row.appendChild(name); row.appendChild(wrap); row.appendChild(count);
+      el.rung.appendChild(row);
+    });
+  }
+
+  function renderRank(step) {
+    el.rank.innerHTML = "";
+    if (!step.rankInfo) {
+      var empty = document.createElement("div");
+      empty.className = "demo-note";
+      empty.textContent = "Brak rankingu na tym kroku.";
+      el.rank.appendChild(empty);
+      return;
+    }
+    var keepN = step.rung ? step.rung.keepN : step.rankInfo.length;
+    var maxScore = Math.max.apply(null, step.rankInfo.map(function (x) { return x._score; }));
+    step.rankInfo.forEach(function (x, i) {
+      var row = document.createElement("div");
+      row.className = "rank-item " + (i < keepN ? "kept" : "cut");
+      var idx = document.createElement("span"); idx.className = "ridx"; idx.textContent = "#" + (i + 1);
+      var barwrap = document.createElement("div"); barwrap.className = "rbarwrap";
+      var barfill = document.createElement("div"); barfill.className = "rbarfill";
+      barfill.style.width = Math.max(4, Math.round((1 - x._score / (maxScore || 1)) * 100)) + "%";
+      barwrap.appendChild(barfill);
+      var score = document.createElement("span"); score.textContent = x._score.toFixed(2);
+      row.appendChild(idx); row.appendChild(barwrap); row.appendChild(score);
+      el.rank.appendChild(row);
+    });
+  }
+
+  function renderFronts(step) {
+    el.front.innerHTML = "";
+    (step.fronts || []).forEach(function (fr, i) {
+      var row = document.createElement("div");
+      row.className = "front-row";
+      var dot = document.createElement("span");
+      dot.className = "fdot";
+      dot.style.background = frontColor(i + 1);
+      var label = document.createElement("span");
+      label.textContent = "Front " + (i + 1) + " — " + fr.length + (fr.length === 1 ? " osobnik" : " osobników");
+      row.appendChild(dot); row.appendChild(label);
+      el.front.appendChild(row);
+    });
+  }
+
+  function renderGenes(step) {
+    el.genes.innerHTML = "";
+    var ind = step.active || (step.rankInfo && step.rankInfo[0]) || (step.offspring && step.offspring[0]) || (step.parents && step.parents[0]);
+    var genes = ind ? ind.genes : new Array(NGENES).fill(0);
+    genes.forEach(function (v, i) {
+      var bar = document.createElement("div");
+      bar.className = "gbar" + (i === 0 ? " f1gene" : "");
+      bar.style.height = Math.max(3, Math.round(v * 38)) + "px";
+      bar.title = "x" + i + " = " + v.toFixed(2);
+      el.genes.appendChild(bar);
+    });
+  }
+
+  function renderStats(step) {
+    el.statGen.textContent = step.genNum;
+    el.statFull.textContent = step.statFull;
+    el.statCheap.textContent = step.statCheap;
+    el.statFront1.textContent = (step.fronts && step.fronts[0]) ? step.fronts[0].length : "0";
+  }
+
+  function render(step) {
+    if (!step) return;
+    el.phase.innerHTML = step.caption;
+    el.log.innerHTML = step.log;
+    renderPlot(step);
+    renderRungs(step);
+    renderRank(step);
+    renderFronts(step);
+    renderGenes(step);
+    renderStats(step);
+  }
+
+  var gen = null, runTimer = null;
+  function newGen() { gen = runSHEMOA(); }
+
+  function step() {
+    if (!gen) newGen();
+    var r = gen.next();
+    render(r.value);
+  }
+
+  function fastForward(nGens) {
+    if (!gen) newGen();
+    var startGen = null, last = null, guard = 0;
+    while (guard < 20000) {
+      var r = gen.next();
+      guard++;
+      if (!r.value) break;
+      last = r.value;
+      if (startGen === null) startGen = last.genNum;
+      if (last.type === "next-gen" && last.genNum >= startGen + nGens - 1) break;
+    }
+    render(last);
+  }
+
+  function setRunning(on) {
+    if (on) {
+      el.run.textContent = "Pauza";
+      runTimer = setInterval(step, 260);
+    } else {
+      el.run.textContent = "Uruchom";
+      clearInterval(runTimer);
+      runTimer = null;
+    }
+  }
+
+  el.step.addEventListener("click", function () { setRunning(false); step(); });
+  el.run.addEventListener("click", function () { setRunning(!runTimer); });
+  el.ff.addEventListener("click", function () { setRunning(false); fastForward(5); });
+  el.reset.addEventListener("click", function () {
+    setRunning(false);
+    newGen();
+    el.phase.textContent = "Kliknij „Krok” albo „Uruchom”, żeby zobaczyć algorytm w akcji.";
+    el.log.textContent = "Kliknij „Krok” albo „Uruchom”, żeby zacząć.";
+    while (el.plot.firstChild) el.plot.removeChild(el.plot.firstChild);
+    el.rung.innerHTML = ""; el.rank.innerHTML = ""; el.front.innerHTML = ""; el.genes.innerHTML = "";
+    el.statGen.textContent = "0"; el.statFull.textContent = "0"; el.statCheap.textContent = "0"; el.statFront1.textContent = "0";
+  });
+
+  newGen();
+})();
+</script>

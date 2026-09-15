@@ -1,0 +1,1331 @@
+<title>Jak naprawdę działa TPE</title>
+<style>
+  :root {
+    --bg: #eef0ec;
+    --bg-raised: #ffffff;
+    --bg-sunken: #e4e7e0;
+    --ink: #1b1f27;
+    --ink-muted: #565f6b;
+    --ink-faint: #8b929c;
+    --line: #d7dad3;
+    --line-strong: #b9bdb2;
+    --accent: #1e7d6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #d7ece7;
+    --accent-soft-line: #a6d3c8;
+    --good: #2f8f4e;
+    --good-soft: #dcefe1;
+    --bad: #b23b3b;
+    --bad-soft: #f4dcdc;
+    --code-bg: #1b1f27;
+    --code-ink: #eef0ec;
+    --code-accent: #e8a15c;
+    --shadow: 0 1px 2px rgba(27,31,39,.06), 0 8px 24px rgba(27,31,39,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c;
+      --bg-raised: #1b1f27;
+      --bg-sunken: #101317;
+      --ink: #edeeea;
+      --ink-muted: #9ba3ad;
+      --ink-faint: #6b7280;
+      --line: #2c313b;
+      --line-strong: #3a4048;
+      --accent: #4bc9ae;
+      --accent-ink: #0a1f1a;
+      --accent-soft: #123330;
+      --accent-soft-line: #1f4d47;
+      --good: #6fcf8e;
+      --good-soft: #163322;
+      --bad: #e08080;
+      --bad-soft: #3a1f1f;
+      --code-bg: #0d0f12;
+      --code-ink: #e8e9e4;
+      --code-accent: #e8a15c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c;
+    --bg-raised: #1b1f27;
+    --bg-sunken: #101317;
+    --ink: #edeeea;
+    --ink-muted: #9ba3ad;
+    --ink-faint: #6b7280;
+    --line: #2c313b;
+    --line-strong: #3a4048;
+    --accent: #4bc9ae;
+    --accent-ink: #0a1f1a;
+    --accent-soft: #123330;
+    --accent-soft-line: #1f4d47;
+    --good: #6fcf8e;
+    --good-soft: #163322;
+    --bad: #e08080;
+    --bad-soft: #3a1f1f;
+    --code-bg: #0d0f12;
+    --code-ink: #e8e9e4;
+    --code-accent: #e8a15c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  }
+
+  a { color: var(--accent); }
+
+  /* ---------- top nav ---------- */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    overflow-x: auto;
+  }
+  .topnav-mark {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--accent);
+    white-space: nowrap;
+    padding-right: 6px;
+    border-right: 1px solid var(--line);
+  }
+  .topnav a {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--ink-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+  }
+  .topnav a:hover { color: var(--ink); border-bottom-color: var(--line-strong); }
+
+  /* ---------- layout shell ---------- */
+  main { max-width: 720px; margin: 0 auto; padding: 0 24px 120px; }
+  .wide { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  section { padding-top: 64px; }
+  section:first-of-type { padding-top: 8px; }
+
+  .eyebrow {
+    font-family: "SF Mono", Consolas, ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .eyebrow .lvl { color: var(--ink-faint); letter-spacing: .1em; }
+
+  h1, h2, h3 { font-family: inherit; text-wrap: balance; color: var(--ink); }
+  h1 {
+    font-size: clamp(32px, 5vw, 46px);
+    font-weight: 700;
+    line-height: 1.08;
+    margin: 4px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2 { font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.005em; }
+  h3 { font-size: 19px; font-weight: 700; margin: 40px 0 10px; }
+  h3 .num { font-family: "SF Mono", Consolas, monospace; font-size: 14px; color: var(--accent); margin-right: 8px; }
+
+  p { margin: 14px 0; color: var(--ink); max-width: 68ch; }
+  .lede { font-size: 20px; color: var(--ink-muted); max-width: 60ch; margin: 0 0 8px; }
+  .subdek { color: var(--ink-muted); font-size: 16px; margin-top: -4px; }
+
+  strong { color: var(--ink); }
+  em.term { font-style: normal; color: var(--accent); }
+
+  hr.rule { border: none; border-top: 1px solid var(--line); margin: 64px 0 0; }
+
+  /* ---------- figure / diagram card ---------- */
+  figure {
+    margin: 28px 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  figure.bleed { margin-left: calc(50% - 50vw + 12px); margin-right: calc(50% - 50vw + 12px); max-width: 1120px; margin-left: auto; margin-right: auto; }
+  figure svg { display: block; width: 100%; height: auto; padding: 20px; }
+  figcaption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+    padding: 10px 20px 16px;
+    border-top: 1px solid var(--line);
+    line-height: 1.5;
+  }
+  figcaption .k { color: var(--accent); }
+
+  /* ---------- callouts ---------- */
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-soft-line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 24px 0;
+  }
+  .callout .tag {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout p { margin: 6px 0; max-width: none; }
+
+  /* ---------- code blocks ---------- */
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "SF Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    box-shadow: var(--shadow);
+    margin: 20px 0;
+  }
+  pre.code .kw { color: var(--code-accent); }
+  pre.code .cm { color: #8b929c; font-style: italic; }
+
+  /* ---------- tables ---------- */
+  .tablewrap { overflow-x: auto; margin: 24px 0; border-radius: 10px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; background: var(--bg-raised); font-size: 15px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.fixed-col { color: var(--ink-muted); }
+  td.decide-col strong { color: var(--accent); }
+
+  /* ---------- checklist ---------- */
+  .checklist { list-style: none; margin: 20px 0; padding: 0; display: grid; gap: 10px; }
+  .checklist li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .checklist .box { width: 14px; height: 14px; border: 1.5px solid var(--accent); border-radius: 3px; margin-top: 4px; }
+
+  /* ---------- hover/focus detail tooltips ---------- */
+  [data-tt] { cursor: help; }
+  [data-tt]:hover, [data-tt]:focus-visible { filter: brightness(1.12); }
+  [data-tt]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tpe-tooltip {
+    position: absolute;
+    z-index: 100;
+    display: none;
+    max-width: 280px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 9px 11px;
+    border-radius: 7px;
+    box-shadow: var(--shadow);
+    pointer-events: none;
+  }
+  .tt-hint { display: inline-block; font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; color: var(--ink-faint); letter-spacing: .04em; margin: 2px 0 0; }
+
+  /* ---------- live demo (section 4) ---------- */
+  .demo-bleed-wrap {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
+    padding: 0 12px;
+    box-sizing: border-box;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+  .demo {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px 24px;
+    max-width: min(1680px, 100%);
+    margin-left: auto; margin-right: auto;
+  }
+  .hero-block { margin-bottom: 8px; }
+  .tpe-plot-wrap {
+    border: 1.5px solid var(--line-strong); border-radius: 10px;
+    background: var(--bg-sunken); padding: 10px 16px 6px;
+  }
+  .tpe-plot-wrap svg { display: block; width: 100%; height: auto; }
+
+  .demo-phase-caption {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 12px 0 18px;
+    min-height: 20px;
+  }
+  .demo-phase-caption strong { color: var(--accent); }
+
+  .zone-caption {
+    margin: 22px 0 12px; font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-faint);
+    display: flex; align-items: center; gap: 10px; cursor: help;
+  }
+  .zone-caption::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .result-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 1000px) { .result-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .result-row { grid-template-columns: 1fr; } }
+  .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .card-row { grid-template-columns: 1fr; } }
+  .demo-panel { background: var(--bg-raised); border: 1px solid var(--line); border-radius: 9px; padding: 14px 16px; }
+
+  .demo-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+  .demo-btn {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    background: var(--bg-sunken);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .demo-btn:hover { border-color: var(--accent); }
+  .demo-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .demo-btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .demo-mode { display: flex; gap: 0; border: 1px solid var(--line-strong); border-radius: 7px; overflow: hidden; font-family: "SF Mono", Consolas, monospace; font-size: 12px; }
+  .demo-mode button { border: none; background: var(--bg-sunken); color: var(--ink-muted); padding: 8px 12px; cursor: pointer; }
+  .demo-mode button.active { background: var(--accent); color: var(--accent-ink); }
+
+  .demo-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11.5px; color: var(--ink-muted);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+  }
+  .demo-legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .demo-legend .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex: none; }
+  .demo-legend .swatch.good { background: var(--good-soft); border: 1.4px solid var(--good); }
+  .demo-legend .swatch.bad { background: var(--bad-soft); border: 1.4px solid var(--bad); }
+  .demo-legend .swatch.neutral { background: var(--bg-raised); border: 1.4px solid var(--line-strong); }
+  .demo-legend .swatch.candidate { background: transparent; border: 1.4px solid var(--accent); opacity: .55; }
+  .demo-legend .swatch.best { background: var(--accent-soft); border: 1.6px solid var(--accent); }
+  .demo-legend .swatch.ratio { background: transparent; border-bottom: 2px dashed var(--accent); height: 4px; margin-top: 4px; }
+  .demo-legend-phases { white-space: normal; color: var(--ink-faint); flex-basis: 100%; }
+  .demo-legend-phases strong { color: var(--ink-muted); }
+
+  .demo-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .demo-stat { background: var(--bg-sunken); border-radius: 8px; padding: 10px 12px; }
+  .demo-stat .lbl { font-family: "SF Mono", Consolas, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+  .demo-stat .val { font-family: "SF Mono", Consolas, monospace; font-size: 20px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .demo-log {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 14px 0;
+    min-height: 20px;
+  }
+  .demo-log strong { color: var(--accent); }
+
+  .demo-panel h4 {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 10px;
+  }
+  .demo-note { font-family: "SF Mono", Consolas, monospace; font-size: 11.5px; color: var(--ink-faint); margin-top: 14px; line-height: 1.6; }
+
+  .history-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; min-height: 30px; }
+  .chip {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    padding: 5px 9px;
+    border-radius: 6px;
+    border: 1.3px solid var(--line-strong);
+    background: var(--bg-sunken);
+    color: var(--ink-muted);
+    max-width: 100%;
+  }
+  .chip.good { border-color: var(--good); color: var(--good); background: var(--good-soft); }
+  .chip.bad { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+  .chip.best { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); font-weight: 700; }
+
+  /* ---------- misc ---------- */
+  .diagram-label { font-family: "SF Mono", Consolas, monospace; }
+  ::selection { background: var(--accent-soft); }
+
+  footer.page-end {
+    max-width: 720px; margin: 80px auto 0; padding: 24px 24px 40px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+  }
+</style>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <span class="topnav-mark">TPE / przewodnik</span>
+    <a href="#context">1&nbsp;Kontekst</a>
+    <a href="#bigpicture">2&nbsp;Ogólny obraz</a>
+    <a href="#components">3&nbsp;Komponenty</a>
+    <a href="#live">4&nbsp;Zobacz na żywo</a>
+    <a href="#code">5&nbsp;Pseudokod</a>
+    <a href="#practice">6&nbsp;Co wymyślasz sam</a>
+  </div>
+</div>
+
+<main>
+
+<section id="top">
+  <div class="eyebrow"><span>TPE — Tree-structured Parzen Estimator</span></div>
+  <h1>Jak naprawdę działa TPE</h1>
+  <p class="lede">Klasyczny sekwencyjny optymalizator bayesowski — jeden z sześciu przeciwników P3Net w siatce ablacyjnej tego artykułu. Od jednej idei, wokół której jest zbudowany, przez trzy procedury, które trzeba napisać, żeby go zaimplementować, aż po demo, które naprawdę liczy w Twojej przeglądarce i pokazuje moment, w którym model zaczyna <em class="term">pamiętać</em>.</p>
+  <p class="subdek">Ułożone jak diagram C4: kontekst, potem duże ruchome elementy, potem każdy z nich rozłożony na czynniki pierwsze, potem kod, na końcu praktyczna checklista.</p>
+</section>
+
+<hr class="rule">
+
+<section id="context">
+  <h3><span class="num">1</span>Kontekst — problem, na który TPE jest odpowiedzią</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: losowe przeszukiwanie nigdy nic nie pamięta. TPE pamięta wszystko, co dotąd zmierzyło, i używa tego, żeby zgadywać lepiej, gdzie spróbować następnym razem.</p>
+  <p>To jest cała różnica. Losowe przeszukiwanie próbkuje punkty niezależnie — dziesiąty punkt wie o poprzednich dziewięciu dokładnie tyle, ile wiedział pierwszy, czyli nic. TPE (Bergstra i in., NeurIPS 2011) po każdej ewaluacji dzieli dotychczasowe obserwacje na „dobre” i „złe”, dopasowuje do każdej z tych grup osobny model gęstości i wybiera kolejny punkt tam, gdzie model dobrych obserwacji jest gęsty, a model złych — rzadki. To wciąż optymalizator sekwencyjny, próbka po próbce, ale każda kolejna próbka jest już warunkowana na historii, nie losowa.</p>
+
+  <p>W siatce ablacyjnej tego artykułu TPE stoi po stronie <strong>klasycznych, sekwencyjnych optymalizatorów modelowych</strong> — obok random search, MO-BOHB, SH-EMOA, NSGA-Net i NSGANetV2, wszystkich zestawionych z P3Net na JAHS-Bench-201 i NAS-HPO-Bench-II (pełny opis siatki w <span class="mono">implementation/lib/README.md</span>). Random search to dolna granica: brak modelu w ogóle. TPE to pierwszy krok w górę od tej granicy — model jest, ale traktuje przestrzeń konfiguracji jako worek niezależnych (lub co najwyżej płytko warunkowych) wymiarów. Właśnie ta granica — model kontra brak modelu — jest tematem tej strony, zanim w sekcji 6 zawęzimy ją do konkretnego ślepego punktu, który TPE ma wobec liniowego, świadomego powiązań podejścia P3Net.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 900 400" role="img" aria-label="Porównanie dwóch pętli: losowe przeszukiwanie próbkuje punkt, ocenia go i wraca do początku bez żadnej pamięci; TPE po każdej ewaluacji dzieli historię na dobre i złe obserwacje, dopasowuje do nich dwie gęstości i wybiera następny punkt tam, gdzie iloraz tych gęstości jest największy.">
+      <defs>
+        <marker id="arrC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <text x="30" y="20" class="diagram-label" font-size="12" letter-spacing="0.06em" fill="currentColor" opacity="0.6">LOSOWE PRZESZUKIWANIE — pętla bez pamięci</text>
+
+      <rect x="30" y="60" width="280" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Punkt jest ciągnięty z rozkładu jednostajnego nad całą przestrzenią — nic z poprzednich ewaluacji nie wpływa na ten wybór."></rect>
+      <text fill="currentColor" x="170" y="91" text-anchor="middle" class="diagram-label" font-size="12.5">próbkuj punkt jednostajnie</text>
+      <path d="M170,112 L170,144" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrC)"></path>
+
+      <rect x="30" y="146" width="280" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Jedna prawdziwa ewaluacja funkcji celu — wynik trafia do historii, ale historia nigdy nie jest odczytywana przy wyborze kolejnego punktu."></rect>
+      <text fill="currentColor" x="170" y="177" text-anchor="middle" class="diagram-label" font-size="12.5">oceń, zapisz do historii</text>
+
+      <path d="M310,172 C400,172 400,86 310,86" fill="none" stroke="currentColor" stroke-width="1.2" marker-end="url(#arrC)"></path>
+      <text x="325" y="132" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.7" pointer-events="all" tabindex="0" data-tt="Pętla wraca do góry bez czytania niczego, co właśnie zapisała — historia rośnie, ale nikt jej nie używa.">powtórz</text>
+
+      <text x="170" y="240" text-anchor="middle" class="diagram-label" font-size="11" fill="currentColor" opacity="0.7">historia rośnie, ale nikt jej nie czyta</text>
+
+      <line x1="450" y1="10" x2="450" y2="390" stroke="currentColor" stroke-width="1" opacity="0.15"></line>
+
+      <text x="480" y="20" class="diagram-label" font-size="12" letter-spacing="0.06em" fill="var(--accent)" opacity="0.9">TPE — pętla z pamięcią</text>
+
+      <rect x="480" y="34" width="280" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Obserwacje zebrane do tej pory sortuje się po wartości celu i dzieli progiem kwantylowym γ. Szczegół w 3.1."></rect>
+      <text fill="currentColor" x="620" y="61" text-anchor="middle" class="diagram-label" font-size="12">podziel historię progiem γ</text>
+      <path d="M620,80 L620,104" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrC)"></path>
+
+      <rect x="480" y="106" width="280" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Dwa osobne modele gęstości — l(x) nad dobrymi punktami, g(x) nad złymi. Szczegół w 3.2."></rect>
+      <text fill="currentColor" x="620" y="133" text-anchor="middle" class="diagram-label" font-size="12">dopasuj l(x) i g(x)</text>
+      <path d="M620,152 L620,176" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrC)"></path>
+
+      <rect x="480" y="178" width="280" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Kilkanaście-kilkadziesiąt kandydatów losowanych z l(x), każdy oceniony ilorazem l(x)/g(x). Szczegół w 3.3."></rect>
+      <text fill="currentColor" x="620" y="205" text-anchor="middle" class="diagram-label" font-size="12">próbkuj kandydatów, oceń ilorazem l/g</text>
+      <path d="M620,224 L620,248" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrC)"></path>
+
+      <rect x="480" y="250" width="280" height="46" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" pointer-events="all" tabindex="0" data-tt="Jedyna prawdziwa ewaluacja w tej iteracji — reszta była tylko liczeniem na modelu. Wynik dopisuje się do historii i zmienia następny podział progiem γ."></rect>
+      <text x="620" y="277" text-anchor="middle" class="diagram-label" font-size="12" fill="var(--ink)">oceń zwycięzcę, dopisz do historii</text>
+
+      <path d="M760,273 C850,273 850,57 760,57" fill="none" stroke="var(--accent)" stroke-width="1.3" marker-end="url(#arrC)"></path>
+      <text x="774" y="165" class="diagram-label" font-size="10.5" fill="var(--accent)" pointer-events="all" tabindex="0" data-tt="Kolejna iteracja czyta pełną, teraz o jeden punkt większą, historię — model za każdym razem jest trochę dokładniejszy.">kolejna iteracja, model już nieco mądrzejszy</text>
+
+      <text x="620" y="340" text-anchor="middle" class="diagram-label" font-size="11" fill="var(--accent)">każda decyzja jest warunkowana na całej dotychczasowej historii</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> obie pętle mają dokładnie ten sam kształt „próbkuj → oceń → wróć”, ale lewa strona nigdy nie zagląda do tego, co już policzyła, a prawa robi z tego cały swój mechanizm. Sekcja 2 rozwija prawą pętlę w pełnym szczególe, sekcja 3 otwiera każdy jej krok osobno.</figcaption>
+  </figure>
+</section>
+
+<section id="bigpicture">
+  <h3><span class="num">2</span>Ogólny obraz — jedna pętla, trzy kroki na iterację</h3>
+  <p class="lede" style="font-size:17px;">Jednym zdaniem: obserwuj, podziel, dopasuj dwie gęstości, spróbkuj kilkanaście kandydatów, wybierz tego z najlepszym ilorazem, oceń naprawdę, wróć na początek.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Element</th><th>Zadanie</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Podział kwantylowy</strong></td><td>Sortuje dotychczasowe obserwacje po wartości celu i wyznacza próg γ oddzielający najlepsze od reszty.</td></tr>
+        <tr><td><strong>Estymatory gęstości l(x), g(x)</strong></td><td>Dwa modele prawdopodobieństwa — jeden nad „dobrymi” punktami, drugi nad „złymi” — mówiące, gdzie w przestrzeni każda z tych grup lubi się skupiać.</td></tr>
+        <tr><td><strong>Krok akwizycji</strong></td><td>Próbkuje kandydatów z l(x) i wybiera tego, dla którego iloraz l(x)/g(x) jest największy — to jedyny moment, w którym naprawdę wydawana jest ewaluacja.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Pełna wersja tej samej pętli, z każdym warunkiem wypisanym wprost:</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 560" role="img" aria-label="Jedna iteracja TPE: podziel historię progiem kwantylowym gamma na dobre i złe obserwacje, dopasuj gęstość l nad dobrymi i g nad złymi, spróbkuj wielu kandydatów z l, oceń każdego ilorazem l przez g, wybierz najlepszego, wykonaj na nim jedną prawdziwą ewaluację i dopisz wynik do historii, po czym zacznij od nowa.">
+      <defs>
+        <marker id="arrB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+        </marker>
+      </defs>
+
+      <rect x="240" y="10" width="400" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Kilka pierwszych iteracji, zanim historia ma wystarczająco punktów, żeby cokolwiek policzyć — te punkty są czysto losowe, dokładnie jak w random search."></rect>
+      <text x="440" y="40" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">bootstrap: R losowych punktów startowych</text>
+      <path d="M440,60 L440,90" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrB)"></path>
+
+      <rect x="240" y="92" width="400" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Sortowanie po wartości celu (minimalizacja: mniejsze = lepsze) i cięcie w miejscu k = round(γ·n). §3.1."></rect>
+      <text x="440" y="122" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">podziel historię progiem γ na dobre / złe</text>
+      <path d="M440,142 L440,172" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrB)"></path>
+
+      <rect x="240" y="174" width="400" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="l(x): suma jąder Gaussa wokół dobrych punktów. g(x): to samo, ale wokół złych. §3.2."></rect>
+      <text x="440" y="204" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">dopasuj l(x) do dobrych, g(x) do złych</text>
+      <path d="M440,224 L440,254" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrB)"></path>
+
+      <rect x="240" y="256" width="400" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Każdy kandydat to punkt wylosowany z rozkładu l(x) — czyli z okolic dobrych obserwacji, nie z całej przestrzeni na oślep. §3.3."></rect>
+      <text x="440" y="286" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">spróbkuj n kandydatów z l(x)</text>
+      <path d="M440,306 L440,336" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrB)"></path>
+
+      <rect x="240" y="338" width="400" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" pointer-events="all" tabindex="0" data-tt="Wysoki iloraz l/g = gęsto wśród dobrych, rzadko wśród złych — to punkt, w którym model najbardziej „wierzy”, że warto spróbować. §3.3."></rect>
+      <text x="440" y="368" text-anchor="middle" class="diagram-label" font-size="13" fill="currentColor">oceń każdego kandydata ilorazem l(x)/g(x)</text>
+      <path d="M440,388 L440,418" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrB)"></path>
+
+      <rect x="240" y="420" width="400" height="52" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" pointer-events="all" tabindex="0" data-tt="Jedyna prawdziwa ewaluacja funkcji celu w całej iteracji — wszystko wcześniej działo się wyłącznie na modelu l/g."></rect>
+      <text x="440" y="443" text-anchor="middle" class="diagram-label" font-size="13" fill="var(--ink)">weź argmax, wykonaj jedną prawdziwą ewaluację</text>
+      <text x="440" y="461" text-anchor="middle" class="diagram-label" font-size="10.5" fill="var(--ink)" opacity="0.75">dopisz (x, y) do historii</text>
+
+      <path d="M640,446 C760,446 760,116 640,116" fill="none" stroke="var(--accent)" stroke-width="1.3" marker-end="url(#arrB)"></path>
+      <text x="700" y="284" text-anchor="middle" class="diagram-label" font-size="10.5" fill="var(--accent)" transform="rotate(90 700 284)" pointer-events="all" tabindex="0" data-tt="Historia jest teraz o jeden punkt większa, więc podział progiem γ w kolejnej iteracji przebiega przez nieco inny, trochę dokładniejszy zbiór.">kolejna iteracja</text>
+
+      <text x="440" y="510" text-anchor="middle" class="diagram-label" font-size="11.5" fill="currentColor" opacity="0.7">Jedno wywołanie tej pętli to jedna iteracja TPE — powtarzaj, aż wyczerpie się budżet ewaluacji.</text>
+      <text x="440" y="532" text-anchor="middle" class="diagram-label" font-size="11.5" fill="currentColor" opacity="0.7">Wszystkie kroki poza ostatnim kosztują zero prawdziwych ewaluacji — liczą tylko na modelu.</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> tylko jedno pudełko w całej pętli kosztuje prawdziwą ewaluację funkcji celu; wszystko powyżej niego to rachunki na modelu zbudowanym z historii. To odwrotność losowego przeszukiwania, gdzie <em>każdy</em> krok jest ewaluacją, bo nie ma żadnego modelu, który mógłby przefiltrować kandydatów wcześniej.</figcaption>
+  </figure>
+</section>
+
+<section id="components">
+  <h2>3&nbsp; Komponenty — rozkładanie każdego kroku na czynniki</h2>
+  <p class="subdek">Te same trzy elementy co wyżej, teraz na poziomie szczegółowości potrzebnym do ich zaimplementowania.</p>
+
+  <h3><span class="num">3.1</span>Podział kwantylowy — gdzie kończy się „dobre”</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: posortuj obserwacje po wartości celu i odetnij najlepsze γ z nich — reszta trafia do „złych”.</p>
+  <p>Przy minimalizacji „lepsze” znaczy mniejsza wartość funkcji celu. Mając <span class="mono">n</span> obserwacji, próg wyznacza <span class="mono">k = max(1, round(γ·n))</span> — pierwsze <span class="mono">k</span> po posortowaniu trafia do zbioru dobrych, reszta do złych. Typowa wartość <span class="mono">γ</span> to 0,10–0,25; w demo poniżej użyte jest <span class="mono">γ=0,15</span>. Im mniejsze γ, tym ostrzejszy, bardziej selektywny model „dobrego” — ale też tym mniej punktów ma na czym się oprzeć, zwłaszcza we wczesnych iteracjach.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 220" role="img" aria-label="Osiem obserwacji posortowanych po wartości celu rosnąco; przy gamma=0,15 próg odcina jedną najlepszą jako dobrą, pozostałe siedem jako złe.">
+      <text x="20" y="24" class="diagram-label" font-size="11" fill="currentColor" opacity="0.6">8 OBSERWACJI, POSORTOWANE ROSNĄCO PO WARTOŚCI CELU (mniejsze = lepsze)</text>
+      <g class="mono">
+        <rect x="20" y="50" width="90" height="40" rx="6" fill="var(--good-soft)" stroke="var(--good)" stroke-width="1.6" pointer-events="all" tabindex="0" data-tt="Najlepsza obserwacja w historii — jedyna, która mieści się w progu k=round(0,15·8)=1."></rect>
+        <text x="65" y="75" text-anchor="middle" font-size="12" fill="currentColor">0,08</text>
+
+        <rect x="120" y="50" width="90" height="40" rx="6" fill="none" stroke="var(--bad)" stroke-width="1.3" opacity="0.8" pointer-events="all" tabindex="0" data-tt="Druga najlepsza — ale k=1, więc mimo bliskości progu ląduje już po złej stronie."></rect>
+        <text x="165" y="75" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.8">0,31</text>
+
+        <rect x="220" y="50" width="90" height="40" rx="6" fill="none" stroke="var(--bad)" stroke-width="1.1" opacity="0.6"></rect>
+        <text x="265" y="75" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.6">0,44</text>
+        <rect x="320" y="50" width="90" height="40" rx="6" fill="none" stroke="var(--bad)" stroke-width="1.1" opacity="0.6"></rect>
+        <text x="365" y="75" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.6">0,52</text>
+        <rect x="420" y="50" width="90" height="40" rx="6" fill="none" stroke="var(--bad)" stroke-width="1.1" opacity="0.6"></rect>
+        <text x="465" y="75" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.6">0,61</text>
+        <rect x="520" y="50" width="90" height="40" rx="6" fill="none" stroke="var(--bad)" stroke-width="1.1" opacity="0.6"></rect>
+        <text x="565" y="75" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.6">0,73</text>
+        <rect x="620" y="50" width="90" height="40" rx="6" fill="none" stroke="var(--bad)" stroke-width="1.1" opacity="0.6"></rect>
+        <text x="665" y="75" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.6">0,85</text>
+        <rect x="720" y="50" width="90" height="40" rx="6" fill="none" stroke="var(--bad)" stroke-width="1.1" opacity="0.6"></rect>
+        <text x="765" y="75" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.6">0,97</text>
+
+        <line x1="115" y1="40" x2="115" y2="106" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="3 3"></line>
+        <text x="115" y="130" text-anchor="middle" font-size="11" fill="var(--accent)">próg γ=0,15 → k=1</text>
+      </g>
+      <text x="65" y="180" text-anchor="middle" class="diagram-label" font-size="11" fill="var(--good)">l(x): 1 punkt</text>
+      <text x="465" y="180" text-anchor="middle" class="diagram-label" font-size="11" fill="var(--bad)">g(x): 7 punktów</text>
+      <text x="440" y="204" text-anchor="middle" class="diagram-label" font-size="10.5" fill="currentColor" opacity="0.6">próg jest przeliczany od nowa przy każdej iteracji, więc granica przesuwa się razem z historią</text>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> przy tak małej próbce próg jest surowy — jedna jedyna obserwacja definiuje na razie cały model „dobrego”. W miarę jak historia rośnie, k rośnie proporcjonalnie i l(x) dostaje więcej materiału do pracy.</figcaption>
+  </figure>
+
+  <h3><span class="num">3.2</span>Estymatory gęstości l(x) i g(x)</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: rozłóż jądro Gaussa na każdym punkcie danej grupy i zsumuj — wysokie miejsca sumy to miejsca, gdzie ta grupa lubi się skupiać.</p>
+  <p>Klasyczne TPE buduje te gęstości hierarchicznie, wymiar po wymiarze warunkowym drzewem zależności przestrzeni konfiguracji (stąd „tree-structured” w nazwie) — jeśli hiperparametr B istnieje tylko wtedy, gdy hiperparametr A ma określoną wartość, drzewo to odzwierciedla, a mieszanka obciętych rozkładów Gaussa jest dopasowywana osobno w każdym takim warunkowym węźle.</p>
+
+  <div class="callout">
+    <span class="tag">Uczciwe uproszczenie w tym demie</span>
+    <p>Poniższe demo i pseudokod w sekcji 5 używają <strong>niezależnego estymatora jądrowego na wymiar, ze stałą szerokością pasma</strong> — bez warunkowej struktury drzewa i bez adaptacyjnej reguły doboru pasma (np. Scotta/Silvermana). To realna, uczciwa wersja rdzenia algorytmu — podział, dwie gęstości, iloraz — ale nie pełna implementacja z artykułu Bergstry. Dokładnie ta różnica — płytkie, niezależne wymiary kontra prawdziwa struktura zależności — wraca w sekcji 6 jako punkt kontrastu z P3Net.</p>
+  </div>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 260" role="img" aria-label="Krzywe l(x) i g(x) nad wspólną osią x: l(x) ma wąski, wysoki garb tam, gdzie skupiają się dobre obserwacje, g(x) jest szeroko rozlana, bo złe obserwacje pokrywają większość przestrzeni.">
+      <g class="mono">
+        <line x1="40" y1="220" x2="840" y2="220" stroke="currentColor" stroke-width="1.2" opacity="0.4"></line>
+        <path d="M40,215 C120,215 150,60 220,55 C290,50 300,210 360,215 L840,216" fill="none" stroke="var(--good)" stroke-width="2.2" pointer-events="all" tabindex="0" data-tt="l(x): suma jąder Gaussa wokół dobrych punktów. Wąski, wysoki garb — dobre obserwacje są ściśnięte blisko siebie, model jest w tym miejscu bardzo pewny."></path>
+        <path d="M40,205 C160,150 260,90 400,85 C560,80 680,140 840,200" fill="none" stroke="var(--bad)" stroke-width="2.2" opacity="0.85" pointer-events="all" tabindex="0" data-tt="g(x): suma jąder Gaussa wokół złych punktów. Szeroko rozlana krzywa — złe obserwacje są rozrzucone po prawie całej przestrzeni, więc g(x) nie ma jednego wyraźnego szczytu."></path>
+
+        <text x="240" y="30" text-anchor="middle" font-size="12" fill="var(--good)">l(x) — gęstość „dobrych”</text>
+        <text x="640" y="70" text-anchor="middle" font-size="12" fill="var(--bad)" opacity="0.9">g(x) — gęstość „złych”</text>
+        <text x="440" y="240" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.6">przestrzeń przeszukiwań x</text>
+      </g>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> tam gdzie l(x) jest wysoko, a g(x) nisko, iloraz l(x)/g(x) eksploduje — to właśnie ten obszar krok akwizycji z 3.3 będzie preferował. Tam gdzie obie krzywe są porównywalne, model nie ma silnej preferencji.</figcaption>
+  </figure>
+
+  <h3><span class="num">3.3</span>Krok akwizycji — próbkowanie i ranking ilorazem l/g</h3>
+  <p class="lede" style="font-size:16px;">Jednym zdaniem: wylosuj garść kandydatów z l(x), oceń każdego ilorazem l(x)/g(x) i weź zwycięzcę do jedynej prawdziwej ewaluacji tej iteracji.</p>
+  <p>Maksymalizacja <span class="mono">l(x)/g(x)</span> jest równoważna maksymalizacji oczekiwanej poprawy (<em>expected improvement</em>) względem progu γ w tym modelu — nie trzeba osobno liczyć EI, wystarczy porównać dwie gęstości w tych samych punktach. Kandydaci są losowani z l(x) (nie z całej przestrzeni), więc od razu skupiają się tam, gdzie dobre obserwacje już są; g(x) w mianowniku karze te spośród nich, które leżą też blisko złych obserwacji.</p>
+
+  <figure class="bleed">
+    <svg viewBox="0 0 880 220" role="img" aria-label="Sześciu kandydatów wylosowanych z l(x), każdy z policzonym ilorazem l/g; kandydat o najwyższym ilorazie zostaje wybrany do jedynej prawdziwej ewaluacji tej iteracji.">
+      <g class="mono">
+        <line x1="40" y1="170" x2="840" y2="170" stroke="currentColor" stroke-width="1.2" opacity="0.4"></line>
+
+        <circle cx="120" cy="150" r="7" fill="none" stroke="var(--accent)" stroke-width="1.6" opacity="0.55" pointer-events="all" tabindex="0" data-tt="iloraz l/g ≈ 1,4 — niezła okolica, ale nie najlepsza."></circle>
+        <text x="120" y="190" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.7">1,4</text>
+
+        <circle cx="240" cy="60" r="9" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.2" pointer-events="all" tabindex="0" data-tt="iloraz l/g ≈ 5,8 — zdecydowany zwycięzca tej rundy: gęsto wśród dobrych, rzadko wśród złych. Ten kandydat dostaje jedyną prawdziwą ewaluację tej iteracji."></circle>
+        <text x="240" y="46" text-anchor="middle" font-size="12" fill="var(--accent)" font-weight="700">5,8 ← wybrany</text>
+
+        <circle cx="360" cy="155" r="6" fill="none" stroke="var(--accent)" stroke-width="1.3" opacity="0.4" pointer-events="all" tabindex="0" data-tt="iloraz l/g ≈ 1,1 — blisko granicy dobre/złe, model nie jest pewny."></circle>
+        <text x="360" y="190" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.6">1,1</text>
+
+        <circle cx="500" cy="140" r="7" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity="0.5" pointer-events="all" tabindex="0" data-tt="iloraz l/g ≈ 1,9."></circle>
+        <text x="500" y="190" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.7">1,9</text>
+
+        <circle cx="640" cy="160" r="6" fill="none" stroke="var(--accent)" stroke-width="1.2" opacity="0.35" pointer-events="all" tabindex="0" data-tt="iloraz l/g ≈ 0,7 — bliżej okolicy złych obserwacji niż dobrych."></circle>
+        <text x="640" y="190" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.55">0,7</text>
+
+        <circle cx="760" cy="165" r="6" fill="none" stroke="var(--accent)" stroke-width="1.1" opacity="0.3" pointer-events="all" tabindex="0" data-tt="iloraz l/g ≈ 0,5 — najsłabszy kandydat tej rundy."></circle>
+        <text x="760" y="190" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.5">0,5</text>
+
+        <text x="440" y="20" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.6">wysokość znacznika ∝ iloraz l(x)/g(x) w tym punkcie — sześciu kandydatów wylosowanych z l(x)</text>
+      </g>
+    </svg>
+    <figcaption><span class="k">Co pokazuje ten diagram —</span> każdy kandydat kosztuje zero prawdziwych ewaluacji — to tylko odczyt z dwóch już dopasowanych krzywych. Dopiero zwycięzca rankingu trafia do funkcji celu naprawdę, dokładnie tak jak w pełnym diagramie pętli z sekcji 2.</figcaption>
+  </figure>
+</section>
+
+<section id="live">
+  <h2>4&nbsp; Zobacz to w akcji</h2>
+  <p class="subdek">Nie animacja jednego ustalonego przykładu — to naprawdę uruchomiony algorytm, dokładnie wg pseudokodu z sekcji&nbsp;5, licząc w Twojej przeglądarce.</p>
+
+  <h3><span class="num">4.1</span>Problem: mała, zwodnicza funkcja celu 1D</h3>
+  <p>Demo poniżej minimalizuje funkcję jednej zmiennej <span class="mono">x ∈ [0, 10]</span> z dwoma dołkami: wąskim i głębokim wokół <span class="mono">x≈3,2</span> (globalne minimum) oraz szerokim, ale płytszym wokół <span class="mono">x≈7,6</span> (lokalne minimum, gorsze o rząd wielkości). Reszta przestrzeni jest w miarę płaska i bliska najgorszej wartości. To zwodnicza funkcja specjalnie dlatego, że szeroki płytki dołek jest łatwy do trafienia losowo, a wąski głęboki — nie; dobry model gęstości powinien w końcu skupić próbkowanie wokół tego drugiego.</p>
+  <p>Prawdziwa funkcja jest narysowana cienką przerywaną linią wyłącznie dla Ciebie jako czytelnika — sam algorytm jej nie widzi, tak jak żaden czarnoskrzynkowy optymalizator nie widzi kształtu tego, co optymalizuje.</p>
+
+  <h3><span class="num">4.2</span>Rozwiązanie: TPE naprawdę uruchomiony na tej funkcji</h3>
+  <p>Przełącznik trybu porównuje dwa warianty na dokładnie tej samej funkcji: <strong>TPE</strong> (podział kwantylowy → l/g → akwizycja, dokładnie jak w sekcjach 2–3) oraz <strong>losowe przeszukiwanie</strong> — czysty odpowiednik lewej pętli z sekcji 1, próbkujący jednostajnie bez używania historii w ogóle. Uruchom oba na tej samej funkcji po kolei i porównaj, jak szybko każdy z nich osiada wokół wąskiego globalnego minimum.</p>
+
+  <div class="demo-bleed-wrap">
+  <div class="demo" id="tpedemo">
+    <div class="demo-legend">
+      <span class="demo-legend-item"><span class="swatch good"></span>dobra obserwacja (l)</span>
+      <span class="demo-legend-item"><span class="swatch bad"></span>zła obserwacja (g)</span>
+      <span class="demo-legend-item"><span class="swatch neutral"></span>jeszcze nie podzielona</span>
+      <span class="demo-legend-item"><span class="swatch candidate"></span>kandydat</span>
+      <span class="demo-legend-item"><span class="swatch best"></span>wybrany kandydat</span>
+      <span class="demo-legend-item"><span class="swatch ratio"></span>iloraz l/g</span>
+      <span class="demo-legend-item demo-legend-phases">Jasne tło pod wykresem = krok, w którym właśnie jesteś.</span>
+    </div>
+
+    <div class="hero-block">
+      <div class="tpe-plot-wrap">
+        <svg id="tpeSvg" viewBox="0 0 940 380" role="img" aria-label="Wykres na żywo: górna część pokazuje prawdziwą funkcję celu i zebrane dotąd obserwacje na osi x kontra wartość celu, z linią progu kwantylowego; dolna część pokazuje krzywe l(x), g(x) i ich iloraz, razem z aktualnie próbkowanymi kandydatami.">
+          <defs>
+            <marker id="arrTpe" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <g id="tpeAxes"></g>
+          <g id="tpeTrueFn"></g>
+          <g id="tpeThreshold"></g>
+          <g id="tpePoints"></g>
+          <g id="tpeCandidates"></g>
+          <g id="tpeDensity"></g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="demo-phase-caption" id="phaseCaption">Kliknij „Krok” albo „Uruchom”, żeby zobaczyć algorytm w akcji — wykres powyżej aktualizuje się na żywo z każdym krokiem.</div>
+    <div class="demo-log" id="demoLog">Kliknij „Krok” albo „Uruchom”, żeby zacząć.</div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Te karty czerpią z całej historii zbudowanej do tej pory — nie tylko z tego jednego kroku.">③ nagromadzony wynik — z całej dotychczasowej historii</div>
+    <div class="result-row">
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Ostatnie obserwacje w historii, w kolejności dodania. Kolor = przynależność do dobrych/złych przy ostatnim podziale.">Historia (ostatnie)</h4>
+        <div class="history-chips" id="historyView"></div>
+        <p class="demo-note">Każdy chip to jedna prawdziwa ewaluacja funkcji celu.</p>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Wartość progu γ użyta przy ostatnim podziale historii oraz liczebność obu grup.">Podział bieżący</h4>
+        <div class="mono" id="splitView" style="font-size:13px; line-height:1.9;">—</div>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Kandydat z najwyższym ilorazem l(x)/g(x) w ostatniej rundzie próbkowania.">Ostatni zwycięzca</h4>
+        <div class="mono" id="winnerView" style="font-size:13px; line-height:1.9;">—</div>
+      </div>
+      <div class="demo-panel">
+        <h4 pointer-events="all" tabindex="0" data-tt="Najlepsza (najmniejsza) wartość celu znaleziona od początku tego uruchomienia.">Najlepsze dotąd</h4>
+        <div class="mono" id="bestView" style="font-size:13px; line-height:1.9;">—</div>
+      </div>
+    </div>
+
+    <div class="zone-caption" pointer-events="all" tabindex="0" data-tt="Sterowanie i statystyki dotyczące całego przebiegu, nie tylko bieżącego kroku.">④ sterowanie, statystyki</div>
+    <div class="card-row">
+      <div class="demo-panel">
+        <h4>Sterowanie</h4>
+        <div class="demo-controls">
+          <button class="demo-btn primary" id="btnStep" type="button">Krok</button>
+          <button class="demo-btn" id="btnRun" type="button">Uruchom</button>
+          <button class="demo-btn" id="btnFF" type="button">⏩ 10 iteracji</button>
+          <button class="demo-btn" id="btnReset" type="button">Reset</button>
+        </div>
+        <div class="demo-mode" role="group" aria-label="Tryb algorytmu" style="margin-top:10px;">
+          <button id="modeTpe" class="active" type="button">TPE</button>
+          <button id="modeRandom" type="button">Losowe przeszukiwanie</button>
+        </div>
+      </div>
+      <div class="demo-panel">
+        <h4>Statystyki</h4>
+        <div class="demo-stats">
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Łączna liczba prawdziwych ewaluacji funkcji celu od resetu.">
+            <div class="lbl">Ewaluacje</div><div class="val" id="statEval">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Ile pełnych iteracji podział→dopasowanie→akwizycja wykonano (nie licząc bootstrapu). W trybie losowym ta liczba zawsze zostaje na 0, bo nie ma tu iteracji modelowych.">
+            <div class="lbl">Iteracje TPE</div><div class="val" id="statIter">0</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Najmniejsza wartość celu znaleziona dotąd. Globalne minimum tej funkcji to około 0,05.">
+            <div class="lbl">Najlepsze y</div><div class="val" id="statBest">—</div>
+          </div>
+          <div class="demo-stat" pointer-events="all" tabindex="0" data-tt="Ustawiony na stałe próg kwantylowy używany do podziału na dobre / złe.">
+            <div class="lbl">γ</div><div class="val" id="statGamma">0,15</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section id="code">
+  <h2>5&nbsp; Pseudokod — co naprawdę trzeba by napisać</h2>
+  <p class="subdek">Trzy procedury. Nic więcej nie jest potrzebne, żeby mieć działający (uproszczony) TPE.</p>
+
+<pre class="code"><span class="kw">procedure</span> TPE-LOOP(f, γ, n_candidates, R, budget)
+    history ← ∅
+    <span class="kw">for</span> t <span class="kw">in</span> 1..R <span class="kw">do</span>          <span class="cm">// bootstrap: model nie ma jeszcze na czym się uczyć</span>
+        x ← losowy punkt <span class="kw">in</span> domena
+        y ← f(x)
+        history.add((x, y))
+
+    <span class="kw">while</span> len(history) &lt; budget <span class="kw">do</span>
+        good, bad ← SPLIT-BY-QUANTILE(history, γ)   <span class="cm">// §3.1</span>
+        l ← FIT-DENSITY(good)                          <span class="cm">// §3.2</span>
+        g ← FIT-DENSITY(bad)                            <span class="cm">// §3.2</span>
+
+        best ← <span class="kw">null</span>; bestScore ← -∞
+        <span class="kw">for</span> c <span class="kw">in</span> 1..n_candidates <span class="kw">do</span>      <span class="cm">// §3.3</span>
+            x' ← SAMPLE-FROM(l)
+            score ← l(x') / (g(x') + ε)
+            <span class="kw">if</span> score &gt; bestScore <span class="kw">then</span>
+                best ← x'; bestScore ← score
+
+        y ← f(best)                          <span class="cm">// jedyna prawdziwa ewaluacja tej iteracji</span>
+        history.add((best, y))
+
+    <span class="kw">return</span> argmin_{(x,y) <span class="kw">in</span> history} y</pre>
+
+<pre class="code"><span class="kw">procedure</span> SPLIT-BY-QUANTILE(history, γ)
+    sorted ← sort history by y ascending    <span class="cm">// minimalizacja: mniejsze y = lepsze</span>
+    k ← max(1, round(γ · len(sorted)))
+    good ← sorted[0 : k]
+    bad  ← sorted[k : ]
+    <span class="kw">return</span> good, bad</pre>
+
+<pre class="code"><span class="kw">procedure</span> FIT-DENSITY(points)
+    <span class="cm">// Uproszczenie na potrzeby tej strony: niezależny estymator jądrowy</span>
+    <span class="cm">// na wymiar, stałe pasmo bw. Prawdziwe TPE buduje hierarchiczne (tree-</span>
+    <span class="cm">// -structured) rozkłady nad WARUNKOWĄ strukturą przestrzeni konfiguracji —</span>
+    <span class="cm">// patrz callout w §3.2.</span>
+    xs ← {x : (x, y) <span class="kw">in</span> points}
+    <span class="kw">return</span> x ↦ (1 / (len(xs)·bw)) · Σ_{xi <span class="kw">in</span> xs} K((x − xi) / bw)   <span class="cm">// K = jądro Gaussa</span></pre>
+
+  <p>To cały rdzeń algorytmu. Prawdziwa implementacja TPE (np. w Optunie czy Hyperopcie) dodaje do tego: warunkową strukturę przestrzeni (drzewo, po którym nawiguje FIT-DENSITY osobno w każdym warunkowym węźle), adaptacyjny dobór szerokości pasma per wymiar oraz obsługę przestrzeni mieszanych — ciągłych, całkowitoliczbowych i kategorycznych naraz. Rdzeń — podział, dwie gęstości, iloraz — zostaje ten sam.</p>
+</section>
+
+<section id="practice">
+  <h2>6&nbsp; Co wymyślasz sam — zastosowanie TPE do rzeczywistego problemu</h2>
+  <p>Ten sam podział, który już znasz z innych algorytmów w tej serii: <em>mechanizm</em> jest ustalony przez algorytm — nie ruszasz tego, jak działa podział kwantylowy czy akwizycja. To, co zmienia się za każdym razem, to jak Twój problem podłącza się do tego mechanizmu.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th style="width:26%">Punkt decyzyjny</th><th>Ustalone przez TPE</th><th>Ty decydujesz, dla każdego problemu</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Podział na dobre/złe</strong></td>
+          <td class="fixed-col">Zawsze progiem kwantylowym nad posortowaną historią — górne γ trafia do l(x), reszta do g(x).</td>
+          <td class="decide-col">Wartość γ — mniejsze daje ostrzejszy, bardziej selektywny model kosztem mniejszej liczby punktów do dopasowania, zwłaszcza wcześnie.</td>
+        </tr>
+        <tr>
+          <td><strong>Rodzina gęstości l(x), g(x)</strong></td>
+          <td class="fixed-col">Zawsze dwie osobne gęstości nad tym samym typem obiektu — jedna dla dobrych, jedna dla złych obserwacji.</td>
+          <td class="decide-col">Konkretna postać: jądro i jego szerokość pasma (stała jak w tym demie, czy adaptacyjna regułą Scotta/Silvermana), oraz — dla prawdziwych przestrzeni mieszanych — jak reprezentować wymiary kategoryczne i całkowitoliczbowe.</td>
+        </tr>
+        <tr>
+          <td><strong>Akwizycja — iloraz l/g</strong></td>
+          <td class="fixed-col">Kolejny kandydat zawsze maksymalizuje l(x)/g(x) wśród próbkowanych — równoważnik oczekiwanej poprawy względem progu γ.</td>
+          <td class="decide-col">Liczba kandydatów próbkowanych na iterację — za mało i ranking jest przypadkowy, za dużo i marnujesz czas na rachunki, które i tak nie zmienią wyboru.</td>
+        </tr>
+        <tr>
+          <td><strong>Kodowanie przestrzeni przeszukiwań</strong></td>
+          <td class="fixed-col">Nieadresowane — TPE zakłada gotowy wektor zmiennych z określonymi typami i zakresami.</td>
+          <td class="decide-col">Jak Twój problem staje się tym wektorem. Dla P3Net: jeden gen na krawędź grafu komórki plus jeden na (zdyskretyzowany) hiperparametr; dla TPE dokładnie ten sam wektor trzeba dodatkowo opisać jako niezależną lub płytko warunkową przestrzeń zmiennych.</td>
+        </tr>
+        <tr>
+          <td><strong>Liczba punktów startowych R</strong></td>
+          <td class="fixed-col">Zawsze najpierw czysto losowy bootstrap — model nie ma z czego korzystać, dopóki historia jest pusta.</td>
+          <td class="decide-col">Ile punktów bootstrapu wystarczy, zanim l(x)/g(x) staje się wiarygodniejsze niż losowe zgadywanie — zbyt mało i wczesne modele są szumem, zbyt dużo i marnujesz budżet, który mogła wykorzystać już poinformowana akwizycja.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <span class="tag">Ślepy punkt, który ta strona odsłania</span>
+    <p>TPE — nawet w swojej pełnej, hierarchicznej wersji z artykułu — buduje model nad <strong>surowymi wartościami konfiguracji</strong>, wymiar po wymiarze. Struktura warunkowa („B istnieje tylko, gdy A ma tę wartość”) jest znana z góry i zakodowana w drzewie przestrzeni, ale <em>które geny mają tendencję do wspólnego, skorelowanego przemieszczania się w dobrych rozwiązaniach</em> — to, co P3 odkrywa dynamicznie przez drzewo powiązań (sekcja 3.3 strony o P3) — nie jest tu w ogóle reprezentowane. Dla TPE każdy wymiar jest osobnym pytaniem do modelu; dla P3Net cały klaster genów, który historycznie działał najlepiej razem, jest kopiowany jako jedna jednostka, a decyzja o tym, które geny należą do tego samego klastra, jest wyuczona z danych, nie zakodowana w strukturze przestrzeni z góry.</p>
+    <p>Innymi słowy: TPE odpowiada na pytanie „gdzie w tej przestrzeni jest gęsto dobrze, a gdzie gęsto źle?” — i robi to dobrze, sekwencyjnie, z pamięcią. Nie odpowiada na pytanie „które wymiary tej przestrzeni w ogóle mają sens rozpatrywane osobno?”. To pytanie zadaje dopiero relatywny, świadomy powiązań surogat P3Net.</p>
+  </div>
+
+  <h3 style="margin-top:32px;"><span class="num">✓</span>Checklista przy stosowaniu TPE do nowego problemu</h3>
+  <ul class="checklist">
+    <li><span class="box"></span><span>Zdefiniuj wektor zmiennych: typ i zakres każdego wymiaru (ciągły, całkowitoliczbowy, kategoryczny).</span></li>
+    <li><span class="box"></span><span>Wybierz γ — im mniejsze, tym ostrzejszy model „dobrego”, tym mniej punktów wcześnie.</span></li>
+    <li><span class="box"></span><span>Wybierz rodzinę jądra i regułę doboru szerokości pasma dla l(x) i g(x).</span></li>
+    <li><span class="box"></span><span>Ustal liczbę punktów bootstrapu R i liczbę kandydatów próbkowanych na iterację.</span></li>
+    <li><span class="box"></span><span>Sprawdź, czy wymiary Twojej przestrzeni są rzeczywiście w miarę niezależne — jeśli nie, TPE i tak będzie działać, ale będzie tracić na tym, co P3Net wykorzystuje wprost.</span></li>
+  </ul>
+
+</section>
+
+</main>
+
+<footer class="page-end">
+  Źródło: J. Bergstra, R. Bardenet, Y. Bengio, B. Kégl, „Algorithms for Hyper-Parameter Optimization”, NeurIPS 2011 — sekcja 4 dla mechanizmu opisanego powyżej.
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ hover / focus detail tooltips ============ */
+  var tip = document.createElement("div");
+  tip.className = "tpe-tooltip";
+  tip.setAttribute("role", "tooltip");
+  document.body.appendChild(tip);
+  var ttCurrent = null;
+  function ttShow(el) {
+    var text = el.getAttribute("data-tt");
+    if (!text) return;
+    tip.textContent = text;
+    tip.style.display = "block";
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var x = r.left + r.width / 2 - tw / 2;
+    var y = r.top - th - 10;
+    if (y < 8) y = r.bottom + 10;
+    x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+    tip.style.left = (x + window.scrollX) + "px";
+    tip.style.top = (y + window.scrollY) + "px";
+    ttCurrent = el;
+  }
+  function ttHide() { tip.style.display = "none"; ttCurrent = null; }
+  document.addEventListener("mouseover", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("mouseout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  document.addEventListener("focusin", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el) ttShow(el);
+  });
+  document.addEventListener("focusout", function (e) {
+    var el = e.target.closest("[data-tt]");
+    if (el && el === ttCurrent) ttHide();
+  });
+  window.addEventListener("scroll", ttHide, { passive: true });
+
+  /* ============ real (simplified) TPE, run on a toy 1D objective ============ */
+  var DOMAIN = 10;
+  var GAMMA = 0.15;
+  var BW = 0.6;
+  var R_BOOTSTRAP = 5;
+  var N_CANDIDATES = 24;
+  var EPS = 1e-3;
+
+  function trueObjective(x) {
+    var deep = Math.exp(-Math.pow(x - 3.2, 2) / 0.05);
+    var shallow = 0.55 * Math.exp(-Math.pow(x - 7.6, 2) / 0.6);
+    var ripple = 0.04 * Math.sin(6 * x);
+    var v = 1.03 - 0.95 * deep - shallow + ripple;
+    return Math.max(0.02, v);
+  }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function randn() {
+    var u = 1 - Math.random(), v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function gaussK(u) { return Math.exp(-0.5 * u * u); }
+  function densityAt(x, xs, bw) {
+    if (!xs.length) return 0;
+    var s = 0;
+    for (var i = 0; i < xs.length; i++) s += gaussK((x - xs[i]) / bw);
+    return s / (xs.length * bw * Math.sqrt(2 * Math.PI));
+  }
+  function densityGrid(xs, bw, n) {
+    var g = [];
+    for (var i = 0; i <= n; i++) {
+      var x = DOMAIN * i / n;
+      g.push({ x: x, v: densityAt(x, xs, bw) });
+    }
+    return g;
+  }
+
+  // Generator implementing TPE-LOOP, yielding one micro-step per .next()
+  function* runTPE(useModel) {
+    var history = [];
+    var evalCount = 0;
+    var iterCount = 0;
+
+    function evaluate(x) {
+      evalCount++;
+      var y = trueObjective(x);
+      history.push({ x: x, y: y });
+      return y;
+    }
+
+    for (var i = 0; i < R_BOOTSTRAP; i++) {
+      var xb = Math.random() * DOMAIN;
+      var yb = evaluate(xb);
+      yield {
+        type: "init", history: history.slice(), evalCount: evalCount, iterCount: iterCount,
+        log: "Bootstrap (" + (i + 1) + "/" + R_BOOTSTRAP + "): losowy punkt startowy, bo model nie ma jeszcze na czym się uczyć — x=" + xb.toFixed(2) + ", y=" + yb.toFixed(3) + "."
+      };
+    }
+
+    while (true) {
+      if (!useModel) {
+        var xr = Math.random() * DOMAIN;
+        var yr = evaluate(xr);
+        yield {
+          type: "random-sample", history: history.slice(), evalCount: evalCount, iterCount: iterCount,
+          log: "Losowe przeszukiwanie: kolejna próbka niezależna od wszystkich poprzednich (x=" + xr.toFixed(2) + ", y=" + yr.toFixed(3) + ") — historia nie jest w żaden sposób wykorzystywana."
+        };
+        continue;
+      }
+
+      var sorted = history.slice().sort(function (a, b) { return a.y - b.y; });
+      var k = Math.max(1, Math.round(GAMMA * sorted.length));
+      var good = sorted.slice(0, k);
+      var bad = sorted.slice(k);
+      good.forEach(function (p) { p.tag = "good"; });
+      bad.forEach(function (p) { p.tag = "bad"; });
+      yield {
+        type: "split", history: history.slice(), good: good, bad: bad, threshold: sorted[k - 1].y,
+        evalCount: evalCount, iterCount: iterCount,
+        log: "Podział kwantylowy: najlepsze " + k + " z " + sorted.length + " obserwacji (γ=" + GAMMA + ") to „dobre” l(x), pozostałe " + bad.length + " to „złe” g(x)."
+      };
+
+      var goodXs = good.map(function (p) { return p.x; });
+      var badXs = bad.map(function (p) { return p.x; });
+      var lGrid = densityGrid(goodXs, BW, 160);
+      var gGrid = densityGrid(badXs, BW, 160);
+      yield {
+        type: "fit", history: history.slice(), good: good, bad: bad, lGrid: lGrid, gGrid: gGrid,
+        evalCount: evalCount, iterCount: iterCount,
+        log: "Dopasowanie gęstości: sumujemy jądra Gaussa (pasmo " + BW + ") wokół dobrych punktów → l(x), i wokół złych → g(x)."
+      };
+
+      var candidates = [];
+      for (var c = 0; c < N_CANDIDATES; c++) {
+        var center = goodXs[Math.floor(Math.random() * goodXs.length)];
+        var xc = clamp(center + randn() * BW, 0, DOMAIN);
+        var lc = densityAt(xc, goodXs, BW);
+        var gc = densityAt(xc, badXs, BW);
+        candidates.push({ x: xc, score: lc / (gc + EPS) });
+      }
+      var best = candidates[0];
+      for (var ci = 1; ci < candidates.length; ci++) if (candidates[ci].score > best.score) best = candidates[ci];
+      yield {
+        type: "sample", history: history.slice(), good: good, bad: bad, lGrid: lGrid, gGrid: gGrid,
+        candidates: candidates, best: best, evalCount: evalCount, iterCount: iterCount,
+        log: "Próbkowanie " + N_CANDIDATES + " kandydatów z l(x), ocena ilorazem l(x)/g(x) — najlepszy: x=" + best.x.toFixed(2) + " (iloraz " + best.score.toFixed(2) + ")."
+      };
+
+      var ybest = evaluate(best.x);
+      iterCount++;
+      yield {
+        type: "evaluate", history: history.slice(), good: good, bad: bad, lGrid: lGrid, gGrid: gGrid,
+        candidates: candidates, best: best, y: ybest, evalCount: evalCount, iterCount: iterCount,
+        log: "Jedyna prawdziwa ewaluacja tej iteracji: f(" + best.x.toFixed(2) + ") = " + ybest.toFixed(3) + " — dołącza do historii i wpłynie na kolejny podział kwantylowy."
+      };
+    }
+  }
+
+  /* ============ demo wiring ============ */
+  var el = {
+    step: document.getElementById("btnStep"),
+    run: document.getElementById("btnRun"),
+    ff: document.getElementById("btnFF"),
+    reset: document.getElementById("btnReset"),
+    modeTpe: document.getElementById("modeTpe"),
+    modeRandom: document.getElementById("modeRandom"),
+    statEval: document.getElementById("statEval"),
+    statIter: document.getElementById("statIter"),
+    statBest: document.getElementById("statBest"),
+    statGamma: document.getElementById("statGamma"),
+    log: document.getElementById("demoLog"),
+    phaseCaption: document.getElementById("phaseCaption"),
+    historyView: document.getElementById("historyView"),
+    splitView: document.getElementById("splitView"),
+    winnerView: document.getElementById("winnerView"),
+    bestView: document.getElementById("bestView"),
+    gTrueFn: document.getElementById("tpeTrueFn"),
+    gAxes: document.getElementById("tpeAxes"),
+    gThreshold: document.getElementById("tpeThreshold"),
+    gPoints: document.getElementById("tpePoints"),
+    gCandidates: document.getElementById("tpeCandidates"),
+    gDensity: document.getElementById("tpeDensity")
+  };
+  if (!el.step) return; // demo markup not present, nothing to wire
+
+  /* ---- coordinate mapping ---- */
+  var PX0 = 70, PX1 = 900;
+  var MAIN_Y_TOP = 20, MAIN_Y_BOTTOM = 210, VAL_MAX = 1.15;
+  var DENS_Y_TOP = 240, DENS_Y_BOTTOM = 350;
+
+  function px(x) { return PX0 + (x / DOMAIN) * (PX1 - PX0); }
+  function pyMain(v) { return MAIN_Y_BOTTOM - clamp(v / VAL_MAX, 0, 1) * (MAIN_Y_BOTTOM - MAIN_Y_TOP); }
+
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  /* ---- static axes + true function curve (drawn once) ---- */
+  (function drawStatic() {
+    el.gAxes.innerHTML = "";
+    el.gAxes.appendChild(svgEl("line", { x1: PX0, y1: MAIN_Y_BOTTOM, x2: PX1, y2: MAIN_Y_BOTTOM, stroke: "currentColor", "stroke-width": "1.2", opacity: "0.4" }));
+    el.gAxes.appendChild(svgEl("line", { x1: PX0, y1: DENS_Y_BOTTOM, x2: PX1, y2: DENS_Y_BOTTOM, stroke: "currentColor", "stroke-width": "1.2", opacity: "0.4" }));
+    for (var t = 0; t <= DOMAIN; t += 2) {
+      var tx = px(t);
+      var tick = svgEl("text", { x: tx, y: MAIN_Y_BOTTOM + 16, "text-anchor": "middle", class: "diagram-label", "font-size": "10.5", fill: "currentColor", opacity: "0.55" });
+      tick.textContent = String(t);
+      el.gAxes.appendChild(tick);
+      var tick2 = svgEl("text", { x: tx, y: DENS_Y_BOTTOM + 16, "text-anchor": "middle", class: "diagram-label", "font-size": "10.5", fill: "currentColor", opacity: "0.55" });
+      tick2.textContent = String(t);
+      el.gAxes.appendChild(tick2);
+    }
+    var lbl1 = svgEl("text", { x: PX0, y: MAIN_Y_TOP - 4, class: "diagram-label", "font-size": "11", fill: "currentColor", opacity: "0.6" });
+    lbl1.textContent = "wartość celu f(x) — niżej = lepiej";
+    el.gAxes.appendChild(lbl1);
+    var lbl2 = svgEl("text", { x: PX0, y: DENS_Y_TOP - 6, class: "diagram-label", "font-size": "11", fill: "currentColor", opacity: "0.6" });
+    lbl2.textContent = "l(x), g(x) i iloraz l/g (znormalizowane do wysokości panelu)";
+    el.gAxes.appendChild(lbl2);
+
+    el.gTrueFn.innerHTML = "";
+    var n = 200, d = "";
+    for (var i = 0; i <= n; i++) {
+      var x = DOMAIN * i / n;
+      var y = trueObjective(x);
+      var cmd = (i === 0 ? "M" : "L");
+      d += cmd + px(x).toFixed(1) + "," + pyMain(y).toFixed(1) + " ";
+    }
+    var fnPath = svgEl("path", { d: d, fill: "none", stroke: "currentColor", "stroke-width": "1.3", "stroke-dasharray": "3 4", opacity: "0.4", "pointer-events": "all", tabindex: "0" });
+    fnPath.setAttribute("data-tt", "Prawdziwa funkcja celu — narysowana tylko dla Ciebie jako czytelnika. Sam algorytm jej nie widzi; zna wyłącznie wartości w punktach, które sam wybrał do ewaluacji.");
+    el.gTrueFn.appendChild(fnPath);
+  })();
+
+  var PHASE_INFO = {
+    init: "<strong>Bootstrap</strong> — kilka czysto losowych punktów startowych, dokładnie jak w losowym przeszukiwaniu, zanim historia ma na czym oprzeć model.",
+    "random-sample": "<strong>Losowe przeszukiwanie</strong> — próbka jednostajna, niezależna od historii. To punkt odniesienia, z którym porównujesz tryb TPE.",
+    split: "<strong>Podział kwantylowy</strong> (sekcja 3.1) — historia posortowana po wartości celu i przecięta progiem γ na dobre / złe.",
+    fit: "<strong>Dopasowanie gęstości</strong> (sekcja 3.2) — l(x) nad dobrymi punktami, g(x) nad złymi, oba jako sumy jąder Gaussa.",
+    sample: "<strong>Krok akwizycji</strong> (sekcja 3.3) — kandydaci próbkowani z l(x), każdy oceniony ilorazem l(x)/g(x).",
+    evaluate: "<strong>Jedyna prawdziwa ewaluacja</strong> tej iteracji — zwycięzca rankingu trafia do funkcji celu naprawdę."
+  };
+
+  function updatePhase(type) {
+    if (PHASE_INFO[type]) el.phaseCaption.innerHTML = PHASE_INFO[type];
+  }
+
+  function renderMainPoints(history) {
+    el.gPoints.innerHTML = "";
+    for (var i = 0; i < history.length; i++) {
+      var p = history[i];
+      var cls = p.tag === "good" ? "good" : (p.tag === "bad" ? "bad" : "neutral");
+      var fill = p.tag === "good" ? "var(--good-soft)" : (p.tag === "bad" ? "var(--bad-soft)" : "var(--bg-raised)");
+      var stroke = p.tag === "good" ? "var(--good)" : (p.tag === "bad" ? "var(--bad)" : "var(--line-strong)");
+      var c = svgEl("circle", {
+        cx: px(p.x).toFixed(1), cy: pyMain(p.y).toFixed(1), r: "6",
+        fill: fill, stroke: stroke, "stroke-width": "1.6",
+        "pointer-events": "all", tabindex: "0"
+      });
+      c.setAttribute("data-tt", "x=" + p.x.toFixed(2) + ", y=" + p.y.toFixed(3) + (p.tag ? (" — " + (p.tag === "good" ? "dobra" : "zła") + " obserwacja") : " — jeszcze nie podzielona"));
+      el.gPoints.appendChild(c);
+    }
+  }
+
+  function renderThreshold(threshold) {
+    el.gThreshold.innerHTML = "";
+    if (threshold == null) return;
+    var y = pyMain(threshold);
+    el.gThreshold.appendChild(svgEl("line", { x1: PX0, y1: y.toFixed(1), x2: PX1, y2: y.toFixed(1), stroke: "var(--accent)", "stroke-width": "1.4", "stroke-dasharray": "4 4", opacity: "0.75" }));
+    var lbl = svgEl("text", { x: PX1 - 4, y: (y - 6).toFixed(1), "text-anchor": "end", class: "diagram-label", "font-size": "10.5", fill: "var(--accent)" });
+    lbl.textContent = "próg γ";
+    el.gThreshold.appendChild(lbl);
+  }
+
+  function renderCandidates(candidates, best) {
+    el.gCandidates.innerHTML = "";
+    if (!candidates) return;
+    var maxScore = candidates.reduce(function (m, c) { return Math.max(m, c.score); }, 0.0001);
+    for (var i = 0; i < candidates.length; i++) {
+      var c = candidates[i];
+      var isBest = best && c === best;
+      var op = clamp(0.18 + 0.55 * (c.score / maxScore), 0.15, 0.85);
+      var line = svgEl("line", {
+        x1: px(c.x).toFixed(1), y1: (MAIN_Y_BOTTOM).toFixed(1),
+        x2: px(c.x).toFixed(1), y2: (MAIN_Y_BOTTOM - 10).toFixed(1),
+        stroke: "var(--accent)", "stroke-width": isBest ? "2.4" : "1.3", opacity: isBest ? "0.95" : op
+      });
+      el.gCandidates.appendChild(line);
+      if (isBest) {
+        var marker = svgEl("circle", {
+          cx: px(c.x).toFixed(1), cy: (MAIN_Y_BOTTOM - 14).toFixed(1), r: "7",
+          fill: "var(--accent-soft)", stroke: "var(--accent)", "stroke-width": "2.2",
+          "pointer-events": "all", tabindex: "0"
+        });
+        marker.setAttribute("data-tt", "Zwycięzca rankingu: x=" + c.x.toFixed(2) + ", iloraz l/g=" + c.score.toFixed(2) + " — ten kandydat dostaje jedyną prawdziwą ewaluację tej iteracji.");
+        el.gCandidates.appendChild(marker);
+      }
+    }
+  }
+
+  function renderDensity(lGrid, gGrid, best) {
+    el.gDensity.innerHTML = "";
+    if (!lGrid || !gGrid) return;
+    var maxLG = 0.0001;
+    for (var i = 0; i < lGrid.length; i++) { maxLG = Math.max(maxLG, lGrid[i].v, gGrid[i].v); }
+    var H = DENS_Y_BOTTOM - DENS_Y_TOP;
+
+    function curvePath(grid, maxv) {
+      var d = "";
+      for (var i = 0; i < grid.length; i++) {
+        var yy = DENS_Y_BOTTOM - clamp(grid[i].v / maxv, 0, 1) * H;
+        d += (i === 0 ? "M" : "L") + px(grid[i].x).toFixed(1) + "," + yy.toFixed(1) + " ";
+      }
+      return d;
+    }
+
+    var lPath = svgEl("path", { d: curvePath(lGrid, maxLG), fill: "none", stroke: "var(--good)", "stroke-width": "2.2", "pointer-events": "all", tabindex: "0" });
+    lPath.setAttribute("data-tt", "l(x) — gęstość dobrych obserwacji. Wysoko tu = gęsto wśród najlepszych dotychczasowych wyników.");
+    el.gDensity.appendChild(lPath);
+
+    var gPath = svgEl("path", { d: curvePath(gGrid, maxLG), fill: "none", stroke: "var(--bad)", "stroke-width": "2.2", opacity: "0.85", "pointer-events": "all", tabindex: "0" });
+    gPath.setAttribute("data-tt", "g(x) — gęstość złych obserwacji. Wysoko tu = gęsto wśród gorszych dotychczasowych wyników.");
+    el.gDensity.appendChild(gPath);
+
+    var maxRatio = 0.0001;
+    var ratios = [];
+    for (var j = 0; j < lGrid.length; j++) {
+      var r = lGrid[j].v / (gGrid[j].v + EPS);
+      ratios.push(r);
+      maxRatio = Math.max(maxRatio, r);
+    }
+    var rd = "";
+    for (var k = 0; k < ratios.length; k++) {
+      var yy2 = DENS_Y_BOTTOM - clamp(ratios[k] / maxRatio, 0, 1) * H;
+      rd += (k === 0 ? "M" : "L") + px(lGrid[k].x).toFixed(1) + "," + yy2.toFixed(1) + " ";
+    }
+    var rPath = svgEl("path", { d: rd, fill: "none", stroke: "var(--accent)", "stroke-width": "1.6", "stroke-dasharray": "4 3", opacity: "0.85", "pointer-events": "all", tabindex: "0" });
+    rPath.setAttribute("data-tt", "Iloraz l(x)/g(x), znormalizowany do wysokości panelu — im wyżej, tym silniej model preferuje ten punkt jako kolejnego kandydata.");
+    el.gDensity.appendChild(rPath);
+
+    if (best) {
+      el.gDensity.appendChild(svgEl("line", { x1: px(best.x).toFixed(1), y1: DENS_Y_TOP, x2: px(best.x).toFixed(1), y2: DENS_Y_BOTTOM, stroke: "var(--accent)", "stroke-width": "1.2", "stroke-dasharray": "2 3", opacity: "0.6" }));
+    }
+  }
+
+  function fmtY(y) { return (y == null) ? "—" : y.toFixed(3); }
+
+  function renderPanels(ev) {
+    var history = ev.history || [];
+    var last8 = history.slice(-8);
+    el.historyView.innerHTML = "";
+    for (var i = 0; i < last8.length; i++) {
+      var p = last8[i];
+      var chip = document.createElement("span");
+      chip.className = "chip" + (p.tag === "good" ? " good" : (p.tag === "bad" ? " bad" : ""));
+      chip.textContent = "x=" + p.x.toFixed(2) + " y=" + p.y.toFixed(3);
+      el.historyView.appendChild(chip);
+    }
+    if (!last8.length) el.historyView.textContent = "—";
+
+    if (ev.good && ev.bad) {
+      el.splitView.innerHTML = "γ=" + GAMMA + "<br>dobre: " + ev.good.length + " · złe: " + ev.bad.length + "<br>próg y ≤ " + fmtY(ev.threshold);
+    }
+    if (ev.best) {
+      el.winnerView.innerHTML = "x=" + ev.best.x.toFixed(2) + "<br>iloraz l/g=" + ev.best.score.toFixed(2) + (ev.type === "evaluate" ? ("<br>y=" + fmtY(ev.y)) : "");
+    }
+    var bestY = null, bestX = null;
+    for (var h = 0; h < history.length; h++) {
+      if (bestY === null || history[h].y < bestY) { bestY = history[h].y; bestX = history[h].x; }
+    }
+    if (bestY !== null) {
+      el.bestView.innerHTML = "y=" + bestY.toFixed(3) + "<br>przy x=" + bestX.toFixed(2);
+    }
+
+    el.statEval.textContent = String(ev.evalCount || 0);
+    el.statIter.textContent = String(ev.iterCount || 0);
+    el.statBest.textContent = bestY === null ? "—" : bestY.toFixed(3);
+  }
+
+  function render(ev) {
+    renderMainPoints(ev.history || []);
+    renderThreshold(ev.threshold != null ? ev.threshold : null);
+    renderCandidates(ev.candidates || null, ev.best || null);
+    renderDensity(ev.lGrid || null, ev.gGrid || null, ev.best || null);
+    renderPanels(ev);
+    updatePhase(ev.type);
+    el.log.innerHTML = ev.log || "";
+  }
+
+  var gen = null;
+  var mode = "tpe";
+  var runTimer = null;
+
+  function newGen() { gen = runTPE(mode === "tpe"); }
+
+  function step() {
+    if (!gen) newGen();
+    var res = gen.next();
+    if (!res.done) render(res.value);
+  }
+
+  function fastForward(steps) {
+    if (!gen) newGen();
+    var lastVal = null;
+    for (var i = 0; i < steps; i++) {
+      var res = gen.next();
+      if (!res.done) lastVal = res.value;
+    }
+    if (lastVal) {
+      render(lastVal);
+      el.log.innerHTML = "Przewinięto " + steps + " kroków silnika — " + (lastVal.log || "");
+    }
+  }
+
+  function setRunning(on) {
+    if (on) {
+      if (runTimer) return;
+      el.run.textContent = "Zatrzymaj";
+      runTimer = setInterval(step, 550);
+    } else {
+      el.run.textContent = "Uruchom";
+      if (runTimer) { clearInterval(runTimer); runTimer = null; }
+    }
+  }
+
+  function resetAll() {
+    setRunning(false);
+    newGen();
+    el.gPoints.innerHTML = "";
+    el.gThreshold.innerHTML = "";
+    el.gCandidates.innerHTML = "";
+    el.gDensity.innerHTML = "";
+    el.historyView.innerHTML = "";
+    el.splitView.textContent = "—";
+    el.winnerView.textContent = "—";
+    el.bestView.textContent = "—";
+    el.statEval.textContent = "0";
+    el.statIter.textContent = "0";
+    el.statBest.textContent = "—";
+    el.phaseCaption.textContent = "Kliknij „Krok” albo „Uruchom”, żeby zobaczyć algorytm w akcji — wykres powyżej aktualizuje się na żywo z każdym krokiem.";
+    el.log.textContent = "Kliknij „Krok” albo „Uruchom”, żeby zacząć.";
+  }
+
+  el.step.addEventListener("click", function () { setRunning(false); step(); });
+  el.run.addEventListener("click", function () { setRunning(!runTimer); });
+  el.ff.addEventListener("click", function () { setRunning(false); fastForward(30); });
+  el.reset.addEventListener("click", resetAll);
+
+  el.modeTpe.addEventListener("click", function () {
+    if (mode === "tpe") return;
+    mode = "tpe";
+    el.modeTpe.classList.add("active");
+    el.modeRandom.classList.remove("active");
+    resetAll();
+  });
+  el.modeRandom.addEventListener("click", function () {
+    if (mode === "random") return;
+    mode = "random";
+    el.modeRandom.classList.add("active");
+    el.modeTpe.classList.remove("active");
+    resetAll();
+  });
+
+  newGen();
+})();
+</script>
