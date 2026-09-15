@@ -72,10 +72,30 @@ from p3net.search_engines.p3.optimal_mixing import SweepState
 def _improves(candidate: Objectives, current: Objectives) -> bool:
     """Accept unless `current` strictly Pareto-dominates `candidate` --
     the same permissive "not worse" spirit as
-    `methods.p3_absolute.P3Absolute`'s absolute acceptance rule, applied
-    to a real (not surrogate-predicted) objective vector so a genuinely
-    useful trade-off (better on one objective, worse on another) still
-    counts as an improving step."""
+    `methods.p3_absolute.P3Absolute`'s absolute acceptance rule, so a
+    genuinely useful trade-off (better on one objective, worse on
+    another) still counts as an improving step.
+
+    Two consequences worth stating, because neither is what the rule was
+    originally written for:
+
+    1. Every production caller in this project drives `climb` with
+       `fitness_fn=surrogate.predict`, NOT a real objective vector
+       (`methods.bartnik_p3.BartnikP3._gated_climb_proposal` and its
+       sibling in experiments-przewozniczek both do). Under a surrogate,
+       permissiveness stops being "tolerate a real trade-off" and becomes
+       "tolerate anything the surrogate's prediction error does not make
+       look strictly dominated" -- a materially weaker filter than the
+       same rule applied to measured objectives.
+    2. The rule is multi-objective. A hill climber substituted via
+       `climb`'s own `hill_climber` parameter need not be: notably
+       `fihc_elympus`, which is driven through
+       `make_elympus_fitness_adapter` and therefore optimises ONE scalar
+       objective. Swapping the hill climber therefore changes two things
+       at once -- the comparison mechanism AND the objective handling --
+       so a comparison between a default climb and a substituted one does
+       not isolate the comparison mechanism by itself. See
+       `fihc_elympus`'s own module docstring."""
     return not dominates(current, candidate)
 
 
@@ -90,6 +110,34 @@ def first_improvement_hill_climber(
     """Algorithm 4 shape: local search over one individual, one
     coordinate at a time, taking the first improving alternative value
     found rather than searching for the best one."""
+    current, _ = _first_improvement_hill_climb(
+        genotype, search_space, fitness_fn, rng, validity=validity
+    )
+    return current
+
+
+def _first_improvement_hill_climb(
+    genotype: Genotype,
+    search_space: SearchSpace,
+    fitness_fn: Callable[[Genotype], Objectives],
+    rng: random.Random,
+    *,
+    validity: Validity | None = None,
+    on_decision: Callable[[Genotype, Genotype, float, bool], None] | None = None,
+) -> tuple[Genotype, Objectives]:
+    """Same climb as `first_improvement_hill_climber`, but also returns the
+    final individual's objective vector -- `climb()` needs it immediately
+    afterwards, and this loop already computed it as `current_obj`;
+    recomputing via a second `fitness_fn(x)` call (as `climb()` used to,
+    unconditionally) wastes one real evaluation on every plain-FIHC climb
+    for a value already known. `first_improvement_hill_climber`'s own
+    public, genotype-only return type is preserved above so existing
+    callers/tests are unaffected.
+
+    `on_decision(current, candidate, predicted_f1_improvement, accepted)`,
+    if given, is told about every alternative the climb scores (for
+    surrogate-decision logging, p3net.harness.decision_log); it has no
+    effect on the climb."""
     current = genotype
     current_obj = fitness_fn(current)
     order = list(range(search_space.n))
@@ -103,10 +151,13 @@ def first_improvement_hill_climber(
             if validity is not None and not is_valid(candidate, validity):
                 continue
             candidate_obj = fitness_fn(candidate)
-            if _improves(candidate_obj, current_obj):
+            improves = _improves(candidate_obj, current_obj)
+            if on_decision is not None:
+                on_decision(current, candidate, current_obj[0] - candidate_obj[0], improves)
+            if improves:
                 current, current_obj = candidate, candidate_obj
                 break
-    return current
+    return current, current_obj
 
 
 @dataclass
@@ -164,10 +215,12 @@ def climb(
         raise ValueError("climb requires at least one existing level (call add_level first)")
 
     if hill_climber is None:
-        x = first_improvement_hill_climber(individual, search_space, fitness_fn, rng, validity=validity)
+        x, x_obj = _first_improvement_hill_climb(
+            individual, search_space, fitness_fn, rng, validity=validity
+        )
     else:
         x = hill_climber(individual)
-    x_obj = fitness_fn(x)
+        x_obj = fitness_fn(x)
 
     level_index = 0
     while level_index < len(pyramid.levels):

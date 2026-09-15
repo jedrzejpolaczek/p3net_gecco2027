@@ -20,7 +20,7 @@ from p3net.surrogates.elympus import ELyMPuS
 def test_fihc_elympus_never_worsens_the_final_objective_on_the_synthetic_trap():
     space = build_k_ary_trap_space(n_blocks=3, block_size=4, alphabet_size=4)
     graph = true_dependency_graph(n_blocks=3, block_size=4)
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(10))
 
     rng = random.Random(0)
     start = space.sample_uniform(rng)
@@ -32,7 +32,7 @@ def test_fihc_elympus_never_worsens_the_final_objective_on_the_synthetic_trap():
 def test_fihc_elympus_reaches_the_global_optimum_from_a_fixed_deceptive_start():
     space = build_k_ary_trap_space(n_blocks=1, block_size=4, alphabet_size=4)
     graph = true_dependency_graph(n_blocks=1, block_size=4)
-    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph)
+    e = ELyMPuS(search_space=space, fitness_fn=k_ary_trap_fitness, dependencies=graph, rng=random.Random(11))
 
     all_off_target = Genotype(values=(1, 1, 1, 1))  # u=0, deceptive-adjacent, not the global optimum
     rng = random.Random(1)
@@ -49,7 +49,7 @@ def test_fihc_elympus_respects_validity():
     def only_all_zero_invalid(g: Genotype) -> float:
         return 1.0 if all(v == 0 for v in g.values) else -1.0
 
-    e = ELyMPuS(search_space=space, fitness_fn=fitness)
+    e = ELyMPuS(search_space=space, fitness_fn=fitness, rng=random.Random(12))
     rng = random.Random(2)
     start = Genotype(values=(1, 0, 0, 0))
     result = fihc_elympus(start, space, e, rng, validity=only_all_zero_invalid)
@@ -78,7 +78,7 @@ def test_climb_accepts_fihc_elympus_as_a_pluggable_hill_climber():
         return (k_ary_trap_fitness(g),)
 
     scalar_fitness = make_elympus_fitness_adapter(real_fitness, objective_index=0)
-    elympus = ELyMPuS(search_space=space, fitness_fn=scalar_fitness, dependencies=graph)
+    elympus = ELyMPuS(search_space=space, fitness_fn=scalar_fitness, dependencies=graph, rng=random.Random(13))
 
     pyramid = CanonicalPyramid()
     pyramid.add_level()
