@@ -1,0 +1,22 @@
+# Design Evolution stage: S3 = S2 + RidgeCV surrogate (regularisation chosen by built-in cross-validation). Never run before as a separate stage: RidgeCV and the pyramid redesign were adopted together on 2026-08-18; the paper orders RidgeCV first.
+#
+# One stage of the paper's Design Evolution section, expressed as a
+# configuration of the current codebase so it can be re-run from scratch
+# with full diagnostics (configs/pipeline/v004.yaml, stage
+# s2_design_evolution). Stage flags are documented on
+# p3net.methods.p3net.P3Net; surrogate_model / use_analytic_cost on
+# scripts/run_experiment.py::build_method.
+#
+# default_grid: false -- never part of the headline comparison.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  use_analytic_cost: true
+  surrogate_model: ridge_cv
+  level_init: empty
+  stall_criterion: dominance

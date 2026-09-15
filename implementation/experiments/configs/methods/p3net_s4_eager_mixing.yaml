@@ -1,0 +1,19 @@
+# Design Evolution stage: S4' = S4 (p3net.yaml, the current default) + optimal mixing starts once a level holds growth_factor individuals instead of its full geometric size. The 2026-08-18 'start mixing much sooner, like canonical P3' attempt, reverted after runaway level growth in a unit test and never run on a real benchmark. A documented dead end.
+#
+# One stage of the paper's Design Evolution section, expressed as a
+# configuration of the current codebase so it can be re-run from scratch
+# with full diagnostics (configs/pipeline/v004.yaml, stage
+# s2_design_evolution). Stage flags are documented on
+# p3net.methods.p3net.P3Net; surrogate_model / use_analytic_cost on
+# scripts/run_experiment.py::build_method.
+#
+# default_grid: false -- never part of the headline comparison.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  bootstrap_threshold: growth_factor

@@ -1,0 +1,22 @@
+# Design Evolution stage: S1, the original P3Net. f2 inherited from the ancestor, unregularised OLS surrogate, new levels filled purely at random, level counts as improving only if a pass strictly dominates its best incumbent. Must reproduce results/archive/p3net-pre-analytic-cost_2026-08-17 exactly (scripts/verify_stage_reproduces_archive.py).
+#
+# One stage of the paper's Design Evolution section, expressed as a
+# configuration of the current codebase so it can be re-run from scratch
+# with full diagnostics (configs/pipeline/v004.yaml, stage
+# s2_design_evolution). Stage flags are documented on
+# p3net.methods.p3net.P3Net; surrogate_model / use_analytic_cost on
+# scripts/run_experiment.py::build_method.
+#
+# default_grid: false -- never part of the headline comparison.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  use_analytic_cost: false
+  surrogate_model: ols
+  level_init: empty
+  stall_criterion: dominance
