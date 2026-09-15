@@ -65,7 +65,9 @@ from methods.external._ask_tell_shared import AskTellMethod
 FIXED_BUDGET = 1.0
 
 
-def _build_configspace(search_space: SearchSpace, *, seed: int | None = None) -> CS.ConfigurationSpace:
+def _build_configspace(
+    search_space: SearchSpace, *, seed: int | None = None
+) -> CS.ConfigurationSpace:
     """`seed`, if given, seeds ConfigurationSpace's OWN internal
     numpy.random.RandomState (created fresh at construction time,
     independent of numpy's global RNG state -- confirmed by reading
@@ -211,9 +213,7 @@ def mo_bohb_ask_tell(
 
     def report(genotype: Genotype, objectives: Objectives) -> None:
         config = pending_configs.pop(genotype)
-        _tell_loss(
-            config, _tchebycheff_scalarize(objectives, rng, objective_mins, objective_maxs)
-        )
+        _tell_loss(config, _tchebycheff_scalarize(objectives, rng, objective_mins, objective_maxs))
 
     return sample, report
 

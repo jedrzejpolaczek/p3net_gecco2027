@@ -16,6 +16,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from p3net.harness.decision_log import DecisionLog
 from p3net.harness.evaluation_cache import EvaluationCache
 from p3net.harness.runner import Observation, RunState
 from p3net.problem.decoding import Validity, is_valid
@@ -47,6 +48,9 @@ class NSGANetV2:
 
     _population: list[Genotype] = field(default_factory=list, init=False, repr=False)
     _history: dict[Genotype, Observation] = field(default_factory=dict, init=False, repr=False)
+    #: Uniform sample of predictor selections, checked against the benchmark
+    #: after the run; never influences the search.
+    decision_log: DecisionLog = field(default_factory=DecisionLog, init=False, repr=False)
 
     def propose(self, state: RunState) -> list[Genotype]:
         if len(self._population) < self.population_size:
@@ -66,8 +70,16 @@ class NSGANetV2:
 
         surrogate = AbsoluteRegressorSurrogate(model_factory=self.model_factory)
         surrogate.fit(list(self._history.values()), objective_index=self.objective_index)
-        pool.sort(key=surrogate.predict)
+        predicted = {g: surrogate.predict(g) for g in pool}
+        pool.sort(key=predicted.__getitem__)
         selected = pool[: self.population_size]
+        for rank, g in enumerate(pool):
+            self.decision_log.selection(
+                source="predictor",
+                candidate=g,
+                predicted_f1=predicted[g],
+                accepted=rank < self.population_size,
+            )
 
         return [
             g

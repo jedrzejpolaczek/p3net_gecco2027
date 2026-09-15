@@ -26,6 +26,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from p3net.harness.decision_log import DecisionLog
 from p3net.harness.evaluation_cache import EvaluationCache
 from p3net.harness.runner import Observation, RunState
 from p3net.problem.decoding import Validity, is_valid
@@ -62,6 +63,9 @@ class P3Absolute:
 
     _pyramid: Pyramid = field(init=False, repr=False)
     _history: dict[Genotype, Observation] = field(default_factory=dict, init=False, repr=False)
+    #: Uniform sample of surrogate acceptance decisions, checked against the
+    #: benchmark after the run; never influences the search.
+    decision_log: DecisionLog = field(default_factory=DecisionLog, init=False, repr=False)
 
     #: Same diagnostics P3Net's own Pyramid engine carries (Results,
     #: "Diagnostics: population-pyramid bootstrap share") -- kept to the
@@ -72,9 +76,7 @@ class P3Absolute:
     #: not have.
     bootstrap_proposals: int = field(default=0, init=False, repr=False)
     mixing_proposals: int = field(default=0, init=False, repr=False)
-    population_snapshots: list[list[Genotype]] = field(
-        default_factory=list, init=False, repr=False
-    )
+    population_snapshots: list[list[Genotype]] = field(default_factory=list, init=False, repr=False)
 
     def __post_init__(self) -> None:
         if self.kappa is None:
@@ -206,6 +208,14 @@ class P3Absolute:
                     sweep.reject(proposal)
                     continue
                 predicted = surrogate.predict(proposal.candidate)
+                self.decision_log.improvement(
+                    source="mixing",
+                    reference=proposal.parent,
+                    candidate=proposal.candidate,
+                    predicted_improvement=current_value - predicted,
+                    threshold=0.0,
+                    accepted=predicted <= current_value,
+                )
                 if predicted <= current_value:
                     sweep.accept(proposal)
                     chain_depth += 1
