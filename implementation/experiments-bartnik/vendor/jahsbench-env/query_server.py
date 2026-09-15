@@ -16,7 +16,9 @@ CELL_EDGES order and nas_genotype.py's CELL_OPERATIONS naming),
 (nas_genotype.py's lowercase naming), "trivial_augment": bool,
 "dataset": str, "epochs": int}
 
-Response: {"valid_acc": float, "size_mb": float} or {"error": str}
+Response: {"valid_acc": float, "size_mb": float, "train_acc": float,
+"test_acc": float, "runtime": float} or {"error": str}. `runtime` is the
+benchmark's cumulative training time up to `epochs`, in seconds.
 """
 
 from __future__ import annotations
@@ -70,7 +72,13 @@ def handle(request: dict, data_dir: str) -> dict:
     epochs = request["epochs"]
     result = benchmark(config, nepochs=epochs)
     row = result[epochs]
-    return {"valid_acc": row["valid-acc"], "size_mb": row["size_MB"]}
+    return {
+        "valid_acc": row["valid-acc"],
+        "size_mb": row["size_MB"],
+        "train_acc": row["train-acc"],
+        "test_acc": row["test-acc"],
+        "runtime": row["runtime"],
+    }
 
 
 def main() -> None:

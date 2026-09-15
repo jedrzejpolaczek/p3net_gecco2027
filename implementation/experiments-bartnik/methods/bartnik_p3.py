@@ -108,7 +108,14 @@ class BartnikP3:
     _warmup_proposed: int = field(default=0, init=False, repr=False)
     _delta_window: list[float] = field(default_factory=list, init=False, repr=False)
     _tau: float = field(default=0.0, init=False, repr=False)
-    _elite_size: int = field(default=0, init=False, repr=False)
+    #: The Pareto front's actual MEMBERSHIP, not just its size -- a front
+    #: whose composition changes (one elite replaced by another) while its
+    #: cardinality stays the same must still reset the gate, per this
+    #: class's own documented contract ("resets to a fresh quantile the
+    #: moment the real Pareto front changes"). Comparing only `len(elites)`
+    #: (an earlier version of this field) misses exactly that case, since
+    #: Genotype is frozen/hashable and safe to put in a frozenset.
+    _elite_set: frozenset[Genotype] = field(default_factory=frozenset, init=False, repr=False)
     _last_was_fallback: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -120,7 +127,13 @@ class BartnikP3:
     # -- harness.Method protocol ------------------------------------------
 
     def propose(self, state: RunState) -> list[Genotype]:
-        if self._warmup_proposed < self.warmup:
+        # `not self._history`, not just `self.warmup`, gates the surrogate
+        # path: an explicit `warmup=0` would otherwise call
+        # `_gated_climb_proposal` -> `_fit_surrogate` on zero observations
+        # on the very first call, crashing instead of falling back to a
+        # random proposal (AbsoluteRandomForestSurrogate.fit rejects an
+        # empty observation list by design).
+        if self._warmup_proposed < self.warmup or not self._history:
             self._warmup_proposed += 1
             return self._random_valid_batch(1)
         return self._gated_climb_proposal()
@@ -135,12 +148,12 @@ class BartnikP3:
             )
             self._history[obs.genotype] = obs
 
-        if self._warmup_proposed < self.warmup:
-            return
-        if self._warmup_proposed == self.warmup and not self._pyramid.levels[0].population:
-            self._pyramid.levels[0].population = list(self._history.keys())
-
-        elites = pareto_front(list(self._history.keys()), lambda g: self._history[g].objectives)
+        # Recorded unconditionally, BEFORE the warmup gate below -- see
+        # methods.przewozniczek_p3elympus.PrzewozniczekP3ELyMPuS's
+        # identical fix for the full reasoning (skipping this during
+        # warmup left `_delta_window` empty at the moment warmup ended,
+        # discarding real warmup deltas the first post-warmup
+        # `_reset_gate()` should have used).
         for obs in new_observations:
             best_before = min(
                 (o.objectives[self.objective_index] for o in self._history.values() if o is not obs),
@@ -150,8 +163,20 @@ class BartnikP3:
         if len(self._delta_window) > self.delta_window_size:
             self._delta_window = self._delta_window[-self.delta_window_size :]
 
-        if len(elites) != self._elite_size:
-            self._elite_size = len(elites)
+        if self._warmup_proposed < self.warmup:
+            return
+        # `>=`, not `==`: with `warmup=0` the `not self._history` guard in
+        # propose() forces `_warmup_proposed` to 1 before this ever runs,
+        # so `== 0` would never fire again and level 0 would never get its
+        # one-time bulk seed from `self._history` at all.
+        if self._warmup_proposed >= self.warmup and not self._pyramid.levels[0].population:
+            self._pyramid.levels[0].population = list(self._history.keys())
+
+        elites = pareto_front(list(self._history.keys()), lambda g: self._history[g].objectives)
+
+        elite_set = frozenset(elites)
+        if elite_set != self._elite_set:
+            self._elite_set = elite_set
             self._reset_gate()
         elif self._last_was_fallback:
             self._register_fallback()
@@ -187,7 +212,15 @@ class BartnikP3:
         self._tau -= (1.0 - self.eta) * max(abs(self._tau), 1.0)
 
     def _fit_surrogate(self) -> AbsoluteRandomForestSurrogate:
-        surrogate = AbsoluteRandomForestSurrogate(n_estimators=self.n_estimators)
+        # `random_state` drawn from `self.rng`, not left at its `None`
+        # default: without it, sklearn's RandomForestRegressor draws its
+        # bootstrap/feature-selection randomness from unseeded global
+        # state, so two runs sharing the same `rng` seed would still fit
+        # different trees on every refit and diverge from there --
+        # breaking reproducibility despite `self.rng` being seeded.
+        surrogate = AbsoluteRandomForestSurrogate(
+            n_estimators=self.n_estimators, random_state=self.rng.randrange(2**31)
+        )
         surrogate.fit(list(self._history.values()))
         return surrogate
 

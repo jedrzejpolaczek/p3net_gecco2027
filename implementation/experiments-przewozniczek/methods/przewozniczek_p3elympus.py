@@ -18,7 +18,22 @@ Combines pieces already built and independently validated:
   notes/lympus-nas-adaptation-validation.md for the literature check and
   synthetic validation this rests on -- validated savings are modest,
   11-13%, smaller than the source paper's own binary results, an honest,
-  documented gap, not glossed over).
+  documented gap, not glossed over. **That 11-13% figure does not
+  transfer to this class's own production wiring as-is**: it was measured
+  (Check 3) with ONE `ELyMPuS` instance's cache reused across 30
+  independent climbs, and that same note states a single cold-cache run
+  "shows no meaningful savings by itself" -- savings accumulate only with
+  sustained reuse. `_gated_climb_proposal` below builds one `ELyMPuS` per
+  call and reuses it across at most `max_climb_attempts` (default 5)
+  climbs before discarding it on the next `propose()` -- a reuse depth
+  roughly 6x shallower than what produced 11-13%, structurally closer to
+  the validation's disclosed near-zero-savings cold-cache regime than to
+  the headline figure. This is a second, separate honesty gap from the
+  "surrogate-predicted, not real, evaluations" one below -- not fixed
+  here, since resolving it (e.g. persisting `elympus` across
+  `_gated_climb_proposal` calls) would need re-litigating the "cached
+  against one surrogate fit is not sound against the next" constraint
+  documented at that construction site.).
 - `p3net.surrogates.absolute_random_forest.AbsoluteRandomForestSurrogate`
   -- reused unmodified, for the same structural reason as `BartnikP3`
   (below).
@@ -103,6 +118,13 @@ class PrzewozniczekP3ELyMPuS:
     objective_index: int = 0
     max_climb_attempts: int = 5
     delta_window_size: int = 50
+    #: Passed straight through to ELyMPuS(verify_probability=...). Non-zero
+    #: is required for `dependencies` to ever grow past empty here, since
+    #: this class starts every ELyMPuS instance with no seeded dependency
+    #: graph (see `_gated_climb_proposal` and ELyMPuS's own module
+    #: docstring for why this is opt-in rather than always-on: it trades
+    #: extra real-surrogate-prediction calls for runtime discovery).
+    elympus_verify_probability: float = 0.2
     experiment_type: str = "przewozniczek_p3elympus"
     protocol_version: str = "v1"
     cache: EvaluationCache = field(default_factory=EvaluationCache)
@@ -112,7 +134,10 @@ class PrzewozniczekP3ELyMPuS:
     _warmup_proposed: int = field(default=0, init=False, repr=False)
     _delta_window: list[float] = field(default_factory=list, init=False, repr=False)
     _tau: float = field(default=0.0, init=False, repr=False)
-    _elite_size: int = field(default=0, init=False, repr=False)
+    #: The Pareto front's actual MEMBERSHIP, not just its size -- see
+    #: methods.bartnik_p3.BartnikP3's identical field for the full
+    #: reasoning (same bug shape, same fix, reported alongside this one).
+    _elite_set: frozenset[Genotype] = field(default_factory=frozenset, init=False, repr=False)
     _last_was_fallback: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -124,7 +149,10 @@ class PrzewozniczekP3ELyMPuS:
     # -- harness.Method protocol ------------------------------------------
 
     def propose(self, state: RunState) -> list[Genotype]:
-        if self._warmup_proposed < self.warmup:
+        # `not self._history`, not just `self.warmup`, gates the surrogate
+        # path -- see methods.bartnik_p3.BartnikP3's identical guard for
+        # the full reasoning (same warmup=0 crash, same fix).
+        if self._warmup_proposed < self.warmup or not self._history:
             self._warmup_proposed += 1
             return self._random_valid_batch(1)
         return self._gated_climb_proposal()
@@ -139,12 +167,13 @@ class PrzewozniczekP3ELyMPuS:
             )
             self._history[obs.genotype] = obs
 
-        if self._warmup_proposed < self.warmup:
-            return
-        if self._warmup_proposed == self.warmup and not self._pyramid.levels[0].population:
-            self._pyramid.levels[0].population = list(self._history.keys())
-
-        elites = pareto_front(list(self._history.keys()), lambda g: self._history[g].objectives)
+        # Recorded unconditionally, BEFORE the warmup gate below: skipping
+        # this during warmup (an earlier version returned before ever
+        # reaching it) meant `_delta_window` was still empty the moment
+        # warmup ended, so the first post-warmup `_reset_gate()` computed
+        # `_quantile([], ...) == 0.0` (accept-everything) instead of using
+        # the `warmup` real deltas that were actually available -- exactly
+        # the data this window exists to hold.
         for obs in new_observations:
             best_before = min(
                 (o.objectives[self.objective_index] for o in self._history.values() if o is not obs),
@@ -154,8 +183,18 @@ class PrzewozniczekP3ELyMPuS:
         if len(self._delta_window) > self.delta_window_size:
             self._delta_window = self._delta_window[-self.delta_window_size :]
 
-        if len(elites) != self._elite_size:
-            self._elite_size = len(elites)
+        if self._warmup_proposed < self.warmup:
+            return
+        # `>=`, not `==` -- see methods.bartnik_p3.BartnikP3's identical
+        # condition for why (warmup=0 would otherwise never seed level 0).
+        if self._warmup_proposed >= self.warmup and not self._pyramid.levels[0].population:
+            self._pyramid.levels[0].population = list(self._history.keys())
+
+        elites = pareto_front(list(self._history.keys()), lambda g: self._history[g].objectives)
+
+        elite_set = frozenset(elites)
+        if elite_set != self._elite_set:
+            self._elite_set = elite_set
             self._reset_gate()
         elif self._last_was_fallback:
             self._register_fallback()
@@ -183,7 +222,13 @@ class PrzewozniczekP3ELyMPuS:
         self._tau -= (1.0 - self.eta) * max(abs(self._tau), 1.0)
 
     def _fit_surrogate(self) -> AbsoluteRandomForestSurrogate:
-        surrogate = AbsoluteRandomForestSurrogate(n_estimators=self.n_estimators)
+        # `random_state` drawn from `self.rng` -- see
+        # methods.bartnik_p3.BartnikP3's identical fix for the full
+        # reasoning (unseeded sklearn RNG otherwise defeats
+        # reproducibility from `self.rng` alone).
+        surrogate = AbsoluteRandomForestSurrogate(
+            n_estimators=self.n_estimators, random_state=self.rng.randrange(2**31)
+        )
         surrogate.fit(list(self._history.values()))
         return surrogate
 
@@ -191,18 +236,37 @@ class PrzewozniczekP3ELyMPuS:
         surrogate = self._fit_surrogate()
         best_real_f1 = min(obs.objectives[self.objective_index] for obs in self._history.values())
 
+        # One ELyMPuS instance per surrogate fit (i.e. per _gated_climb_proposal
+        # call), NOT per climb attempt: all `max_climb_attempts` climbs below
+        # share the same `surrogate.predict` fitness landscape, so reusing one
+        # instance across them is sound and lets its comparison cache AND its
+        # discovered `dependencies` (see ELyMPuS.discover_missing_dependency)
+        # actually accumulate within one call, instead of being thrown away
+        # after a single climb -- a previous version constructed a fresh
+        # ELyMPuS per attempt, which defeated both the caching this class'
+        # own docstring describes and the runtime dependency discovery
+        # `verify_probability` below exists to enable (without it,
+        # `dependencies` never grows past empty at all -- see
+        # ELyMPuS's own module docstring and
+        # notes/lympus-nas-adaptation-validation.md). A fresh instance is
+        # still built once per _gated_climb_proposal call because the
+        # underlying surrogate itself is refit every call -- a comparison
+        # cached against one surrogate fit is not guaranteed sound against
+        # the next one.
+        elympus = ELyMPuS(
+            search_space=self.search_space,
+            fitness_fn=make_elympus_fitness_adapter(surrogate.predict, objective_index=self.objective_index),
+            verify_probability=self.elympus_verify_probability,
+            rng=self.rng,
+        )
+
+        def _hill_climber(genotype: Genotype) -> Genotype:
+            return fihc_elympus(genotype, self.search_space, elympus, self.rng, validity=self.validity)
+
         for _ in range(self.max_climb_attempts):
             start = self.search_space.sample_uniform(self.rng)
             if not is_valid(start, self.validity):
                 continue
-
-            elympus = ELyMPuS(
-                search_space=self.search_space,
-                fitness_fn=make_elympus_fitness_adapter(surrogate.predict, objective_index=self.objective_index),
-            )
-
-            def _hill_climber(genotype: Genotype, _elympus: ELyMPuS = elympus) -> Genotype:
-                return fihc_elympus(genotype, self.search_space, _elympus, self.rng, validity=self.validity)
 
             candidate = climb(
                 start,
