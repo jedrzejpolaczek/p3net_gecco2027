@@ -1,101 +1,43 @@
 \section{Problem Formulation}
 \label{sec:problem-formulation}
 
-\subsection*{Formal definition}
+\paragraph{Search space.} Let $[n] \triangleq \{1, \dots, n\}$. A genotype
+$x = (x_1, \dots, x_n) \in \Lambda = \Lambda_1 \times \cdots \times \Lambda_n$ assigns one categorical value to
+each coordinate. The first coordinates choose one operation per edge of the cell graph (e.g.\
+\textsc{conv}$3{\times}3$, \textsc{skip}, \textsc{none}); the remaining coordinates choose training
+hyperparameters such as learning rate or weight decay. Continuous hyperparameters are discretised into a fixed
+grid before search (Section~\ref{sec:proposed-optimizer}), so $\Lambda$ is entirely categorical.
 
-Let $[n] \triangleq \{1, \dots, n\}$.
-The search space is defined as the Cartesian product
-\[
-    \Lambda = \Lambda_1 \times \Lambda_2 \times \cdots \times \Lambda_n,
-\]
-where each $\Lambda_i$ is a finite set of operations (e.g.\ \textsc{conv}$3{\times}3$, \textsc{skip}, \textsc{none}).
-A genotype $x = (x_1, \dots, x_n) \in \Lambda$ assigns one operation to each edge of the cell graph.
-Under the joint architecture and hyperparameter search setting targeted in Section~\ref{sec:results}, $\Lambda$
-is extended with continuous coordinates for training hyperparameters (e.g.\ learning rate, weight decay),
-giving $\Lambda = \Lambda_1 \times \cdots \times \Lambda_n \times \Theta$, where $\Theta \subset \mathbb{R}^m$
-collects these continuous coordinates. Two resolutions of how P3's block wise linkage tree crossover, defined
-over discrete groups, is to handle $\Theta$ remain open, and both are compatible with the formulation below:
-(i) discretising each coordinate of $\Theta$ into a finite set, absorbing it into the discrete product above
-without changing the crossover operator, or (ii) extending the linkage tree and optimal mixing to real valued
-mixing on $\Theta$ in the spirit of RV-GOMEA~\citep{andreadis2024maxclique}, alongside discrete mixing on $\Lambda_1 \times \cdots \times
-\Lambda_n$. Which of the two is used is fixed once, in Section~\ref{sec:proposed-optimizer}; either choice
-leaves $D$, $g$, $f_1$, and $f_2$ as defined below unchanged.
+\paragraph{Validity.} A decoding function $D \colon \Lambda \to \mathcal{N}$ maps a genotype to a network. Not
+every genotype decodes to a valid cell (e.g.\ no path from input to output). We write the constraint as
+$g(x) \leq 0$ and the feasible set as $\Lambda^* = \{x \in \Lambda : g(x) \leq 0\}$.
 
-\paragraph{Decoding and validity.}
-The decoding function $D \colon \Lambda \to \mathcal{N}$ maps a genotype to a neural network.
-Not every genotype yields a valid architecture (e.g.\ no path exists between input and output of the cell).
-The validity constraint is expressed as
-\[
-    g(x) \leq 0,
-\]
-where $g \colon \Lambda \to \mathbb{R}$ is a structural function, boolean in the cases used in this work (e.g.\ $g(x) \in \{-1, +1\}$ encoding whether an input--output path exists), stated in real-valued form to accommodate a graded infeasibility measure should a benchmark define one; $x$ is \emph{valid} if and only if $g(x) \leq 0$.
-The set of valid genotypes is denoted $\Lambda^* = \{x \in \Lambda : g(x) \leq 0\}$.
-
-\paragraph{Objective functions.}
-Each genotype $x \in \Lambda^*$ is assessed by two functions:
+\paragraph{Objectives.} Each $x \in \Lambda^*$ is assessed by
 \begin{align}
-    f_1(x) &= \text{validation error of network } D(x) \quad \text{(minimised)}, \\
-    f_2(x) &= \phi\bigl(D(x)\bigr) \quad \text{(computational proxy, minimised)},
+    f_1(x) &= \text{validation error of } D(x) \quad \text{(minimised)}, \\
+    f_2(x) &= \text{computational cost of } D(x) \quad \text{(minimised)}.
 \end{align}
-where $\phi$ denotes the chosen measure of computational cost (parameter count or FLOPs), computed analytically for a fixed input resolution, held at the resolution setting fixed by the highest fidelity level $r_K$ (Multi fidelity evaluation, below), so that $f_2$ does not vary with the fidelity level at which $f_1$ happens to be queried, even on benchmarks such as JAHS-Bench-201 where resolution is itself one of the fidelity axes.
-
-\paragraph{Multi objective formulation.}
-We seek the set of nondominated solutions (Pareto front):
+The cost measure is the one each benchmark exposes: model size in megabytes on JAHS-Bench-201, and tabulated
+total training-and-validation time on NAS-HPO-Bench-II, which is read from the same lookup-table row as $f_1$
+(one fixed recorded seed) and is therefore not cheaper to obtain. Both objectives are always queried at the highest fidelity $r_K$ the
+benchmark tabulates. We seek the Pareto front
 \[
-    \begin{aligned}[t]
-        \mathcal{P}^* ={} & \bigl\{ x \in \Lambda^* : \nexists\, x' \in \Lambda^*,\; \\
-        & f_1(x') \leq f_1(x) \;\wedge\; f_2(x') \leq f_2(x) \;\wedge{} \\
-        & \mathbf{f}(x') \neq \mathbf{f}(x) \bigr\},
-    \end{aligned}
+    \mathcal{P}^* = \bigl\{ x \in \Lambda^* : \nexists\, x' \in \Lambda^*,\;
+    \mathbf{f}(x') \preceq \mathbf{f}(x) \wedge \mathbf{f}(x') \neq \mathbf{f}(x) \bigr\},
 \]
-where $\mathbf{f}(x) = (f_1(x), f_2(x))$.
+where $\mathbf{f} = (f_1, f_2)$ and $\preceq$ is component-wise $\leq$.
 
-\paragraph{Multi fidelity evaluation.}
-Evaluating $f_1(x)$ at full fidelity is expensive.
-We introduce a fidelity ladder $r_1 < r_2 < \cdots < r_K$, ordered by increasing training epochs; where a
-benchmark exposes further resource axes affecting evaluation cost or the computational proxy (e.g.\ input
-resolution), each level $r_k$ additionally fixes a corresponding setting on those axes, so $r_k$ denotes a
-full resource configuration rather than an epoch count alone. On benchmarks with a single resource axis,
-this reduces to $r_k$ denoting the number of training epochs only.
-The objective at level $r_k$ is $f_1^{(k)}(x)$; the value at the highest level $f_1^{(K)}(x)$ is the target quality measure.
-For model learning and selection, methods that exploit the fidelity ladder use $f_1^{(k)}(x)$ at the lowest level that correlates sufficiently with $f_1^{(K)}(x)$, preventing bias introduced by mixing fidelity levels; P3Net itself does not exploit this ladder, operating exclusively at $r_K$ (Section~\ref{sec:proposed-optimizer}). None of the methods compared in Section~\ref{sec:results} (Baselines) exploits it either; it is defined here as general, substrate-level machinery, useful should a future multi-fidelity baseline (e.g.\ a Hyperband-based method) be added to the comparison, rather than as an active component of the present experiment.
+\paragraph{Budget.} The cost of search is the number of full evaluations of $\mathbf{f}$. Both benchmarks answer
+deterministically, so each configuration is evaluated once; randomness across the $R$ independent runs of a
+method comes from initialisation and stochastic operators, not from repeated queries.
 
-\paragraph{Evaluation noise.}
-Where the substrate answering $f_1$ carries genuine stochasticity, for instance live training or a
-benchmark's own recorded repeats, $f_1^{(k)}(x)$ is treated as a random variable: each configuration is
-evaluated with $s$ distinct seeds, or with samples drawn from the substrate's recorded repeats, and the
-median across them is used for selection and reporting. Deterministic substrates, such as a point estimate
-surrogate, require no such averaging. Both of P3Net's primary benchmarks (Section~\ref{sec:results}) answer queries
-deterministically: a point-estimate surrogate for JAHS-Bench-201, a fixed lookup table for
-NAS-HPO-Bench-II within its exhaustively tabulated range (caveat on which fidelity level this refers to
-discussed in Section~\ref{sec:related-work}). So $s=1$ throughout this work and this averaging step is not exercised; it is retained
-as general substrate-level machinery for future work on stochastic substrates such as live training. $s$
-should not be confused with $R$, the number of independent search runs per method (Section~\ref{sec:results}): $R$ remains
-meaningful regardless of substrate determinism, since randomness across runs comes from initialization and
-stochastic search operators, not from repeated queries to the same configuration.
-
-\paragraph{Surrogate model.}
-A full evaluation of $f_1(x)$ queries the true objective for $D(x)$; the concrete substrate for this
-query, whether live training, a benchmark lookup, or a benchmark's own surrogate, is instantiated in
-Section~\ref{sec:results}.
-After collecting $t$ full evaluations we have the observation dataset
+\paragraph{Relative surrogate.} After $t$ full evaluations we hold
+$\mathcal{H}_t = \{ (x^{(i)}, \mathbf{f}(x^{(i)})) \}_{i=1}^{t}$. Rather than regressing $f_1$ from an encoded
+genotype, as NSGANetV2 does~\citep{lu2020nsganetv2}, P3Net's surrogate is \emph{relative} and
+\emph{linkage-aware}. For a parent $x \in \Lambda^*$ and a candidate $x'$ that differs from $x$ only on a
+linkage subset $F \subseteq [n]$ of the current dependency model ($x'_i = x_i$ for all $i \notin F$), it
+predicts the effect of that local change,
 \[
-    \mathcal{H}_t = \bigl\{ (x^{(i)},\, \mathbf{f}(x^{(i)})) \bigr\}_{i=1}^{t}.
-\]
-Rather than regressing $f_1$ directly from an encoded genotype, as in NSGANetV2~\citep{lu2020nsganetv2}, the surrogate used by
-P3Net is \emph{relative} and \emph{linkage aware}: for a parent $x \in \Lambda^*$ and a candidate $x'$
-differing from $x$ only on the coordinates of a linkage subset $F \subseteq [n]$ identified by the current
-dependency model (i.e.\ $x'_i = x_i$ for all $i \notin F$), the surrogate predicts the effect of that local
-change relative to the parent,
-\[
-    \hat{\delta}_F \colon \Lambda^* \times \Lambda^* \to \mathbb{R},
-    \quad
     \hat{\delta}_F(x, x') \approx f_1(x) - f_1(x'),
 \]
-trained on pairwise fitness differences derived from $\mathcal{H}_t$.
-The primary cost of search is measured in calls to $f_1$ (full evaluations), not in calls to $\hat{\delta}_F$.
-This is what distinguishes P3Net from NSGANetV2~\citep{lu2020nsganetv2} already at the level of problem formulation: P3Net scores
-candidates relative to their parent using the structure discovered by P3, whereas NSGANetV2 scores each
-candidate in absolute terms from its encoding alone.
-The construction and update of $\hat{\delta}_F$, and its use within the P3Net search loop, are described in
-Section~\ref{sec:proposed-optimizer}.
+trained on pairwise differences derived from $\mathcal{H}_t$. A positive $\hat\delta_F$ predicts an improvement.
