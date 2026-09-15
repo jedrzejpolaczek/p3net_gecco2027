@@ -1,0 +1,81 @@
+% PARKED -- removed from the GECCO'27 draft on 2026-09-13.
+% The author is still investigating przewozniczek_p3elympus and expects to
+% reorient the paper around it later. This is the verbatim text as it stood in
+% chapters/v003/conclusions/main.tex (lines 56-122) before removal, kept so
+% nothing is lost. NOT \input by nas_compare_v0.0.3.tex.
+%
+% Open issue to resolve before this returns to a paper (review finding B4):
+% the comparison against bartnik_p3 does not isolate the comparison mechanism
+% alone. fihc_elympus optimises ONE scalar objective, while bartnik_p3's default
+% climber accepts anything not strictly Pareto-dominated. A third arm --
+% canonical pyramid + gate + RF surrogate + plain first-improvement over the
+% same scalar f1 -- is needed. See the docstrings of
+% lib/src/p3net/search_engines/p3/fihc_elympus.py and canonical_pyramid._improves.
+
+The same architecture-only grid was extended with a fourth arm, \texttt{przewozniczek\_p3elympus}, this project's own k-ary generalisation of \texttt{eLyMPuS}~\citep{przewozniczek2026lympus}. Crucially, this arm is not a different search engine: it shares \texttt{bartnik\_p3}'s exact \texttt{canonical\_pyramid} (Goldman's single-individual-climbing P3) and its exact lambda-quantile acceptance gate, and its outer real-evaluation surrogate is the same \texttt{AbsoluteRandomForestSurrogate} used to gate \texttt{bartnik\_p3}'s climbs. The one thing that differs is the hill-climbing step inside a single climb: \texttt{bartnik\_p3} runs plain first-improvement hill climbing directly on the surrogate's predicted absolute values, while \texttt{przewozniczek\_p3elympus} runs that same hill climb through \texttt{ELyMPuS} -- a relative, $k$-ary partial-comparison mechanism with guaranteed recursive linkage discovery, still scored against the identical Random Forest surrogate rather than against real evaluations (a structural constraint of this harness, not a design choice; \texttt{implementation/experiments-przewozniczek/methods/przewozniczek\_p3elympus.py} documents this explicitly). Every other component -- population engine, acceptance gate, real-evaluation surrogate, baseline set, seeds, budgets -- is held identical to \texttt{bartnik\_p3}.
+
+\begin{table}[t]
+    \centering
+    \footnotesize
+    \caption{Architecture-only NAS-Bench-201 isolation grid: \texttt{przewozniczek\_p3elympus} vs.\ \texttt{random\_search} and vs.\ \texttt{p3net}, same protocol as Table~\ref{tab:bartnik-isolation}. Unlike \texttt{bartnik\_p3}, this arm rejects $H_0$ against both at budget~350.}
+    \label{tab:przewozniczek-isolation}
+    \begin{tabular}{@{}lrrrr@{}}
+        \toprule
+        \textbf{Budget} & \textbf{vs.} & \textbf{Median \texttt{przewozniczek\_p3elympus}} & \textbf{Adj.\ $p$} & \textbf{Cliff's $\delta$} \\
+        \midrule
+        100 & \texttt{random\_search} & 0.9854 & 1.000 & $-0.004$ \\
+        100 & \texttt{p3net}          & 0.9854 & 1.000 & $-0.033$ \\
+        350 & \texttt{random\_search} & 0.9962 & \textbf{0.0001$^{*}$} & $+0.691$ \\
+        350 & \texttt{p3net}          & 0.9962 & \textbf{0.0000$^{*}$} & $+0.707$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+At budget~100, \texttt{przewozniczek\_p3elympus} matches \texttt{bartnik\_p3}'s pattern exactly: no separation from random search ($p=1.000$, $\delta=-0.004$). At budget~350, the pattern inverts sharply: \texttt{przewozniczek\_p3elympus} separates from random search decisively ($p=0.0001$, $\delta=+0.691$) and beats \texttt{p3net} itself just as decisively ($p=0.0000$, $\delta=+0.707$), along with \texttt{mo\_bohb}, \texttt{nsganetv2}, and \texttt{p3\_absolute} (all $p<0.005$); it still loses to \texttt{sh\_emoa} and \texttt{nsga\_net} at this budget, the same two differently-engineered baselines \texttt{p3net} itself loses to throughout Results. Since population engine, acceptance gate, and real-evaluation surrogate are all held fixed against \texttt{bartnik\_p3} (above), the one variable that changed -- the relative, linkage-discovering comparison mechanism inside the hill-climb -- is what the data implicates directly.
+
+    With the joint-genotype axis now ruled out and both isolation results in hand (above), the
+    remaining open explanations were narrowed with a planned two-part test: first, testing (iii) by running on a
+    larger or more structurally complex search space than any benchmark used in this work -- the step already
+    motivated above (Results, ``Scope, and what would extend it''), still not attempted, and still the most
+    direct way to test the benchmark-ceiling account on its own terms; second, testing whether (i)--(ii) rather
+    than (iii) are the operative bottleneck by holding this project's search space and evaluation infrastructure
+    fixed while swapping in components closest to \texttt{P3Net} in the two most relevant strands of prior work,
+    Bartnik's own \texttt{SA-P3-GOMEA}-class design~\citep{bartnik2026evolutionary,dushatskiy2021novelsurrogateassistedevolutionaryalgorithm}
+    and Przewoźniczek et al.'s \texttt{eLyMPuS}/\texttt{OLyMPuS} family~\citep{przewozniczek2026lympus}. The second
+    test was run as \texttt{bartnik\_p3} and \texttt{przewozniczek\_p3elympus} (above), and it resolved
+    differently from how it was originally framed: rather than two full engines swapped in wholesale, the actual
+    implementation holds the population engine (\texttt{canonical\_pyramid}), the acceptance gate, and the
+    real-evaluation surrogate identical across both arms, isolating only the comparison mechanism used inside
+    the hill-climb -- plain absolute-value first-improvement climbing (\texttt{bartnik\_p3}) versus
+    \texttt{ELyMPuS}'s relative, $k$-ary, linkage-discovering partial comparisons
+    (\texttt{przewozniczek\_p3elympus}). This turned out to be a more surgical test than planned, and its result
+    is correspondingly sharper: with every other component held fixed, \texttt{bartnik\_p3} reproduces
+    \texttt{P3Net}'s own null against random search, while \texttt{przewozniczek\_p3elympus} separates from
+    random search decisively at budget~350 ($\delta=+0.691$, $p=0.0001$) and beats \texttt{p3net} itself
+    ($\delta=+0.707$, $p=0.0000$). Read in isolation, \texttt{bartnik\_p3}'s null would have favoured (iii): an
+    approach free of \texttt{P3Net}'s two diagnosed defects still hits the same ceiling, suggesting the benchmark
+    itself is the limiting factor regardless of engineering. \texttt{przewozniczek\_p3elympus}'s result rules
+    that reading out directly: the identical population engine, gate, and real-evaluation surrogate, paired with
+    a different comparison mechanism, \emph{does} separate from random search on the exact same benchmark,
+    budget, and baseline set. A genuine small-landscape ceiling, per (iii), would not be selectively permeable
+    to one specific comparison mechanism and not another. The comparison-mechanism axis -- part of (ii), and the
+    one \texttt{P3Net}'s own $\hat\delta_F$ instantiates as a plain additive-only linear regressor (Diagnostics:
+    surrogate representational capacity, above) -- is accordingly the better-supported account on this benchmark
+    family: (iii) is not an absolute ceiling this benchmark imposes on every method, but a ceiling
+    \texttt{P3Net}'s own additive-only, absolute-regression-style comparison mechanism fails to clear, which a
+    relative, $k$-ary, linkage-discovering one does.
+
+    This reframes, rather than contradicts, den Ottelander et al.'s~\citep{denottelander2021localsearch}
+    independent finding (Related Work) that MO-GOMEA, NSGA-II, local search, and random search are all
+    statistically indistinguishable on NAS-Bench-101 -- a different linkage-learning engine, a different
+    research group, three years earlier, on a different but architecturally similar cell-based search space.
+    Their reading, that linkage learning needs a larger, less redundant search space to show an advantage
+    (confirmed there on their own MacroNAS benchmarks), is not the whole story here: \texttt{przewozniczek\_p3elympus}
+    achieves separation from random search \emph{on the same small, cell-based NAS-Bench-201 search space} where
+    \texttt{bartnik\_p3}, \texttt{p3net}, and (by den Ottelander et al.'s account) generic linkage learning all
+    fail. Both pieces of evidence agree that linkage learning does not automatically help at this scale; they
+    disagree on whether scaling the search space (den Ottelander et al.'s lever) or fixing the comparison
+    mechanism (this project's own \texttt{eLyMPuS}-class result) is what recovers the advantage, and the present
+    work has now shown at least one case of the latter without needing the former. Testing (iii) on a larger
+    search space (First, above) remains the natural next step to see whether the two levers are complementary or
+    whether one subsumes the other.
