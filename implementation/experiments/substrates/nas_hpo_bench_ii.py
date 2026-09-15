@@ -86,12 +86,25 @@ class NASHPOBenchIISubstrate(Substrate):
         config = decode_nas_hpo_bench_ii_genotype(genotype)
         cellcode = genotype_to_cellcode(config.edges)
         api = self._get_api()
-        accuracy, cost = api.query_by_key(
-            cellcode=cellcode,
-            lr=config.learning_rate,
-            batch_size=config.batch_size,
-            epoch=requested_epochs,
-        )
+        if requested_epochs == MAX_TABULATED_EPOCHS:
+            accuracy, cost = api.query_by_key(
+                cellcode=cellcode,
+                lr=config.learning_rate,
+                batch_size=config.batch_size,
+                epoch=requested_epochs,
+            )
+        else:
+            # Lower fidelity (multi-fidelity track): the same 12-epoch
+            # training run read after `requested_epochs` epochs -- the
+            # table's own intermediate record (`iepoch`), not a separate
+            # shorter schedule.
+            accuracy, cost = api.query_by_key(
+                cellcode=cellcode,
+                lr=config.learning_rate,
+                batch_size=config.batch_size,
+                epoch=MAX_TABULATED_EPOCHS,
+                iepoch=requested_epochs,
+            )
         error_rate = 100.0 - accuracy  # this project's minimisation convention: lower f1 = better
         result = (error_rate, float(cost))
         self._query_cache[cache_key] = result
@@ -106,3 +119,28 @@ class NASHPOBenchIISubstrate(Substrate):
         # -- shares the real query cache with query_f1, always at r_K.
         _, cost = self._query(genotype, self.fidelity_ladder()[-1])
         return cost
+
+    def training_seconds(self, genotype: Genotype, epochs: int) -> float:
+        """Training plus per-epoch validation time up to `epochs` -- the
+        table's `total_trainval_time` at 12 epochs, i.e. exactly f2, and its
+        per-epoch sum below that."""
+        _, cost = self._query(genotype, FidelityLevel(rank=-1, config={"epochs": epochs}))
+        return cost
+
+    def full_fidelity_metrics(self, genotype: Genotype) -> dict[str, float]:
+        config = decode_nas_hpo_bench_ii_genotype(genotype)
+        cellcode = genotype_to_cellcode(config.edges)
+        api = self._get_api()
+        metrics: dict[str, float] = {}
+        for mode in ("train", "valid", "test"):
+            accuracy, _ = api.query_by_key(
+                cellcode=cellcode,
+                lr=config.learning_rate,
+                batch_size=config.batch_size,
+                epoch=MAX_TABULATED_EPOCHS,
+                mode=mode,
+                enable_log=False,
+            )
+            metrics[f"{mode}_acc"] = float(accuracy)
+        metrics["training_seconds"] = self.training_seconds(genotype, MAX_TABULATED_EPOCHS)
+        return metrics

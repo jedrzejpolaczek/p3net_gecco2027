@@ -56,6 +56,32 @@ class Substrate(ABC):
         r_k = self.fidelity_ladder()[-1]
         return (self.query_f1(genotype, r_k), self.analytic_f2(genotype))
 
+    def max_epochs(self) -> int:
+        """Training epochs of a full evaluation (r_K's epoch count)."""
+        return int(self.fidelity_ladder()[-1].config["epochs"])
+
+    def objectives_at_epochs(self, genotype: Genotype, epochs: int) -> Objectives:
+        """(f1 after `epochs` training epochs, f2) -- the multi-fidelity
+        track's query (methods/multi_fidelity.py). f2 stays the r_K value,
+        exactly as in `objectives`; only f1 depends on the fidelity. At
+        epochs == max_epochs() this is identical to `objectives`."""
+        fidelity = FidelityLevel(rank=-1, config={"epochs": epochs})
+        return (self.query_f1(genotype, fidelity), self.analytic_f2(genotype))
+
+    def training_seconds(self, genotype: Genotype, epochs: int) -> float | None:
+        """Training time, in seconds, the benchmark records for training
+        `genotype` for `epochs` epochs (measurement/training_cost.py). None
+        if the benchmark records none."""
+        return None
+
+    def full_fidelity_metrics(self, genotype: Genotype) -> dict[str, float]:
+        """Every accuracy the benchmark records for `genotype` at r_K --
+        keys among train_acc, valid_acc, test_acc (percent) and
+        training_seconds. Queried after a run, outside the evaluation
+        budget, for the test-set front and the generalisation gaps
+        (scripts/posthoc_metrics.py)."""
+        return {}
+
     def analytic_cost_objectives(self, genotype: Genotype) -> Objectives:
         """Objectives-shaped adapter around analytic_f2, for search engines
         that need every non-f1 objective computed fresh without a wasted f1

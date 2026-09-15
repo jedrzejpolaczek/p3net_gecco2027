@@ -132,3 +132,25 @@ class NASBench201Substrate(Substrate):
         # shares the real query cache with query_f1, always at r_K.
         _, flops = self._query(genotype, self.fidelity_ladder()[-1])
         return flops
+
+    def _info(self, genotype: Genotype) -> dict:
+        config = decode_nas_bench_201_genotype(genotype)
+        api = self._get_api()
+        index = api.query_index_by_arch(genotype_to_arch_str(config.edges))
+        return api.get_more_info(index, self.dataset, hp=str(FULL_TRAINING_EPOCHS), is_random=False)
+
+    def training_seconds(self, genotype: Genotype, epochs: int) -> float:
+        """`train-all-time` (averaged over the logged trials, like f1)."""
+        if epochs != FULL_TRAINING_EPOCHS:
+            raise ValueError(f"single fidelity level ({FULL_TRAINING_EPOCHS} epochs)")
+        return float(self._info(genotype)["train-all-time"])
+
+    def full_fidelity_metrics(self, genotype: Genotype) -> dict[str, float]:
+        """No validation split is recorded for this dataset setting (f1 is
+        already the test error, following Bartnik)."""
+        info = self._info(genotype)
+        return {
+            "train_acc": float(info["train-accuracy"]),
+            "test_acc": float(info["test-accuracy"]),
+            "training_seconds": float(info["train-all-time"]),
+        }
