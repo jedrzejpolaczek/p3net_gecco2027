@@ -1,0 +1,22 @@
+# Design-decision ablation variant: f2 inherited from the ancestor instead of computed fresh (default: fresh).
+#
+# Restored 2026-09-13 to re-run the 2026-08-16 design-decision round on the
+# post-pyramid-fix engine (review finding P4). Parameter values are the ones
+# that round actually used, recovered from that session's transcript (the
+# original YAML files were deleted and never committed).
+#
+# Single-axis: identical to p3net.yaml except for the line(s) marked below.
+# default_grid: false -- a separate analysis axis, never part of the
+# headline 11-arm comparison (reporting.MAIN_COMPARISON_METHODS).
+#
+# Reference: chapters/v003/conclusions/main.tex (Limitations);
+# scripts/generate_variants_report.py.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  use_analytic_cost: false  # <- variant
