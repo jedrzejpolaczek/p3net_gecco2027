@@ -1,0 +1,17 @@
+# Design defense on the final engine (v0.0.4 plan, stage 4): a zero-proposal sweep grows a new level instead of injecting diversity.
+#
+# Identical to p3net_cascade.yaml (S5, the final P3Net) except for the
+# line(s) marked "# <- variant".
+# default_grid: false -- a separate analysis axis.
+#
+# Reference: notes/plans/v004-plan.md (phase 3); configs/pipeline/v004.yaml.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: null
+  acceptance_threshold: 0.0
+  objective_index: 0
+  cascade: true
+  stall_recovery: grow  # <- variant

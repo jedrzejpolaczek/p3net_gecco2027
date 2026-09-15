@@ -1,0 +1,19 @@
+# kappa x acceptance-threshold sweep on the final engine (v0.0.4 plan, stage 4).
+#
+# Grid settled in configs/experiment/kappa_threshold_sweep.yaml:
+#   kappa in {1, ceil(log2 n), 2 ceil(log2 n) (default), unbounded}
+#   acceptance_threshold in {0, epsilon, 2 epsilon}, epsilon = 0.01
+# The (2 ceil(log2 n), 0) cell is p3net_cascade.yaml itself. Symbolic kappa
+# values are resolved per search space (scripts/run_experiment.py
+# resolve_kappa): JAHS-Bench-201 n=10, NAS-HPO-Bench-II n=8, FCNet n=9.
+#
+# This cell: kappa = unbounded, acceptance_threshold = epsilon = 0.01.
+
+method: p3net
+default_grid: false
+params:
+  growth_factor: 2
+  kappa: "unbounded"  # <- sweep
+  acceptance_threshold: 0.01  # <- sweep
+  objective_index: 0
+  cascade: true
