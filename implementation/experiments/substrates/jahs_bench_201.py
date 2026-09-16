@@ -52,7 +52,12 @@ JAHS_DATASETS: tuple[str, ...] = ("cifar10", "colorectal_histology", "fashion_mn
 
 _EXPERIMENTS_ROOT = Path(__file__).resolve().parent.parent
 _VENDOR_ENV = _EXPERIMENTS_ROOT / "vendor" / "jahsbench-env"
-BRIDGE_PYTHON = _VENDOR_ENV / ".venv" / "Scripts" / "python.exe"
+_BRIDGE_VENV = _VENDOR_ENV / ".venv"
+BRIDGE_PYTHON = (
+    _BRIDGE_VENV / "Scripts" / "python.exe"
+    if os.name == "nt"
+    else _BRIDGE_VENV / "bin" / "python"
+)
 BRIDGE_SCRIPT = _VENDOR_ENV / "query_server.py"
 DEFAULT_DATA_DIR = _EXPERIMENTS_ROOT / "data" / "cache" / "jahs_bench_201"
 #: If set, path of a lock file held while a bridge starts and loads its models
@@ -92,7 +97,8 @@ class JAHSBench201Substrate(Substrate):
             if not BRIDGE_PYTHON.exists():
                 raise RuntimeError(
                     f"jahs-bench bridge environment not found at {BRIDGE_PYTHON} -- "
-                    "see vendor/jahsbench-env/ for how to build it."
+                    "build it with scripts/bootstrap_env.sh (Linux/macOS) or the "
+                    "steps in implementation/README.md (Windows)."
                 )
             # stderr goes to a temporary file, not a pipe: nothing reads the
             # bridge's stderr while it runs, and a full pipe buffer (warnings

@@ -54,7 +54,13 @@ reporting = [
 # is the forcing function that keeps the library's public API honest.
 [tool.uv.sources]
 p3net = { path = "../lib", editable = true }
-torch = { index = "pytorch-cu126" }
+# CUDA build on Windows (the GPU is optional: BoTorch defaults to the CPU),
+# CPU-only build on Linux -- the CUDA wheels add ~3 GB per machine, which is
+# wasted on the CPU-only cloud machines the runbook uses.
+torch = [
+    { index = "pytorch-cu126", marker = "sys_platform == 'win32'" },
+    { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+]
 # netifaces has no prebuilt wheel for modern Python on Windows and needs
 # MSVC Build Tools to build from source. It's a hard install_requires of
 # hpbandster (MO-BOHB's backend) but is only ever used inside a lazy
@@ -65,6 +71,11 @@ netifaces = { path = "vendor/netifaces-stub", editable = true }
 [[tool.uv.index]]
 name = "pytorch-cu126"
 url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [build-system]

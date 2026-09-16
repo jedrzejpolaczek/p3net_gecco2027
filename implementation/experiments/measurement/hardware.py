@@ -63,6 +63,13 @@ def cpu_name() -> str | None:
         )
         if out:
             return out.splitlines()[0].strip()
+    elif sys.platform.startswith("linux"):
+        try:
+            for line in open("/proc/cpuinfo", encoding="utf-8"):
+                if line.startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+        except OSError:
+            pass
     return platform.processor() or None
 
 
@@ -99,9 +106,17 @@ def _number(text: str) -> float | None:
 
 
 def power_plan() -> str | None:
-    if sys.platform != "win32":
-        return None
-    return _run(["powercfg", "/getactivescheme"])
+    """Windows power scheme; on Linux the CPU frequency governor."""
+    if sys.platform == "win32":
+        return _run(["powercfg", "/getactivescheme"])
+    if sys.platform.startswith("linux"):
+        try:
+            return "governor: " + open(
+                "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", encoding="utf-8"
+            ).read().strip()
+        except OSError:
+            return None
+    return None
 
 
 def battery() -> dict[str, Any] | None:
@@ -137,11 +152,31 @@ def library_versions() -> dict[str, str | None]:
     return versions
 
 
+def cloud_instance() -> dict[str, str] | None:
+    """Cloud instance metadata, where the machine exposes it (DMI product
+    name plus the provider's own label, both best-effort). None on a machine
+    that is not a recognised cloud VM -- timings from a shared-vCPU VM are not
+    comparable with bare metal, so which machine produced them is recorded."""
+    if not sys.platform.startswith("linux"):
+        return None
+    info: dict[str, str] = {}
+    for key, path in (
+        ("product", "/sys/class/dmi/id/product_name"),
+        ("vendor", "/sys/class/dmi/id/sys_vendor"),
+    ):
+        try:
+            info[key] = open(path, encoding="utf-8").read().strip()
+        except OSError:
+            pass
+    return info or None
+
+
 def manifest() -> dict[str, Any]:
     memory = psutil.virtual_memory()
     return {
         "recorded_at": dt.datetime.now().isoformat(timespec="seconds"),
         "host": platform.node(),
+        "cloud": cloud_instance(),
         "os": platform.platform(),
         "python": sys.version.split()[0],
         "cpu": cpu_name(),
