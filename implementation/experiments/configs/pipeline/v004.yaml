@@ -84,7 +84,11 @@ parallel:
   # loading (one load at a time, lock), 1.9 GB afterwards; 3 workers fit in
   # 31.7 GB RAM (measurement:
   # results/checks/phase2c_jahs_bridge_memory.log).
-  workers: 3
+  # 2, not 3: with 3 the machine ran out of memory on the first full run
+  # (OSS Vizier holds ~13 GB per run, a JAHS bridge 1.9 GB and 17.5 GB while
+  # loading), which killed workers and failed benchmark queries. On a machine
+  # with more memory, raise it with --workers.
+  workers: 2
   # Threads for numerical libraries in every run, whatever the worker count,
   # so parallelism changes neither results nor per-run CPU accounting.
   threads_per_run: 2
@@ -93,9 +97,11 @@ parallel:
     gpu:
       capacity: 1
       methods: [botorch_qnehvi, botorch_qparego]
-    # CPU-heavy GP arms: at most two at a time, so they do not starve the rest.
+    # Memory-heavy arm: one at a time. One OSS Vizier run held 12.6 GB of
+    # resident memory at budget 200; two at once exhausted 31.7 GB together
+    # with the JAHS bridges.
     heavy_gp:
-      capacity: 2
+      capacity: 1
       methods: [oss_vizier]
 
 stages:
