@@ -60,7 +60,7 @@ zero-cost proxies jako przykład (nie widzą hiperparametrów, bo liczone są na
 | 2c | Infrastruktura pomiarów + tor wielowiernościowy + GPU + równoległość | ✅ zrobione |
 | 2d | FCNet | ✅ zrobione |
 | 3 | Domknięcie konfiguracji, prerejestracja, commit | ✅ zrobione (commit: Ty) |
-| 4 | Przebieg od zera (Ty) | ⏳ |
+| 4 | Przebieg od zera (Ty) | ⏳ (próba 1 przerwana, poprawki wprowadzone) |
 | 4b | Ponowny trening frontu Pareto na GPU (Ty) | ⏳ |
 | 5 | Raporty | ⏳ |
 | 6 | Tekst artykułu | ⏳ |
@@ -226,7 +226,30 @@ zero-cost proxies jako przykład (nie widzą hiperparametrów, bo liczone są na
 - Testy: biblioteka 203, eksperymenty 339 (+2 pominięte).
 - **Commit (Ty)**: pipeline odmawia startu na niezacommitowanym kodzie.
 
-### Faza 4 — przebieg od zera (`run_pipeline.ps1`)
+### Faza 4 — przebieg od zera (Ty)
+
+**Próba 1 (2026-09-15/16, lokalnie, Windows) przerwana i skasowana.** 2421 z 56 348 punktów w
+30 godzin, 578 awarii, 158 punktów porzuconych. Przyczyny i poprawki:
+
+| Problem | Poprawka |
+|---|---|
+| BoTorch na GPU 4 GB: 509 × `CUDA out of memory` przy budżetach 200 i 350 | `device: cpu` domyślnie (GPU tylko jawnie); na CPU ok. 14 min na przebieg |
+| OSS Vizier trzyma 13 GB na przebieg, dwa naraz + mosty JAHS wyczerpały 31,7 GB RAM (padające workery, `bad allocation` w moście, `WinError 1455`) | slot `heavy_gp` z pojemnością 1; domyślnie 2 workery zamiast 3 |
+| Worker porzucany po 5 restartach (w2 przepadł na 5 godzin przed końcem) | limit restartów 20 |
+| Brak jakiegokolwiek sygnału postępu w terminalu przez wiele godzin | linia `STATUS` co 10 minut (`--status-every`) |
+
+Dodatkowo, pod kątem uruchomienia w chmurze (`notes/plans/v004-cloud-run.md`):
+
+- `--shard i/N` — rozłączny podział planu na maszyny, bez koordynacji; `--unlock-after H` łamie
+  blokady po awarii na innym hoście;
+- `scripts/run_pipeline.sh` i `scripts/bootstrap_env.sh` (Linux), ścieżka interpretera mostu JAHS
+  zależna od systemu, nazwa CPU i governor na Linuksie, model maszyny wirtualnej w manifeście;
+- PyTorch: wariant CUDA na Windows, CPU na Linuksie (oszczędza ok. 3 GB na maszynę);
+- `scripts/download_data.py` (FCNet + surogaty JAHS) i `scripts/check_data.py` (po jednym
+  prawdziwym zapytaniu do każdego benchmarku).
+
+Szacunek z pomiarów: **ok. 2900 godzin pracy jednego workera**, czyli ok. 15 dni na maszynie
+16 vCPU / 64 GB (8 workerów) albo ok. 4 dni na czterech takich maszynach.
 
 | Etap | Zawartość | Przebiegi (szac.) |
 |---|---|---|
