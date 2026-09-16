@@ -47,6 +47,17 @@ Every worker runs its numerical libraries with the plan's
 results nor per-run CPU accounting. Worker output goes to
 `logs/worker-<i>.log`.
 
+Several machines
+----------------
+`--shard i/N` runs only the points whose key hashes to shard `i` of `N`, so N
+machines (or N run roots) can split one plan with no coordination at all: each
+machine gets a disjoint, deterministic subset, and the raw files are merged
+afterwards by copying them into one directory. Sharding is the recommended way
+to split work across machines; a shared network directory also works, but a
+lock left behind by a crashed process on another host is only broken by
+`--unlock-after <hours>` (a process is never assumed dead on a host this one
+cannot see).
+
 Timing stage
 ------------
 `kind: timing` stages run after all grid stages, one point at a time, each
@@ -87,6 +98,7 @@ REPO_ROOT = EXPERIMENTS_ROOT.parents[1]
 if str(EXPERIMENTS_ROOT) not in sys.path:
     sys.path.insert(0, str(EXPERIMENTS_ROOT))
 
+import psutil  # noqa: E402
 import yaml  # noqa: E402
 
 from file_locks import FileLock, lock_is_stale, release_lock, try_lock  # noqa: E402
@@ -143,6 +155,29 @@ def _expand_seeds(spec: Any) -> list[int]:
     if isinstance(spec, dict):
         return list(range(int(spec["from"]), int(spec["to"]) + 1))
     return [int(s) for s in spec]
+
+
+def shard_of(key: str, shards: int) -> int:
+    """Stable shard index for a point key: sha256, not hash(), so it does not
+    depend on the interpreter's per-process hash seed."""
+    return int(hashlib.sha256(key.encode()).hexdigest(), 16) % shards
+
+
+def select_shard(points: list[Point], shard: tuple[int, int] | None) -> list[Point]:
+    if shard is None:
+        return points
+    index, shards = shard
+    return [p for p in points if shard_of(p.key, shards) == index]
+
+
+def parse_shard(text: str | None) -> tuple[int, int] | None:
+    if text is None:
+        return None
+    index, _, shards = text.partition("/")
+    index, shards = int(index), int(shards)
+    if not 0 <= index < shards:
+        raise ValueError(f"--shard {text}: index must be in 0..{shards - 1}")
+    return index, shards
 
 
 def stage_methods(stage: dict[str, Any]) -> list[str]:
@@ -731,14 +766,53 @@ def worker_env(threads: int, run_root: Path) -> dict[str, str]:
     return env
 
 
-def remove_stale_locks(lock_dir: Path) -> int:
+def remove_stale_locks(lock_dir: Path, unlock_after_hours: float | None = None) -> int:
+    """Break locks whose owning process no longer exists on this host, and --
+    if `unlock_after_hours` is given -- any lock older than that, whatever host
+    holds it (for a shared directory, where this host cannot see the other
+    machine's processes)."""
     removed = 0
-    if lock_dir.exists():
-        for lock in lock_dir.glob("*.lock"):
-            if lock_is_stale(lock, grace_seconds=0.0):
-                release_lock(lock)
-                removed += 1
+    if not lock_dir.exists():
+        return 0
+    for lock in lock_dir.glob("*.lock"):
+        too_old = (
+            unlock_after_hours is not None
+            and time.time() - lock.stat().st_mtime > unlock_after_hours * 3600
+        )
+        if too_old or lock_is_stale(lock, grace_seconds=0.0):
+            release_lock(lock)
+            removed += 1
     return removed
+
+
+def status_line(run_root: Path, stages: list[dict[str, Any]], shard) -> str:
+    """One-line progress summary from the files and locks on disk: cheap
+    enough (one directory listing) to print every few minutes."""
+    raw = run_root / "raw"
+    present = {p.name for p in raw.glob("*.json")} if raw.exists() else set()
+    parts = []
+    for stage in stages:
+        points = select_shard(expand_stage(stage), shard)
+        if not points:
+            continue
+        done = sum(1 for point in points if point.filename in present)
+        if done < len(points):
+            parts.append(f"{stage['name']} {done}/{len(points)}")
+        if len(parts) >= 3:
+            break
+    running = []
+    lock_dir = run_root / "locks"
+    if lock_dir.exists():
+        for lock in sorted(lock_dir.glob("*.lock")):
+            if lock.name.startswith("slot-") or lock.name.startswith("jahs-"):
+                continue
+            minutes = (time.time() - lock.stat().st_mtime) / 60
+            running.append(f"{lock.stem.split('__')[0]} {minutes:.0f}m")
+    memory = psutil.virtual_memory()
+    return (
+        f"STATUS {', '.join(parts) or 'all stages complete'} | running: "
+        f"{', '.join(running) or 'none'} | RAM free {memory.available / 2**30:.1f} GB"
+    )
 
 
 def spawn_workers(
@@ -749,6 +823,8 @@ def spawn_workers(
     stages: list[str],
     env: dict[str, str],
     log: Callable[[str], None],
+    status: Callable[[], str] | None = None,
+    status_every: float = 600.0,
 ) -> list[int]:
     """Start `n` worker processes on the grid stages and wait for all of
     them. A worker that dies (not a clean exit) is restarted, up to
@@ -769,6 +845,8 @@ def spawn_workers(
     ]
     if args.stop_on_error:
         base.append("--stop-on-error")
+    if args.shard:
+        base += ["--shard", args.shard]
 
     def start(i: int) -> tuple[subprocess.Popen, Any]:
         handle = open(run_root / "logs" / f"worker-{i}.log", "a", encoding="utf-8")
@@ -785,9 +863,13 @@ def spawn_workers(
     running = {i: start(i) for i in range(n)}
     restarts = defaultdict(int)
     codes: dict[int, int] = {}
+    next_status = time.monotonic() + status_every
     try:
         while running:
             time.sleep(2.0)
+            if status is not None and time.monotonic() >= next_status:
+                next_status = time.monotonic() + status_every
+                log(status())
             for i, (proc, handle) in list(running.items()):
                 code = proc.poll()
                 if code is None:
@@ -836,11 +918,12 @@ def run_worker(args: argparse.Namespace, plan: dict[str, Any], stages: list[dict
         worker=args.worker_name,
     )
     grid = [s for s in stages if s.get("kind", "grid") == "grid"]
+    shard = parse_shard(args.shard)
     try:
         while True:
             ran = busy = failed = 0
             for s in grid:
-                report = pipeline.run_stage(s["name"], expand_stage(s))
+                report = pipeline.run_stage(s["name"], select_shard(expand_stage(s), shard))
                 ran += report.ran
                 busy += report.busy
                 failed += report.failed_now
@@ -852,12 +935,16 @@ def run_worker(args: argparse.Namespace, plan: dict[str, Any], stages: list[dict
         return 2
 
 
-def stage_reports(pipeline: Pipeline, stages: list[dict[str, Any]]) -> tuple[dict[str, Any], bool]:
+def stage_reports(
+    pipeline: Pipeline,
+    stages: list[dict[str, Any]],
+    shard: tuple[int, int] | None = None,
+) -> tuple[dict[str, Any], bool]:
     """Completion of each stage from the files on disk, without running."""
     status: dict[str, Any] = {}
     incomplete = False
     for s in stages:
-        points = expand_stage(s)
+        points = select_shard(expand_stage(s), shard)
         report = StageReport(stage=s["name"], total=len(points))
         for point in points:
             path = pipeline.raw_dir / point.filename
@@ -906,7 +993,31 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="worker processes (default: plan's parallel.workers, else 1)",
     )
-    parser.add_argument("--max-worker-restarts", type=int, default=5)
+    parser.add_argument(
+        "--max-worker-restarts",
+        type=int,
+        default=20,
+        help="restarts per worker before it is given up (a worker killed by the "
+        "out-of-memory killer should be restarted, not abandoned)",
+    )
+    parser.add_argument(
+        "--shard", default=None, help="run only shard i of N points, e.g. 0/4 (see --help)"
+    )
+    parser.add_argument(
+        "--unlock-after",
+        type=float,
+        default=None,
+        metavar="HOURS",
+        help="also break locks older than HOURS, whatever host holds them "
+        "(shared run root, after a crash on another machine)",
+    )
+    parser.add_argument(
+        "--status-every",
+        type=float,
+        default=600.0,
+        metavar="SECONDS",
+        help="how often to print a progress summary while workers run (0 = never)",
+    )
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--worker-name", default="main", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
@@ -919,7 +1030,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.worker:
         return run_worker(args, plan, stages)
-    grid_points = [p for s in stages for p in expand_stage(s)]
+    shard = parse_shard(args.shard)
+    grid_points = [p for s in stages for p in select_shard(expand_stage(s), shard)]
     all_plan_points = [p for s in plan["stages"] for p in expand_stage(s)]
     parallel = plan.get("parallel", {})
     workers = args.workers or int(parallel.get("workers", 1))
@@ -932,9 +1044,10 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"plan {plan['name']}: {len(stages)} stage(s), {len(grid_points)} point(s), "
         f"{workers} worker(s), {threads} thread(s) per run"
+        + (f", shard {args.shard}" if shard else "")
     )
     for s in stages:
-        n = len(expand_stage(s))
+        n = len(select_shard(expand_stage(s), shard))
         print(f"  {s['name']:22} {s.get('kind', 'grid'):6} {n:6} point(s)")
     print(
         f"commit {fingerprint['commit'][:12]}{' (DIRTY)' if fingerprint['dirty'] else ''} -> run root {run_root}"  # noqa: E501
@@ -993,7 +1106,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print("\ncompletion in this run root:")
         for s in stages:
-            pts = expand_stage(s)
+            pts = select_shard(expand_stage(s), shard)
             if not pts:
                 continue
             directory = (
@@ -1015,7 +1128,7 @@ def main(argv: list[str] | None = None) -> int:
     removed = pipeline.remove_temp_files()
     if removed:
         pipeline.log(f"removed {removed} leftover .tmp file(s) from an interrupted write")
-    stale = remove_stale_locks(run_root / "locks")
+    stale = remove_stale_locks(run_root / "locks", args.unlock_after)
     if stale:
         pipeline.log(f"removed {stale} lock(s) left by processes that no longer exist")
 
@@ -1057,9 +1170,15 @@ def main(argv: list[str] | None = None) -> int:
                 stages=[s["name"] for s in grid_stages],
                 env=worker_env(threads, run_root),
                 log=pipeline.log,
+                status=(
+                    None
+                    if args.status_every <= 0
+                    else lambda: status_line(run_root, grid_stages, shard)
+                ),
+                status_every=args.status_every,
             )
         pipeline.ledger.refresh()
-        status, incomplete = stage_reports(pipeline, grid_stages)
+        status, incomplete = stage_reports(pipeline, grid_stages, shard)
         for s in timing_stages:
             timing = TimingPipeline(
                 run_root=run_root,
@@ -1068,7 +1187,7 @@ def main(argv: list[str] | None = None) -> int:
                 env=worker_env(threads, run_root),
                 worker="timing",
             )
-            report = timing.run_stage(s["name"], expand_stage(s))
+            report = timing.run_stage(s["name"], select_shard(expand_stage(s), shard))
             status[s["name"]] = asdict(report) | {"done": report.done}
             incomplete |= not report.done
         status_path = run_root / "stage_status.json"
