@@ -34,11 +34,18 @@ random valid unevaluated genotypes plus every valid unevaluated
 one-coordinate neighbour of the current Pareto set. The best-scoring
 candidate is proposed.
 
-Device: CUDA when available (`device: auto`), otherwise CPU; tensors are
-float64 on either. On CUDA, deterministic algorithms are enforced and the
-pool is scored in chunks of `gpu_chunk_size` to bound memory. CPU and GPU
-runs of the same seed are not expected to be identical (different floating
-point kernels); every run records its device.
+Device: CPU by default; `device: "cuda"` (or "auto") moves the model and the
+candidate pool to the GPU. Tensors are float64 on either. On CUDA,
+deterministic algorithms are enforced and the pool is scored in chunks of
+`gpu_chunk_size` to bound memory.
+
+CPU is the default because a 4 GB GPU is not enough for this arm at the
+budgets this project uses: on the first full pipeline run, 509 of 578
+failures were `CUDA error: out of memory` from qNEHVI and qParEGO at budgets
+200 and 350, while the same runs cost about 14 minutes each on the CPU. Set
+`device: "cuda"` only with a GPU whose memory has been checked at the
+largest budget. CPU and GPU runs of the same seed are not expected to be
+identical (different floating point kernels); every run records its device.
 
 Efficiency choice (not a performance tweak): GP hyperparameters are refit
 at every step, but the optimiser starts from the previous step's
@@ -77,8 +84,8 @@ class BoTorchMO:
     n_initial: int | None = None
     pool_size: int = 1024
     mc_samples: int = 128
-    #: "auto" = CUDA when available, else CPU; or "cpu" / "cuda".
-    device: str = "auto"
+    #: "cpu" (default), "cuda", or "auto" = CUDA when available.
+    device: str = "cpu"
     #: Candidates scored per acquisition call on CUDA (bounds GPU memory).
     gpu_chunk_size: int = 256
     experiment_type: str = "botorch_mo"

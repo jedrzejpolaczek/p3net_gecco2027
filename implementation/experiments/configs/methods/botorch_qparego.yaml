@@ -4,4 +4,7 @@
 # benchmarks (paper, Limitations: tuning asymmetry).
 
 method: botorch_qparego
+# device: "cpu" (the arm's default) -- see methods/external/botorch_mo.py
+# ("Device"): on a 4 GB GPU this arm runs out of memory at budgets 200 and
+# 350. Override with device: cuda on a GPU with checked memory.
 params: {}
