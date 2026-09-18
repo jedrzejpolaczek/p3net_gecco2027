@@ -20,10 +20,17 @@ if ! command -v uv >/dev/null 2>&1; then
   echo "== installing uv"
   curl -LsSf https://astral.sh/uv/install.sh | sh
   export PATH="$HOME/.local/bin:$PATH"
+  # ... and for the next login shell, so `uv` is found after reconnecting
+  grep -qs 'HOME/.local/bin' "$HOME/.bashrc" ||
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
 fi
 uv --version
 
 echo "== main environment (uv.lock)"
+# The interpreter is pinned by .python-version (3.13) rather than left to
+# whatever the machine ships: every run of one experiment must use the same
+# Python, whichever machine produced it. uv downloads it if missing.
+uv python install
 uv sync --extra dev
 
 echo "== JAHS-Bench-201 bridge environment (Python 3.10, jahs-bench 1.1.0)"
