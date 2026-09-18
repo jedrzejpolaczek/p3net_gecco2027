@@ -31,8 +31,12 @@ BRIDGE=vendor/jahsbench-env
 if [ ! -x "$BRIDGE/.venv/bin/python" ]; then
   uv venv --python 3.10 "$BRIDGE/.venv"
 fi
+# setuptools is listed explicitly: `uv venv` does not install it (unlike
+# python -m venv), and xgboost 1.5.2 imports pkg_resources, which ships with
+# setuptools. Pinned below 81, the release that removes pkg_resources.
 VIRTUAL_ENV="$BRIDGE/.venv" uv pip install --python "$BRIDGE/.venv/bin/python" \
-  "jahs-bench==1.1.0" "xgboost==1.5.2" "scikit-learn==1.0.2" "pandas==1.3.5" "numpy==1.26.4"
+  "setuptools<81" "jahs-bench==1.1.0" "xgboost==1.5.2" "scikit-learn==1.0.2" \
+  "pandas==1.3.5" "numpy==1.26.4"
 
 echo "== versions"
 uv run python -c "import sys, torch; print('main', sys.version.split()[0], 'torch', torch.__version__)"
