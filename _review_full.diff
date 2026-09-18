@@ -1,0 +1,444 @@
+diff --git a/implementation/experiments-bartnik/methods/bartnik_p3.py b/implementation/experiments-bartnik/methods/bartnik_p3.py
+index d77f8049..4066728e 100644
+--- a/implementation/experiments-bartnik/methods/bartnik_p3.py
++++ b/implementation/experiments-bartnik/methods/bartnik_p3.py
+@@ -108,7 +108,14 @@ class BartnikP3:
+     _warmup_proposed: int = field(default=0, init=False, repr=False)
+     _delta_window: list[float] = field(default_factory=list, init=False, repr=False)
+     _tau: float = field(default=0.0, init=False, repr=False)
+-    _elite_size: int = field(default=0, init=False, repr=False)
++    #: The Pareto front's actual MEMBERSHIP, not just its size -- a front
++    #: whose composition changes (one elite replaced by another) while its
++    #: cardinality stays the same must still reset the gate, per this
++    #: class's own documented contract ("resets to a fresh quantile the
++    #: moment the real Pareto front changes"). Comparing only `len(elites)`
++    #: (an earlier version of this field) misses exactly that case, since
++    #: Genotype is frozen/hashable and safe to put in a frozenset.
++    _elite_set: frozenset[Genotype] = field(default_factory=frozenset, init=False, repr=False)
+     _last_was_fallback: bool = field(default=False, init=False, repr=False)
+ 
+     def __post_init__(self) -> None:
+@@ -120,7 +127,13 @@ def __post_init__(self) -> None:
+     # -- harness.Method protocol ------------------------------------------
+ 
+     def propose(self, state: RunState) -> list[Genotype]:
+-        if self._warmup_proposed < self.warmup:
++        # `not self._history`, not just `self.warmup`, gates the surrogate
++        # path: an explicit `warmup=0` would otherwise call
++        # `_gated_climb_proposal` -> `_fit_surrogate` on zero observations
++        # on the very first call, crashing instead of falling back to a
++        # random proposal (AbsoluteRandomForestSurrogate.fit rejects an
++        # empty observation list by design).
++        if self._warmup_proposed < self.warmup or not self._history:
+             self._warmup_proposed += 1
+             return self._random_valid_batch(1)
+         return self._gated_climb_proposal()
+@@ -137,7 +150,11 @@ def update(self, state: RunState, new_observations: list[Observation]) -> None:
+ 
+         if self._warmup_proposed < self.warmup:
+             return
+-        if self._warmup_proposed == self.warmup and not self._pyramid.levels[0].population:
++        # `>=`, not `==`: with `warmup=0` the `not self._history` guard in
++        # propose() forces `_warmup_proposed` to 1 before this ever runs,
++        # so `== 0` would never fire again and level 0 would never get its
++        # one-time bulk seed from `self._history` at all.
++        if self._warmup_proposed >= self.warmup and not self._pyramid.levels[0].population:
+             self._pyramid.levels[0].population = list(self._history.keys())
+ 
+         elites = pareto_front(list(self._history.keys()), lambda g: self._history[g].objectives)
+@@ -150,8 +167,9 @@ def update(self, state: RunState, new_observations: list[Observation]) -> None:
+         if len(self._delta_window) > self.delta_window_size:
+             self._delta_window = self._delta_window[-self.delta_window_size :]
+ 
+-        if len(elites) != self._elite_size:
+-            self._elite_size = len(elites)
++        elite_set = frozenset(elites)
++        if elite_set != self._elite_set:
++            self._elite_set = elite_set
+             self._reset_gate()
+         elif self._last_was_fallback:
+             self._register_fallback()
+diff --git a/implementation/experiments-przewozniczek/methods/przewozniczek_p3elympus.py b/implementation/experiments-przewozniczek/methods/przewozniczek_p3elympus.py
+index a8d57858..2a3c6c4d 100644
+--- a/implementation/experiments-przewozniczek/methods/przewozniczek_p3elympus.py
++++ b/implementation/experiments-przewozniczek/methods/przewozniczek_p3elympus.py
+@@ -103,6 +103,13 @@ class PrzewozniczekP3ELyMPuS:
+     objective_index: int = 0
+     max_climb_attempts: int = 5
+     delta_window_size: int = 50
++    #: Passed straight through to ELyMPuS(verify_probability=...). Non-zero
++    #: is required for `dependencies` to ever grow past empty here, since
++    #: this class starts every ELyMPuS instance with no seeded dependency
++    #: graph (see `_gated_climb_proposal` and ELyMPuS's own module
++    #: docstring for why this is opt-in rather than always-on: it trades
++    #: extra real-surrogate-prediction calls for runtime discovery).
++    elympus_verify_probability: float = 0.2
+     experiment_type: str = "przewozniczek_p3elympus"
+     protocol_version: str = "v1"
+     cache: EvaluationCache = field(default_factory=EvaluationCache)
+@@ -112,7 +119,10 @@ class PrzewozniczekP3ELyMPuS:
+     _warmup_proposed: int = field(default=0, init=False, repr=False)
+     _delta_window: list[float] = field(default_factory=list, init=False, repr=False)
+     _tau: float = field(default=0.0, init=False, repr=False)
+-    _elite_size: int = field(default=0, init=False, repr=False)
++    #: The Pareto front's actual MEMBERSHIP, not just its size -- see
++    #: methods.bartnik_p3.BartnikP3's identical field for the full
++    #: reasoning (same bug shape, same fix, reported alongside this one).
++    _elite_set: frozenset[Genotype] = field(default_factory=frozenset, init=False, repr=False)
+     _last_was_fallback: bool = field(default=False, init=False, repr=False)
+ 
+     def __post_init__(self) -> None:
+@@ -124,7 +134,10 @@ def __post_init__(self) -> None:
+     # -- harness.Method protocol ------------------------------------------
+ 
+     def propose(self, state: RunState) -> list[Genotype]:
+-        if self._warmup_proposed < self.warmup:
++        # `not self._history`, not just `self.warmup`, gates the surrogate
++        # path -- see methods.bartnik_p3.BartnikP3's identical guard for
++        # the full reasoning (same warmup=0 crash, same fix).
++        if self._warmup_proposed < self.warmup or not self._history:
+             self._warmup_proposed += 1
+             return self._random_valid_batch(1)
+         return self._gated_climb_proposal()
+@@ -141,7 +154,9 @@ def update(self, state: RunState, new_observations: list[Observation]) -> None:
+ 
+         if self._warmup_proposed < self.warmup:
+             return
+-        if self._warmup_proposed == self.warmup and not self._pyramid.levels[0].population:
++        # `>=`, not `==` -- see methods.bartnik_p3.BartnikP3's identical
++        # condition for why (warmup=0 would otherwise never seed level 0).
++        if self._warmup_proposed >= self.warmup and not self._pyramid.levels[0].population:
+             self._pyramid.levels[0].population = list(self._history.keys())
+ 
+         elites = pareto_front(list(self._history.keys()), lambda g: self._history[g].objectives)
+@@ -154,8 +169,9 @@ def update(self, state: RunState, new_observations: list[Observation]) -> None:
+         if len(self._delta_window) > self.delta_window_size:
+             self._delta_window = self._delta_window[-self.delta_window_size :]
+ 
+-        if len(elites) != self._elite_size:
+-            self._elite_size = len(elites)
++        elite_set = frozenset(elites)
++        if elite_set != self._elite_set:
++            self._elite_set = elite_set
+             self._reset_gate()
+         elif self._last_was_fallback:
+             self._register_fallback()
+@@ -191,19 +207,38 @@ def _gated_climb_proposal(self) -> list[Genotype]:
+         surrogate = self._fit_surrogate()
+         best_real_f1 = min(obs.objectives[self.objective_index] for obs in self._history.values())
+ 
++        # One ELyMPuS instance per surrogate fit (i.e. per _gated_climb_proposal
++        # call), NOT per climb attempt: all `max_climb_attempts` climbs below
++        # share the same `surrogate.predict` fitness landscape, so reusing one
++        # instance across them is sound and lets its comparison cache AND its
++        # discovered `dependencies` (see ELyMPuS.discover_missing_dependency)
++        # actually accumulate within one call, instead of being thrown away
++        # after a single climb -- a previous version constructed a fresh
++        # ELyMPuS per attempt, which defeated both the caching this class'
++        # own docstring describes and the runtime dependency discovery
++        # `verify_probability` below exists to enable (without it,
++        # `dependencies` never grows past empty at all -- see
++        # ELyMPuS's own module docstring and
++        # notes/lympus-nas-adaptation-validation.md). A fresh instance is
++        # still built once per _gated_climb_proposal call because the
++        # underlying surrogate itself is refit every call -- a comparison
++        # cached against one surrogate fit is not guaranteed sound against
++        # the next one.
++        elympus = ELyMPuS(
++            search_space=self.search_space,
++            fitness_fn=make_elympus_fitness_adapter(surrogate.predict, objective_index=self.objective_index),
++            verify_probability=self.elympus_verify_probability,
++            rng=self.rng,
++        )
++
++        def _hill_climber(genotype: Genotype) -> Genotype:
++            return fihc_elympus(genotype, self.search_space, elympus, self.rng, validity=self.validity)
++
+         for _ in range(self.max_climb_attempts):
+             start = self.search_space.sample_uniform(self.rng)
+             if not is_valid(start, self.validity):
+                 continue
+ 
+-            elympus = ELyMPuS(
+-                search_space=self.search_space,
+-                fitness_fn=make_elympus_fitness_adapter(surrogate.predict, objective_index=self.objective_index),
+-            )
+-
+-            def _hill_climber(genotype: Genotype, _elympus: ELyMPuS = elympus) -> Genotype:
+-                return fihc_elympus(genotype, self.search_space, _elympus, self.rng, validity=self.validity)
+-
+             candidate = climb(
+                 start,
+                 self._pyramid,
+diff --git a/implementation/lib/src/p3net/search_engines/p3/canonical_pyramid.py b/implementation/lib/src/p3net/search_engines/p3/canonical_pyramid.py
+index 15adbe8e..e07103a0 100644
+--- a/implementation/lib/src/p3net/search_engines/p3/canonical_pyramid.py
++++ b/implementation/lib/src/p3net/search_engines/p3/canonical_pyramid.py
+@@ -90,6 +90,26 @@ def first_improvement_hill_climber(
+     """Algorithm 4 shape: local search over one individual, one
+     coordinate at a time, taking the first improving alternative value
+     found rather than searching for the best one."""
++    current, _ = _first_improvement_hill_climb(genotype, search_space, fitness_fn, rng, validity=validity)
++    return current
++
++
++def _first_improvement_hill_climb(
++    genotype: Genotype,
++    search_space: SearchSpace,
++    fitness_fn: Callable[[Genotype], Objectives],
++    rng: random.Random,
++    *,
++    validity: Validity | None = None,
++) -> tuple[Genotype, Objectives]:
++    """Same climb as `first_improvement_hill_climber`, but also returns the
++    final individual's objective vector -- `climb()` needs it immediately
++    afterwards, and this loop already computed it as `current_obj`;
++    recomputing via a second `fitness_fn(x)` call (as `climb()` used to,
++    unconditionally) wastes one real evaluation on every plain-FIHC climb
++    for a value already known. `first_improvement_hill_climber`'s own
++    public, genotype-only return type is preserved above so existing
++    callers/tests are unaffected."""
+     current = genotype
+     current_obj = fitness_fn(current)
+     order = list(range(search_space.n))
+@@ -106,7 +126,7 @@ def first_improvement_hill_climber(
+             if _improves(candidate_obj, current_obj):
+                 current, current_obj = candidate, candidate_obj
+                 break
+-    return current
++    return current, current_obj
+ 
+ 
+ @dataclass
+@@ -164,10 +184,10 @@ def climb(
+         raise ValueError("climb requires at least one existing level (call add_level first)")
+ 
+     if hill_climber is None:
+-        x = first_improvement_hill_climber(individual, search_space, fitness_fn, rng, validity=validity)
++        x, x_obj = _first_improvement_hill_climb(individual, search_space, fitness_fn, rng, validity=validity)
+     else:
+         x = hill_climber(individual)
+-    x_obj = fitness_fn(x)
++        x_obj = fitness_fn(x)
+ 
+     level_index = 0
+     while level_index < len(pyramid.levels):
+diff --git a/implementation/lib/src/p3net/surrogates/elympus.py b/implementation/lib/src/p3net/surrogates/elympus.py
+index 0315fcd5..81eeb6e1 100644
+--- a/implementation/lib/src/p3net/surrogates/elympus.py
++++ b/implementation/lib/src/p3net/surrogates/elympus.py
+@@ -49,6 +49,7 @@
+ 
+ from __future__ import annotations
+ 
++import random
+ from collections.abc import Callable
+ from dataclasses import dataclass, field
+ from enum import Enum, auto
+@@ -91,10 +92,42 @@ class ELyMPuS:
+     search_space: SearchSpace
+     fitness_fn: Callable[[Genotype], float]
+     dependencies: dict[int, set[int]] = field(default_factory=dict)
++    #: Probability of spot-checking a cache hit from a genotype other than
++    #: the one that established it (see `_pairwise_comparison`'s
++    #: docstring). Defaults to 0.0 -- off -- so a caller that already
++    #: knows/seeds the true dependency graph (Check 1's `eG = G`
++    #: precondition, as every existing test in test_elympus.py does) pays
++    #: exactly zero extra evaluations, matching this module's own
++    #: documented zero-overhead guarantee for that case. A caller that
++    #: does NOT seed the true graph (the actual production case in
++    #: `PrzewozniczekP3ELyMPuS`, which starts `dependencies` empty) MUST
++    #: set this above 0.0, or `dependencies` never grows at all --
++    #: `discover_missing_dependency` exists and is independently tested
++    #: (Check 2) but nothing ever calls it otherwise.
++    verify_probability: float = 0.0
++    rng: random.Random = field(default_factory=random.Random)
+     evaluation_count: int = field(default=0, init=False)
+     _table: dict[int, dict[Context, dict[Any, Comparison]]] = field(
+         default_factory=dict, init=False, repr=False
+     )
++    #: One witness genotype per (g, context, value_a, value_b) cache entry
++    #: -- mirrors `_table`'s own shape exactly -- recording whose
++    #: evaluation actually produced that entry. Used by
++    #: `_pairwise_comparison` to run Theorem 1's own non-monotonicity spot
++    #: check on a cache hit from a genuinely different genotype; without
++    #: this, `dependencies` never grows past whatever the caller seeds it
++    #: with, since nothing would ever call `discover_missing_dependency`
++    #: (see that method's docstring and
++    #: notes/lympus-nas-adaptation-validation.md). MUST be tracked per
++    #: entry, not per (g, context) alone: several distinct value pairs
++    #: under one context can each be first computed by a different
++    #: genotype, and a coarser per-context witness would not necessarily
++    #: correspond to whichever genotype produced the specific entry being
++    #: spot-checked -- an earlier version of this field did exactly that
++    #: and could inject false dependencies as a result.
++    _context_witness: dict[int, dict[Context, dict[Any, Genotype]]] = field(
++        default_factory=dict, init=False, repr=False
++    )
+     #: Plain memoisation of the real fitness function itself (Genotype is
+     #: frozen/hashable, so this is exact, not approximate) -- independent
+     #: of the context-scoped comparison cache above. Needed because
+@@ -158,25 +191,109 @@ def _pairwise_comparison(
+         the SAME comparison outcome, not the same absolute fitness) -- a
+         real bug caught by Faza 2's own correctness test (Check 1) failing
+         on a genuine cross-genotype cache-reuse mismatch, not a
+-        micro-optimisation detail."""
++        micro-optimisation detail.
++
++        A cache HIT from a genotype other than the one whose evaluation
++        actually produced THIS SPECIFIC (g, context, value_a, value_b)
++        entry -- tracked per entry, not per context, since one context can
++        accumulate entries from several different genotypes over time -- is
++        also spot-checked against a fresh, direct recomputation for THIS
++        genotype (Theorem 1's own non-monotonicity check): if they
++        disagree, `dependencies[g]` is provably still missing a real
++        dependency (some coordinate differing between the two genotypes,
++        outside the currently-known context, actually affects g's local
++        behaviour) -- `discover_missing_dependency` is invoked to find and
++        record it, `g`'s now-stale cache is cleared, and the freshly
++        computed, correct verdict is used instead of the stale one. This
++        is what lets `dependencies` grow from an initially-empty (or
++        partial) graph at runtime rather than requiring the caller to seed
++        the true graph up front -- see this class's own module docstring
++        and notes/lympus-nas-adaptation-validation.md.
++
++        (An earlier version of this check tracked one witness per
++        (g, context) rather than per (g, context, value_a, value_b): since
++        several distinct value pairs under the same context can each be
++        first computed by a different genotype, that witness often did not
++        correspond to whichever genotype actually produced the specific
++        cached entry being spot-checked -- `discover_missing_dependency`'s
++        precondition (x1, x2 actually disagree on this exact comparison)
++        then did not hold, and `_bisect` could report an arbitrary,
++        FALSE dependency. Tracking a witness per cache entry, not per
++        context, is what this docstring's "per entry" phrasing above
++        means and is required for soundness.)"""
+         if value_a == value_b:
+             return Comparison.TIE
+         ctx = self.context_of(g, genotype)
+         ctx_table = self._table.setdefault(g, {}).setdefault(ctx, {})
++        ctx_witnesses = self._context_witness.setdefault(g, {}).setdefault(ctx, {})
+         key = (value_a, value_b)
+         cached = ctx_table.get(key)
+         if cached is not None:
++            witness = ctx_witnesses.get(key)
++            if (
++                witness is not None
++                and witness.values != genotype.values
++                and self.verify_probability > 0.0
++                and self.rng.random() < self.verify_probability
++            ):
++                fresh = Comparison.of(
++                    self._evaluate(genotype.with_values(indices=[g], new_values=[value_a])),
++                    self._evaluate(genotype.with_values(indices=[g], new_values=[value_b])),
++                )
++                if fresh != cached:
++                    found = None
++                    if value_b == genotype.values[g]:
++                        found = self.discover_missing_dependency(g, value_a, witness, genotype)
++                    if found is not None:
++                        self._table[g] = {}
++                        self._context_witness[g] = {}
++                        return self._pairwise_comparison(g, value_a, value_b, genotype)
++                    # Discovery could not pin down a culprit (its own
++                    # defensive branch) -- still fix up this one entry so
++                    # future lookups don't keep serving the now-known-wrong
++                    # cached verdict indefinitely, even though the root
++                    # cause (an incomplete `dependencies[g]`) is not fully
++                    # resolved.
++                    ctx_table[key] = fresh
++                    ctx_table[(value_b, value_a)] = _flip(fresh)
++                    # `genotype` is a valid witness for `key` only (its own
++                    # g-value equals `value_b`, `key`'s second element) --
++                    # NOT for the reverse entry, whose witness would need
++                    # its own g-value to equal `value_a` instead. Leaving
++                    # the reverse entry without a witness here is
++                    # deliberate (see the fresh-compute branch below for
++                    # the same reasoning); a future direct/reverse lookup
++                    # will fill it in correctly if and when one occurs.
++                    ctx_witnesses[key] = genotype
++                    return fresh
+             return cached
+         reverse_cached = ctx_table.get((value_b, value_a))
+         if reverse_cached is not None:
+             result = _flip(reverse_cached)
+             ctx_table[key] = result
++            # `genotype` itself, NOT the reverse entry's own witness: this
++            # call was reached via `partial_comparison`, whose own contract
++            # guarantees `value_b == genotype.values[g]` for THIS key --
++            # the reverse entry's witness instead has its OWN g-value equal
++            # to `value_a` (it is the witness for key (value_b, value_a),
++            # not (value_a, value_b)), so reusing it here would record a
++            # witness whose g-value does not match `value_b`, breaking
++            # `discover_missing_dependency`'s precondition on a later spot
++            # check and letting it attribute a mismatch to the wrong
++            # coordinate -- exactly the false-cross-block-dependency bug an
++            # earlier version of this branch produced in practice.
++            ctx_witnesses[key] = genotype
+             return result
+         fitness_a = self._evaluate(genotype.with_values(indices=[g], new_values=[value_a]))
+         fitness_b = self._evaluate(genotype.with_values(indices=[g], new_values=[value_b]))
+         result = Comparison.of(fitness_a, fitness_b)
+         ctx_table[key] = result
+         ctx_table[(value_b, value_a)] = _flip(result)
++        # `genotype` is a valid witness for `key` (own g-value == value_b,
++        # key's second element) but NOT for the reverse entry (which would
++        # need own g-value == value_a instead) -- see the two branches
++        # above for the same reasoning; deliberately left unset here.
++        ctx_witnesses[key] = genotype
+         return result
+ 
+     def partial_comparison(self, g: int, value: Any, genotype: Genotype) -> Comparison:
+diff --git a/implementation/lib/tests/test_elympus.py b/implementation/lib/tests/test_elympus.py
+index 1861e835..e2e90b35 100644
+--- a/implementation/lib/tests/test_elympus.py
++++ b/implementation/lib/tests/test_elympus.py
+@@ -114,6 +114,48 @@ def test_discover_missing_dependency_finds_a_true_dependency_and_terminates():
+     assert found is not None, "no mismatching (x1, x2, g, value) sampled in 200 attempts"
+ 
+ 
++def test_partial_comparison_discovers_dependencies_at_runtime_when_verify_probability_is_set():
++    """Regression test for the production wiring gap this fix closes:
++    with `dependencies` starting empty (the real starting point
++    `PrzewozniczekP3ELyMPuS` uses) and `verify_probability=1.0`,
++    repeated `partial_comparison` calls across genuinely different
++    genotypes sharing a (currently too-narrow) context must eventually
++    grow `dependencies[g]` towards the true neighbourhood -- without
++    this, `dependencies` stays permanently empty (see this class's
++    module docstring and notes/lympus-nas-adaptation-validation.md)."""
++    # n_blocks=2 (not 1): with a single block, every OTHER coordinate is a
++    # true dependency, so a witness-tracking bug that attributes a
++    # discovery to the wrong genotype could still only ever "discover" a
++    # real edge -- it would never surface a FALSE cross-block edge the way
++    # a multi-block problem does. This is exactly the false-positive
++    # discovery a earlier, per-context (not per-cache-entry) witness
++    # design produced in practice.
++    space = build_k_ary_trap_space(n_blocks=2, block_size=4, alphabet_size=4)
++    true_graph = true_dependency_graph(n_blocks=2, block_size=4)
++    e = ELyMPuS(
++        search_space=space,
++        fitness_fn=k_ary_trap_fitness,
++        verify_probability=1.0,
++        rng=random.Random(3),
++    )
++
++    rng = random.Random(3)
++    for _ in range(400):
++        genotype = random_genotype(space, rng)
++        g = rng.randrange(space.n)
++        value = rng.choice([v for v in space.domains[g].values if v != genotype.values[g]])
++        e.partial_comparison(g, value, genotype)
++
++    assert any(e.dependencies[g] for g in range(space.n)), (
++        "dependencies stayed empty after 400 partial_comparison calls with "
++        "verify_probability=1.0 -- discovery is still not being triggered"
++    )
++    for g in range(space.n):
++        assert e.dependencies[g] <= true_graph[g], (
++            f"discovered a false dependency for g={g}: {e.dependencies[g]} not <= {true_graph[g]}"
++        )
++
++
+ def test_discover_missing_dependency_returns_none_when_no_dependency_differs():
+     space = build_k_ary_trap_space(n_blocks=1, block_size=4, alphabet_size=4)
+     graph = true_dependency_graph(n_blocks=1, block_size=4)
