@@ -54,9 +54,7 @@ _EXPERIMENTS_ROOT = Path(__file__).resolve().parent.parent
 _VENDOR_ENV = _EXPERIMENTS_ROOT / "vendor" / "jahsbench-env"
 _BRIDGE_VENV = _VENDOR_ENV / ".venv"
 BRIDGE_PYTHON = (
-    _BRIDGE_VENV / "Scripts" / "python.exe"
-    if os.name == "nt"
-    else _BRIDGE_VENV / "bin" / "python"
+    _BRIDGE_VENV / "Scripts" / "python.exe" if os.name == "nt" else _BRIDGE_VENV / "bin" / "python"
 )
 BRIDGE_SCRIPT = _VENDOR_ENV / "query_server.py"
 DEFAULT_DATA_DIR = _EXPERIMENTS_ROOT / "data" / "cache" / "jahs_bench_201"
@@ -114,6 +112,28 @@ class JAHSBench201Substrate(Substrate):
             )
         return self._process
 
+    @staticmethod
+    def _read_response(process: subprocess.Popen, max_skipped: int = 100) -> tuple[str, int]:
+        """The bridge's next JSON response, skipping anything else it printed.
+
+        The bridge sends library output to stderr, but a dependency that writes
+        to file descriptor 1 directly would still land between responses; such
+        a line is skipped rather than parsed as a result. Returns the line
+        (empty if the bridge died) and how many lines were skipped."""
+        skipped = 0
+        while skipped <= max_skipped:
+            line = process.stdout.readline()
+            if not line:
+                return "", skipped
+            stripped = line.strip()
+            if stripped.startswith("{"):
+                return stripped, skipped
+            skipped += 1
+        raise RuntimeError(
+            f"jahs-bench bridge printed {skipped} lines that are not responses; "
+            f"last one: {line.strip()[:200]!r}"
+        )
+
     def _response(self, genotype: Genotype, epochs: int) -> dict[str, float]:
         cache_key = (genotype, epochs)
         if cache_key in self._query_cache:
@@ -139,13 +159,15 @@ class JAHSBench201Substrate(Substrate):
             process = self._ensure_process()
             process.stdin.write(json.dumps(request) + "\n")
             process.stdin.flush()
-            line = process.stdout.readline()
+            line, skipped = self._read_response(process)
         if not line:
             stderr = ""
             if self._stderr is not None:
                 self._stderr.seek(0)
                 stderr = self._stderr.read()[-4000:]
-            raise RuntimeError(f"jahs-bench bridge process died: {stderr}")
+            raise RuntimeError(
+                f"jahs-bench bridge process died (ignored {skipped} non-response line(s)): {stderr}"
+            )
         response = json.loads(line)
         if "error" in response:
             raise RuntimeError(f"jahs-bench bridge query failed: {response['error']}")

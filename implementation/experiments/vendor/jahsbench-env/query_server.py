@@ -83,6 +83,13 @@ def handle(request: dict, data_dir: str) -> dict:
 
 def main() -> None:
     data_dir = sys.argv[1]
+    # Only responses may reach the caller's stdout. jahs_bench and its
+    # dependencies print to stdout themselves (observed on Linux: a line of
+    # library output between the request and the response, which the caller
+    # then tried to parse as JSON), so the library's stdout goes to stderr and
+    # responses are written to the real stdout kept here.
+    responses = sys.stdout
+    sys.stdout = sys.stderr
     for line in sys.stdin:
         line = line.strip()
         if not line:
@@ -92,8 +99,8 @@ def main() -> None:
             response = handle(request, data_dir)
         except Exception as e:  # noqa: BLE001 -- reported to the caller, not swallowed
             response = {"error": f"{type(e).__name__}: {e}"}
-        sys.stdout.write(json.dumps(response) + "\n")
-        sys.stdout.flush()
+        responses.write(json.dumps(response) + "\n")
+        responses.flush()
 
 
 if __name__ == "__main__":
