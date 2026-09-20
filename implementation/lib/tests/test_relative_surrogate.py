@@ -82,7 +82,33 @@ def _and_pattern_observations() -> list[Observation]:
     return [Observation(genotype=g, objectives=o) for g, o in data]
 
 
-def test_include_interactions_lets_the_model_represent_a_non_additive_pattern():
+def _training_error(surrogate, observations, subset) -> float:
+    """Sum of squared errors over every ordered pair the surrogate was fit on."""
+    total = 0.0
+    for a in observations:
+        for b in observations:
+            if a is b:
+                continue
+            predicted = surrogate.predict(a.genotype, b.genotype, subset)
+            total += (predicted - (a.objectives[0] - b.objectives[0])) ** 2
+    return total
+
+
+def test_interaction_columns_do_not_help_on_a_direction_dependent_pattern():
+    """The documented limit of the `include_interactions` ablation.
+
+    `_interaction_features` is a direction-blind "coordinates i and j changed
+    together" indicator: it takes the same value for x -> x' and x' -> x, and
+    the same value for 00 -> 11 (delta -10 on the AND pattern) as for
+    10 -> 01 (delta 0). It therefore adds no representational power here --
+    exactly the reason the module's own docstring gives for encoding both
+    endpoints instead of a plain diff mask.
+
+    An earlier version of this test asserted the opposite on one query pair
+    whose prediction is symmetric, where both variants are exact and the
+    comparison only ever saw floating-point noise (it passed on Windows and
+    failed on Linux, on values of 1e-15).
+    """
     subset = frozenset({0, 1})
     observations = _and_pattern_observations()
 
@@ -96,11 +122,14 @@ def test_include_interactions_lets_the_model_represent_a_non_additive_pattern():
     )
     with_interactions.fit(observations, subsets=[subset])
 
-    x = Genotype(values=(0, 0))
-    x_prime = Genotype(values=(1, 1))
-    true_delta = 0.0 - 10.0  # f1(x) - f1(x_prime)
+    additive_error = _training_error(additive_only, observations, subset)
+    interaction_error = _training_error(with_interactions, observations, subset)
+    assert additive_error > 1.0  # the AND pattern is not additively representable
+    assert interaction_error == pytest.approx(additive_error)
 
-    additive_error = abs(additive_only.predict(x, x_prime, subset) - true_delta)
-    interaction_error = abs(with_interactions.predict(x, x_prime, subset) - true_delta)
-    assert interaction_error < additive_error
-    assert interaction_error == pytest.approx(0.0, abs=1e-6)
+    # Both are exact on the fully symmetric query, which is what made the
+    # earlier assertion vacuous.
+    x, x_prime = Genotype(values=(0, 0)), Genotype(values=(1, 1))
+    true_delta = 0.0 - 10.0
+    assert additive_only.predict(x, x_prime, subset) == pytest.approx(true_delta)
+    assert with_interactions.predict(x, x_prime, subset) == pytest.approx(true_delta)

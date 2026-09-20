@@ -31,3 +31,12 @@ params:
   acceptance_threshold: 0.0
   objective_index: 0
   use_surrogate_interactions: true
+
+# Known limitation (measured 2026-09-20, tests/test_relative_surrogate.py):
+# the interaction feature is a direction-blind "coordinates i and j changed
+# together" indicator, so it cannot separate 00 -> 11 from 10 -> 01 on the
+# canonical non-additive (AND) pattern. Its training error there is identical
+# to the plain concatenated one-hot encoding, i.e. this ablation adds no
+# representational power for exactly the case it was introduced for. Not part
+# of the v0.0.4 plan's method groups; a directional encoding would be a design
+# change, not a fix.
