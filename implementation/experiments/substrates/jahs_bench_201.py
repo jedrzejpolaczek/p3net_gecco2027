@@ -36,8 +36,10 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import socket
 import subprocess
 import tempfile
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -59,8 +61,23 @@ BRIDGE_PYTHON = (
 BRIDGE_SCRIPT = _VENDOR_ENV / "query_server.py"
 DEFAULT_DATA_DIR = _EXPERIMENTS_ROOT / "data" / "cache" / "jahs_bench_201"
 #: If set, path of a lock file held while a bridge starts and loads its models
-#: (set by scripts/run_pipeline.py for its workers).
+#: (set by scripts/run_pipeline.py for its workers). Only used without a
+#: shared bridge.
 LOAD_LOCK_ENV = "P3NET_JAHS_LOAD_LOCK"
+#: If set, directory holding the shared bridge's port and lock files: every
+#: process on this machine then talks to ONE bridge over a local socket
+#: instead of starting its own (scripts/run_pipeline.py sets it for workers).
+#:
+#: One loaded dataset costs about 12 GB resident, so a bridge per worker
+#: exhausts a 30 GB machine at three workers; shared, the cost is per
+#: dataset. SERVER_MAX_DATASETS_ENV bounds how many stay loaded at once.
+SERVER_DIR_ENV = "P3NET_JAHS_SERVER_DIR"
+SERVER_MAX_DATASETS_ENV = "P3NET_JAHS_MAX_DATASETS"
+#: A bridge that has loaded nothing for this long exits and frees its memory.
+SERVER_IDLE_TIMEOUT = 3600.0
+#: Loading a dataset takes minutes; a worker waits this long for a bridge
+#: that another worker is starting.
+SERVER_START_TIMEOUT = 1800.0
 
 
 @dataclass
@@ -77,6 +94,8 @@ class JAHSBench201Substrate(Substrate):
     data_dir: str | Path = DEFAULT_DATA_DIR
     _process: Any = field(default=None, init=False, repr=False)
     _stderr: Any = field(default=None, init=False, repr=False)
+    _socket: Any = field(default=None, init=False, repr=False)
+    _stream: Any = field(default=None, init=False, repr=False)
     _query_cache: dict[tuple[Genotype, int], dict[str, float]] = field(
         default_factory=dict, init=False, repr=False
     )
@@ -134,6 +153,109 @@ class JAHSBench201Substrate(Substrate):
             f"last one: {line.strip()[:200]!r}"
         )
 
+    # -- shared bridge (SERVER_DIR_ENV) ------------------------------------
+
+    @staticmethod
+    def _server_files(directory: Path) -> tuple[Path, Path, Path]:
+        return (
+            directory / "jahs-server.port",
+            directory / "jahs-server.lock",
+            directory / "jahs-server.log",
+        )
+
+    @staticmethod
+    def _connect(port_file: Path) -> Any:
+        """A connected socket, or None if no bridge is listening."""
+        try:
+            port = int(port_file.read_text(encoding="utf-8").splitlines()[0])
+        except (OSError, ValueError, IndexError):
+            return None
+        try:
+            connection = socket.create_connection(("127.0.0.1", port), timeout=SERVER_START_TIMEOUT)
+        except OSError:
+            return None
+        return connection
+
+    def _start_server(self, directory: Path) -> None:
+        """Start the shared bridge, unless another process just did.
+
+        Holds the lock for the whole start so two workers never load the
+        models at once (12 GB each)."""
+        port_file, lock_file, log_file = self._server_files(directory)
+        with FileLock(lock_file):
+            if self._connect(port_file) is not None:
+                return
+            port_file.unlink(missing_ok=True)
+            with open(log_file, "a", encoding="utf-8") as log:
+                subprocess.Popen(
+                    [
+                        str(BRIDGE_PYTHON),
+                        str(BRIDGE_SCRIPT),
+                        str(self.data_dir),
+                        "--serve",
+                        str(port_file),
+                        "--max-datasets",
+                        os.environ.get(SERVER_MAX_DATASETS_ENV, "2"),
+                        "--idle-timeout",
+                        str(SERVER_IDLE_TIMEOUT),
+                    ],
+                    stdin=subprocess.DEVNULL,
+                    stdout=log,
+                    stderr=log,
+                    start_new_session=True,
+                )
+            deadline = time.monotonic() + SERVER_START_TIMEOUT
+            while time.monotonic() < deadline:
+                connection = self._connect(port_file)
+                if connection is not None:
+                    connection.close()
+                    return
+                time.sleep(0.5)
+            raise RuntimeError(
+                f"shared jahs-bench bridge did not start within "
+                f"{SERVER_START_TIMEOUT:.0f}s -- see {log_file}"
+            )
+
+    def _ensure_stream(self, directory: Path) -> Any:
+        if self._stream is not None:
+            return self._stream
+        port_file, _, _ = self._server_files(directory)
+        connection = self._connect(port_file)
+        if connection is None:
+            self._start_server(directory)
+            connection = self._connect(port_file)
+        if connection is None:
+            raise RuntimeError("cannot reach the shared jahs-bench bridge")
+        self._socket = connection
+        self._stream = connection.makefile("rw", encoding="utf-8", newline="\n")
+        return self._stream
+
+    def _shared_response(self, request: dict, directory: Path) -> dict[str, float]:
+        stream = self._ensure_stream(directory)
+        try:
+            stream.write(json.dumps(request) + "\n")
+            stream.flush()
+            line = stream.readline()
+        except OSError as exc:
+            self._close_stream()
+            raise RuntimeError(f"shared jahs-bench bridge connection failed: {exc}") from exc
+        if not line:
+            self._close_stream()
+            raise RuntimeError(
+                "shared jahs-bench bridge closed the connection -- see "
+                f"{self._server_files(directory)[2]}"
+            )
+        return json.loads(line)
+
+    def _close_stream(self) -> None:
+        for handle in (self._stream, self._socket):
+            if handle is not None:
+                try:
+                    handle.close()
+                except OSError:
+                    pass
+        self._stream = self._socket = None
+
     def _response(self, genotype: Genotype, epochs: int) -> dict[str, float]:
         cache_key = (genotype, epochs)
         if cache_key in self._query_cache:
@@ -149,26 +271,31 @@ class JAHSBench201Substrate(Substrate):
             "dataset": self.dataset,
             "epochs": epochs,
         }
-        # The bridge loads the benchmark's surrogate models on its first
-        # query: ~17.5 GB peak resident memory for a few minutes, ~1.9 GB
-        # afterwards (results/checks/phase2c_jahs_bridge_memory.log). With
-        # several pipeline workers, only one bridge may load at a time.
-        starting = self._process is None or self._process.poll() is not None
-        lock_path = os.environ.get(LOAD_LOCK_ENV) if starting else None
-        with FileLock(Path(lock_path)) if lock_path else contextlib.nullcontext():
-            process = self._ensure_process()
-            process.stdin.write(json.dumps(request) + "\n")
-            process.stdin.flush()
-            line, skipped = self._read_response(process)
-        if not line:
-            stderr = ""
-            if self._stderr is not None:
-                self._stderr.seek(0)
-                stderr = self._stderr.read()[-4000:]
-            raise RuntimeError(
-                f"jahs-bench bridge process died (ignored {skipped} non-response line(s)): {stderr}"
-            )
-        response = json.loads(line)
+        server_dir = os.environ.get(SERVER_DIR_ENV)
+        if server_dir:
+            # One bridge for the whole machine (SERVER_DIR_ENV's docstring).
+            response = self._shared_response(request, Path(server_dir))
+        else:
+            # Own bridge: it loads the surrogate models on the first query,
+            # about 12 GB resident per dataset, so with several workers only
+            # one bridge may load at a time.
+            starting = self._process is None or self._process.poll() is not None
+            lock_path = os.environ.get(LOAD_LOCK_ENV) if starting else None
+            with FileLock(Path(lock_path)) if lock_path else contextlib.nullcontext():
+                process = self._ensure_process()
+                process.stdin.write(json.dumps(request) + "\n")
+                process.stdin.flush()
+                line, skipped = self._read_response(process)
+            if not line:
+                stderr = ""
+                if self._stderr is not None:
+                    self._stderr.seek(0)
+                    stderr = self._stderr.read()[-4000:]
+                raise RuntimeError(
+                    f"jahs-bench bridge process died (ignored {skipped} "
+                    f"non-response line(s)): {stderr}"
+                )
+            response = json.loads(line)
         if "error" in response:
             raise RuntimeError(f"jahs-bench bridge query failed: {response['error']}")
         self._query_cache[cache_key] = response
@@ -203,7 +330,11 @@ class JAHSBench201Substrate(Substrate):
     def close(self) -> None:
         """Not called automatically -- callers that construct many
         short-lived substrates in one process (e.g. a test suite) should
-        call this explicitly rather than leaking bridge processes."""
+        call this explicitly rather than leaking bridge processes.
+
+        A shared bridge is left running for the other workers; only this
+        substrate's connection to it is closed."""
+        self._close_stream()
         if self._process is not None:
             self._process.stdin.close()
             try:

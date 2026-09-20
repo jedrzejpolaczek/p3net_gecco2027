@@ -83,6 +83,7 @@ import hashlib
 import json
 import os
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -757,13 +758,40 @@ THREAD_VARIABLES = (
 )
 
 
-def worker_env(threads: int, run_root: Path) -> dict[str, str]:
+def worker_env(threads: int, run_root: Path, jahs_max_datasets: int = 1) -> dict[str, str]:
     env = dict(os.environ)
+    # One JAHS-Bench-201 bridge for the whole machine, shared by every worker:
+    # a loaded dataset holds about 12 GB, so a bridge per worker exhausts a
+    # 30 GB machine at three workers (substrates/jahs_bench_201.py).
+    server_dir = run_root / "jahs"
+    server_dir.mkdir(parents=True, exist_ok=True)
+    env["P3NET_JAHS_SERVER_DIR"] = str(server_dir)
+    env["P3NET_JAHS_MAX_DATASETS"] = str(jahs_max_datasets)
     env["P3NET_JAHS_LOAD_LOCK"] = str(run_root / "locks" / "jahs-bridge-load.lock")
     for name in THREAD_VARIABLES:
         env[name] = str(threads)
     env["PYTHONUNBUFFERED"] = "1"
     return env
+
+
+def shutdown_jahs_server(run_root: Path, log: Callable[[str], None]) -> None:
+    """Ask the shared JAHS bridge to exit, freeing its ~12 GB.
+
+    Best effort: it also exits by itself once idle, and a bridge that is
+    already gone is not an error."""
+    port_file = run_root / "jahs" / "jahs-server.port"
+    try:
+        port = int(port_file.read_text(encoding="utf-8").splitlines()[0])
+    except (OSError, ValueError, IndexError):
+        return
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=30) as connection:
+            connection.sendall(b'{"command": "shutdown"}\n')
+            connection.recv(1024)
+    except OSError as exc:
+        log(f"shared JAHS bridge did not acknowledge shutdown: {exc}")
+        return
+    log("shared JAHS bridge shut down")
 
 
 def remove_stale_locks(lock_dir: Path, unlock_after_hours: float | None = None) -> int:
@@ -1036,6 +1064,7 @@ def main(argv: list[str] | None = None) -> int:
     parallel = plan.get("parallel", {})
     workers = args.workers or int(parallel.get("workers", 1))
     threads = int(parallel.get("threads_per_run", 2))
+    jahs_max_datasets = int(parallel.get("jahs_max_datasets", 1))
 
     fingerprint = git_fingerprint()
     short = fingerprint["commit"][:8] + ("-dirty" if fingerprint["dirty"] else "")
@@ -1168,7 +1197,7 @@ def main(argv: list[str] | None = None) -> int:
                 args=args,
                 run_root=run_root,
                 stages=[s["name"] for s in grid_stages],
-                env=worker_env(threads, run_root),
+                env=worker_env(threads, run_root, jahs_max_datasets),
                 log=pipeline.log,
                 status=(
                     None
@@ -1184,12 +1213,13 @@ def main(argv: list[str] | None = None) -> int:
                 run_root=run_root,
                 raw_dir=run_root / "timing" / "raw",
                 max_retries=args.max_retries,
-                env=worker_env(threads, run_root),
+                env=worker_env(threads, run_root, jahs_max_datasets),
                 worker="timing",
             )
             report = timing.run_stage(s["name"], select_shard(expand_stage(s), shard))
             status[s["name"]] = asdict(report) | {"done": report.done}
             incomplete |= not report.done
+        shutdown_jahs_server(run_root, pipeline.log)
         status_path = run_root / "stage_status.json"
         status_path.write_text(json.dumps(status, indent=2), encoding="utf-8")
         for name, st in status.items():

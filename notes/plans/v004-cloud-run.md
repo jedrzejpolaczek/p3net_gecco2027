@@ -20,9 +20,18 @@ Jeden worker zajmuje 2 wątki, więc maszyna z N vCPU liczy około N/2 punktów 
 Przy 16 vCPU praca zajmie ok. 360 godzin maszynowych niezależnie od tego, na ile maszyn to
 podzielisz, więc koszt zależy tylko od ceny za godzinę i od tego, czy vCPU są dedykowane.
 
-Pamięć: **minimum 4 GB na workera**, bo jedno ramię (OSS Vizier) potrafi zająć 13 GB, a most
-JAHS-Bench-201 przy starcie 17,5 GB (ładuje się tylko jeden naraz, pilnuje tego blokada).
-Przy 8 workerach planuj 64 GB RAM. Dysk: 20 GB na dane benchmarków plus ok. 10 GB na wyniki.
+Pamięć (zmierzone na Linuksie, poprawione 2026-09-20):
+
+    12 GB × liczba jednocześnie załadowanych zbiorów JAHS  +  13 GB (jeden przebieg OSS Vizier)
+    +  ok. 0,5 GB na workera
+
+Most JAHS-Bench-201 jest **wspólny dla wszystkich workerów** na maszynie (gniazdo lokalne), więc
+jego koszt liczy się per zbiór danych, nie per worker; `parallel.jahs_max_datasets` (domyślnie 1)
+ogranicza, ile zbiorów zostaje w pamięci. Przy 30 GB RAM mieści się ok. 6 workerów.
+Wcześniejsza liczba 1,9 GB na most pochodziła z Windowsa i była artefaktem licznika zestawu
+roboczego — na Linuksie to ok. 12 GB (`results/checks/phase2c_jahs_bridge_memory.log`).
+
+Dysk: 20 GB na dane benchmarków plus ok. 10 GB na wyniki.
 
 ## 2. Jaką maszynę
 

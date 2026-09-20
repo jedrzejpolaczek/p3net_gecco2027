@@ -12,3 +12,25 @@ Consequences for the parallel pipeline:
   * per JAHS worker after loading: ~1.9 GB bridge + 0.6-2.7 GB worker process;
   * 3 workers, worst case: 17.5 + 2 x 1.9 + 3 x 2.7 = ~29 GB of 31.7 GB
     -> plan default workers: 3.
+
+CORRECTION (2026-09-20, Linux, Hetzner CPX62, 30 GB RAM)
+--------------------------------------------------------
+The 1.85 GB "resident after loading" above is a Windows working-set artifact.
+On Linux the same bridge holds ~11.7 GB of anonymous memory per loaded
+dataset, measured as anon-rss of the processes the OOM killer reported:
+
+  Out of memory: Killed process 32437 (python) total-vm:14969716kB,
+  anon-rss:11690964kB   (and two more, 11.71 GB and 11.59 GB)
+
+With one bridge per worker this exhausted 30 GB at three workers: six OOM
+kills in an hour at 6 and 8 workers, before any Vizier run had started.
+
+Consequence: all workers on a machine now share ONE bridge over a local
+socket (P3NET_JAHS_SERVER_DIR, substrates/jahs_bench_201.py), which keeps at
+most `parallel.jahs_max_datasets` datasets loaded (default 1). Memory is then
+per dataset, not per worker:
+
+  12 GB (one dataset) + 13 GB (one OSS Vizier run) + ~0.5 GB per worker
+
+Verified: p3net on jahs_bench_201, budget 50, seed 1 through the shared
+bridge reproduces the archived run element for element.

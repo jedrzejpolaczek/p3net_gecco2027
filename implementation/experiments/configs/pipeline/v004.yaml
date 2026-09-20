@@ -84,11 +84,16 @@ parallel:
   # loading (one load at a time, lock), 1.9 GB afterwards; 3 workers fit in
   # 31.7 GB RAM (measurement:
   # results/checks/phase2c_jahs_bridge_memory.log).
-  # 2, not 3: with 3 the machine ran out of memory on the first full run
-  # (OSS Vizier holds ~13 GB per run, a JAHS bridge 1.9 GB and 17.5 GB while
-  # loading), which killed workers and failed benchmark queries. On a machine
-  # with more memory, raise it with --workers.
-  workers: 2
+  # Memory, measured on Linux: one loaded JAHS-Bench-201 dataset holds about
+  # 12 GB and OSS Vizier about 13 GB per run. The bridge is shared by all
+  # workers and holds `jahs_max_datasets` datasets, so the budget is roughly
+  #   12 * jahs_max_datasets + 13 (one Vizier) + 0.5 per worker.
+  # With 30 GB that allows about 6 workers; override with --workers.
+  workers: 6
+  # How many JAHS-Bench-201 datasets the shared bridge keeps loaded at once
+  # (12 GB each, least recently used evicted). Workers move through the
+  # search spaces roughly together, so 1 rarely costs a reload.
+  jahs_max_datasets: 1
   # Threads for numerical libraries in every run, whatever the worker count,
   # so parallelism changes neither results nor per-run CPU accounting.
   threads_per_run: 2
