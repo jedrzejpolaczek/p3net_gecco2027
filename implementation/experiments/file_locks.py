@@ -12,12 +12,15 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import logging
 import os
 import platform
 import time
 from pathlib import Path
 
 import psutil
+
+logger = logging.getLogger(__name__)
 
 
 def try_lock(path: Path) -> bool:
@@ -64,24 +67,58 @@ def lock_is_stale(path: Path, grace_seconds: float = 60.0) -> bool:
     return not psutil.pid_exists(int(holder.get("pid", -1)))
 
 
-def release_lock(path: Path) -> None:
-    try:
-        path.unlink()
-    except FileNotFoundError:
-        pass
+def release_lock(path: Path, attempts: int = 40) -> None:
+    """Release a lock, never raising.
+
+    Windows refuses to delete a file another process or thread has open --
+    `lock_is_stale` reading it, for instance -- with PermissionError. Letting
+    that escape used to kill the releasing thread and leave the lock file
+    behind for good, so everyone else waited on a lock nobody held."""
+    for _ in range(attempts):
+        try:
+            path.unlink()
+            return
+        except FileNotFoundError:
+            return
+        except PermissionError:
+            time.sleep(0.05)
+    logger.warning("could not remove the lock file %s; it will be broken as stale", path)
 
 
 class FileLock:
-    """Blocking mutual exclusion for short critical sections."""
+    """Mutual exclusion for a critical section, with a deadline.
 
-    def __init__(self, path: Path, poll_seconds: float = 0.05) -> None:
+    `timeout_seconds` is not a nicety: a lock file that outlives its holder
+    (a process killed at the wrong moment, or a delete that Windows refused)
+    would otherwise stop every other process silently and for ever. On
+    timeout the holder recorded in the lock file is named in the error."""
+
+    def __init__(
+        self,
+        path: Path,
+        poll_seconds: float = 0.05,
+        timeout_seconds: float | None = 3600.0,
+    ) -> None:
         self.path = path
         self.poll_seconds = poll_seconds
+        self.timeout_seconds = timeout_seconds
 
     def __enter__(self) -> FileLock:
+        deadline = None if self.timeout_seconds is None else time.monotonic() + self.timeout_seconds
         while not try_lock(self.path):
+            if deadline is not None and time.monotonic() > deadline:
+                raise TimeoutError(
+                    f"lock {self.path} is still held after "
+                    f"{self.timeout_seconds:.0f}s by {self.holder()}"
+                )
             time.sleep(self.poll_seconds)
         return self
 
     def __exit__(self, *exc) -> None:
         release_lock(self.path)
+
+    def holder(self) -> str:
+        try:
+            return self.path.read_text(encoding="utf-8").strip()
+        except OSError:
+            return "an unreadable lock file"
