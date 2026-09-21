@@ -758,7 +758,9 @@ THREAD_VARIABLES = (
 )
 
 
-def worker_env(threads: int, run_root: Path, jahs_max_datasets: int = 1) -> dict[str, str]:
+def worker_env(
+    threads: int, run_root: Path, jahs_max_datasets: int = 1, jahs_parallel: int = 4
+) -> dict[str, str]:
     env = dict(os.environ)
     # One JAHS-Bench-201 bridge for the whole machine, shared by every worker:
     # a loaded dataset holds about 12 GB, so a bridge per worker exhausts a
@@ -767,6 +769,7 @@ def worker_env(threads: int, run_root: Path, jahs_max_datasets: int = 1) -> dict
     server_dir.mkdir(parents=True, exist_ok=True)
     env["P3NET_JAHS_SERVER_DIR"] = str(server_dir)
     env["P3NET_JAHS_MAX_DATASETS"] = str(jahs_max_datasets)
+    env["P3NET_JAHS_PARALLEL"] = str(jahs_parallel)
     env["P3NET_JAHS_LOAD_LOCK"] = str(run_root / "locks" / "jahs-bridge-load.lock")
     for name in THREAD_VARIABLES:
         env[name] = str(threads)
@@ -1065,6 +1068,8 @@ def main(argv: list[str] | None = None) -> int:
     workers = args.workers or int(parallel.get("workers", 1))
     threads = int(parallel.get("threads_per_run", 2))
     jahs_max_datasets = int(parallel.get("jahs_max_datasets", 1))
+    # One handler per worker: the bridge must not become the bottleneck.
+    jahs_parallel = int(parallel.get("jahs_parallel", 0)) or workers
 
     fingerprint = git_fingerprint()
     short = fingerprint["commit"][:8] + ("-dirty" if fingerprint["dirty"] else "")
@@ -1197,7 +1202,7 @@ def main(argv: list[str] | None = None) -> int:
                 args=args,
                 run_root=run_root,
                 stages=[s["name"] for s in grid_stages],
-                env=worker_env(threads, run_root, jahs_max_datasets),
+                env=worker_env(threads, run_root, jahs_max_datasets, jahs_parallel),
                 log=pipeline.log,
                 status=(
                     None
@@ -1213,7 +1218,7 @@ def main(argv: list[str] | None = None) -> int:
                 run_root=run_root,
                 raw_dir=run_root / "timing" / "raw",
                 max_retries=args.max_retries,
-                env=worker_env(threads, run_root, jahs_max_datasets),
+                env=worker_env(threads, run_root, jahs_max_datasets, jahs_parallel),
                 worker="timing",
             )
             report = timing.run_stage(s["name"], select_shard(expand_stage(s), shard))

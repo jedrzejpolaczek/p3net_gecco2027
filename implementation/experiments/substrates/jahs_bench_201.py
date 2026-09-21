@@ -73,6 +73,10 @@ LOAD_LOCK_ENV = "P3NET_JAHS_LOAD_LOCK"
 #: dataset. SERVER_MAX_DATASETS_ENV bounds how many stay loaded at once.
 SERVER_DIR_ENV = "P3NET_JAHS_SERVER_DIR"
 SERVER_MAX_DATASETS_ENV = "P3NET_JAHS_MAX_DATASETS"
+#: How many handler processes the shared bridge forks after loading (they
+#: share the models copy-on-write, so this costs almost no extra memory).
+#: One handler makes the bridge the throughput limit of the whole machine.
+SERVER_PARALLEL_ENV = "P3NET_JAHS_PARALLEL"
 #: A bridge that has loaded nothing for this long exits and frees its memory.
 SERVER_IDLE_TIMEOUT = 3600.0
 #: Loading a dataset takes minutes; a worker waits this long for a bridge
@@ -182,12 +186,15 @@ class JAHSBench201Substrate(Substrate):
         Holds the lock for the whole start so two workers never load the
         models at once (12 GB each)."""
         port_file, lock_file, log_file = self._server_files(directory)
-        with FileLock(lock_file):
+        # The lock is held across the whole model load (minutes), so the
+        # deadline has to cover it -- but it must exist: a lock outliving its
+        # holder would otherwise stall every worker on the machine silently.
+        with FileLock(lock_file, timeout_seconds=SERVER_START_TIMEOUT * 2):
             if self._connect(port_file) is not None:
                 return
             port_file.unlink(missing_ok=True)
             with open(log_file, "a", encoding="utf-8") as log:
-                subprocess.Popen(
+                server = subprocess.Popen(
                     [
                         str(BRIDGE_PYTHON),
                         str(BRIDGE_SCRIPT),
@@ -198,6 +205,8 @@ class JAHSBench201Substrate(Substrate):
                         os.environ.get(SERVER_MAX_DATASETS_ENV, "2"),
                         "--idle-timeout",
                         str(SERVER_IDLE_TIMEOUT),
+                        "--parallel",
+                        os.environ.get(SERVER_PARALLEL_ENV, "4"),
                     ],
                     stdin=subprocess.DEVNULL,
                     stdout=log,
@@ -210,6 +219,13 @@ class JAHSBench201Substrate(Substrate):
                 if connection is not None:
                     connection.close()
                     return
+                if server.poll() is not None:
+                    # Failing fast matters: otherwise every worker waits out
+                    # the full start timeout before reporting the same error.
+                    raise RuntimeError(
+                        f"shared jahs-bench bridge exited with {server.returncode} "
+                        f"while starting -- see {log_file}"
+                    )
                 time.sleep(0.5)
             raise RuntimeError(
                 f"shared jahs-bench bridge did not start within "

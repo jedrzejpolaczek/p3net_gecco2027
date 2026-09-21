@@ -94,6 +94,11 @@ parallel:
   # (12 GB each, least recently used evicted). Workers move through the
   # search spaces roughly together, so 1 rarely costs a reload.
   jahs_max_datasets: 1
+  # Handler processes the shared bridge forks after loading the dataset (they
+  # share its memory copy-on-write). 0 = one per worker. With a single handler
+  # the bridge answers one query at a time and becomes the machine's
+  # bottleneck: measured load average 1.9 of 16 cores on cheap JAHS arms.
+  jahs_parallel: 0
   # Threads for numerical libraries in every run, whatever the worker count,
   # so parallelism changes neither results nor per-run CPU accounting.
   threads_per_run: 2

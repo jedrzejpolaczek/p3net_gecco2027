@@ -63,6 +63,7 @@ def main() -> None:
     parser.add_argument("--serve", metavar="PORT_FILE", default=None)
     parser.add_argument("--max-datasets", type=int, default=8)
     parser.add_argument("--idle-timeout", type=float, default=3600.0)
+    parser.add_argument("--parallel", type=int, default=1)
     args = parser.parse_args()
     if args.serve:
         serve(args.serve)

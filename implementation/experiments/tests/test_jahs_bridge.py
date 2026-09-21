@@ -164,3 +164,19 @@ def test_run_pipeline_points_workers_at_one_shared_bridge(tmp_path):
     assert env[jahs.SERVER_DIR_ENV] == str(tmp_path / "jahs")
     assert env[jahs.SERVER_MAX_DATASETS_ENV] == "1"
     assert json.loads('{"ok": true}')  # keep json import meaningful for linters
+
+
+def test_a_bridge_that_cannot_start_fails_immediately(monkeypatch, tmp_path):
+    """Without this, every worker waits out the full start timeout (30 min)
+    before reporting the same failure."""
+    broken = tmp_path / "broken_server.py"
+    broken.write_text("import sys\nsys.exit(3)\n", encoding="utf-8")
+    monkeypatch.setattr(jahs, "BRIDGE_PYTHON", Path(sys.executable))
+    monkeypatch.setattr(jahs, "BRIDGE_SCRIPT", broken)
+    monkeypatch.setenv(jahs.SERVER_DIR_ENV, str(tmp_path))
+
+    substrate = jahs.JAHSBench201Substrate()
+    started = time.monotonic()
+    with pytest.raises(RuntimeError, match="exited with 3"):
+        substrate.objectives(GENOTYPE)
+    assert time.monotonic() - started < 30.0
