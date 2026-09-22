@@ -36,8 +36,9 @@ candidate is proposed.
 
 Device: CPU by default; `device: "cuda"` (or "auto") moves the model and the
 candidate pool to the GPU. Tensors are float64 on either. On CUDA,
-deterministic algorithms are enforced and the pool is scored in chunks of
-`gpu_chunk_size` to bound memory.
+deterministic algorithms are enforced. The candidate pool is scored in
+chunks of `chunk_size` on both devices:every  candidate is scored independently,
+so this changes no result and only bounds peak memory.
 
 CPU is the default because a 4 GB GPU is not enough for this arm at the
 budgets this project uses: on the first full pipeline run, 509 of 578
@@ -86,8 +87,12 @@ class BoTorchMO:
     mc_samples: int = 128
     #: "cpu" (default), "cuda", or "auto" = CUDA when available.
     device: str = "cpu"
-    #: Candidates scored per acquisition call on CUDA (bounds GPU memory).
-    gpu_chunk_size: int = 256
+    #: Candidates scored per acquisition call. Each candidate is scored
+    #: independently, so chunking changes no result -- it only bounds peak
+    #: memory. Scoring the whole pool at once held about 16 GB at budget 350
+    #: on the cloud machine (2026-09-22), which pushed everything else into
+    #: swap; in chunks it is a fraction of that.
+    chunk_size: int = 256
     experiment_type: str = "botorch_mo"
     protocol_version: str = "v1"
     cache: EvaluationCache = field(default_factory=EvaluationCache)
@@ -147,15 +152,12 @@ class BoTorchMO:
             acq = self._acquisition_function()
             with torch.no_grad():
                 X_pool = self._encode(pool).unsqueeze(1)
-                if self._device.type == "cuda":
-                    scores = torch.cat(
-                        [
-                            acq(X_pool[i : i + self.gpu_chunk_size])
-                            for i in range(0, len(pool), self.gpu_chunk_size)
-                        ]
-                    )
-                else:
-                    scores = acq(X_pool)
+                scores = torch.cat(
+                    [
+                        acq(X_pool[i : i + self.chunk_size])
+                        for i in range(0, len(pool), self.chunk_size)
+                    ]
+                )
         best = pool[int(torch.argmax(scores))]
         self.cache.record_proposal(
             best, experiment_type=self.experiment_type, protocol_version=self.protocol_version
