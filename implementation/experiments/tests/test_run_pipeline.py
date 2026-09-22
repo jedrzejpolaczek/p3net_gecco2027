@@ -338,3 +338,53 @@ def test_plan_parallel_section_is_well_formed():
         assert spec["capacity"] >= 1 and spec["methods"]
     timing = [s for s in plan["stages"] if s.get("kind") == "timing"]
     assert timing and all(rp.expand_stage(s) for s in timing)
+
+
+# ---------------------------------------------------------------------------
+# Splitting a plan across machines
+# ---------------------------------------------------------------------------
+
+
+def _selection_points():
+    return [
+        rp.Point("stage", method, "space", 50, seed)
+        for method in ("p3net", "oss_vizier", "random_search")
+        for seed in (1, 2, 3)
+    ]
+
+
+def test_only_methods_keeps_just_those_arms():
+    chosen = rp.Selection(only_methods=frozenset({"oss_vizier"}))(_selection_points())
+    assert {p.method for p in chosen} == {"oss_vizier"}
+    assert len(chosen) == 3
+
+
+def test_exclude_methods_drops_just_those_arms():
+    chosen = rp.Selection(exclude_methods=frozenset({"oss_vizier"}))(_selection_points())
+    assert {p.method for p in chosen} == {"p3net", "random_search"}
+
+
+def test_the_two_filters_partition_the_plan_between_machines():
+    """One machine runs the memory-hungry arm, the other runs the rest, and
+    together they cover every point exactly once."""
+    points = _selection_points()
+    heavy = rp.Selection(only_methods=frozenset({"oss_vizier"}))(points)
+    rest = rp.Selection(exclude_methods=frozenset({"oss_vizier"}))(points)
+    assert {p.key for p in heavy} | {p.key for p in rest} == {p.key for p in points}
+    assert not {p.key for p in heavy} & {p.key for p in rest}
+
+
+def test_filters_compose_with_sharding():
+    points = _selection_points()
+    shards = [
+        rp.Selection(shard=(i, 3), exclude_methods=frozenset({"oss_vizier"}))(points)
+        for i in range(3)
+    ]
+    keys = [p.key for shard in shards for p in shard]
+    assert sorted(keys) == sorted(p.key for p in points if p.method != "oss_vizier")
+    assert len(keys) == len(set(keys))
+
+
+def test_selection_describes_itself_for_the_log():
+    described = rp.Selection(shard=(1, 4), exclude_methods=frozenset({"oss_vizier"})).describe()
+    assert "shard 1/4" in described and "oss_vizier" in described

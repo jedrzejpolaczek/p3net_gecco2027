@@ -49,6 +49,13 @@ results nor per-run CPU accounting. Worker output goes to
 
 Several machines
 ----------------
+`--only-methods` and `--exclude-methods` restrict a machine to some arms.
+That is how an arm whose memory does not fit alongside the others is given a
+machine of its own: OSS Vizier held about 34 GB at the larger budgets, which
+pushed the JAHS bridge into swap and stalled everything (2026-09-22). The
+filters apply to grid and timing stages alike, and each machine's raw files
+are merged afterwards by copying them into one directory.
+
 `--shard i/N` runs only the points whose key hashes to shard `i` of `N`, so N
 machines (or N run roots) can split one plan with no coordination at all: each
 machine gets a disjoint, deterministic subset, and the raw files are merged
@@ -169,6 +176,41 @@ def select_shard(points: list[Point], shard: tuple[int, int] | None) -> list[Poi
         return points
     index, shards = shard
     return [p for p in points if shard_of(p.key, shards) == index]
+
+
+@dataclass(frozen=True)
+class Selection:
+    """Which of a plan's points this machine runs."""
+
+    shard: tuple[int, int] | None = None
+    only_methods: frozenset[str] = frozenset()
+    exclude_methods: frozenset[str] = frozenset()
+
+    def __call__(self, points: list[Point]) -> list[Point]:
+        chosen = select_shard(points, self.shard)
+        if self.only_methods:
+            chosen = [p for p in chosen if p.method in self.only_methods]
+        if self.exclude_methods:
+            chosen = [p for p in chosen if p.method not in self.exclude_methods]
+        return chosen
+
+    def describe(self) -> str:
+        parts = []
+        if self.shard is not None:
+            parts.append(f"shard {self.shard[0]}/{self.shard[1]}")
+        if self.only_methods:
+            parts.append("only " + ", ".join(sorted(self.only_methods)))
+        if self.exclude_methods:
+            parts.append("without " + ", ".join(sorted(self.exclude_methods)))
+        return ", ".join(parts)
+
+    @classmethod
+    def from_args(cls, args: argparse.Namespace) -> Selection:
+        return cls(
+            shard=parse_shard(args.shard),
+            only_methods=frozenset(args.only_methods or ()),
+            exclude_methods=frozenset(args.exclude_methods or ()),
+        )
 
 
 def parse_shard(text: str | None) -> tuple[int, int] | None:
@@ -816,14 +858,14 @@ def remove_stale_locks(lock_dir: Path, unlock_after_hours: float | None = None) 
     return removed
 
 
-def status_line(run_root: Path, stages: list[dict[str, Any]], shard) -> str:
+def status_line(run_root: Path, stages: list[dict[str, Any]], selection: Selection) -> str:
     """One-line progress summary from the files and locks on disk: cheap
     enough (one directory listing) to print every few minutes."""
     raw = run_root / "raw"
     present = {p.name for p in raw.glob("*.json")} if raw.exists() else set()
     parts = []
     for stage in stages:
-        points = select_shard(expand_stage(stage), shard)
+        points = selection(expand_stage(stage))
         if not points:
             continue
         done = sum(1 for point in points if point.filename in present)
@@ -878,6 +920,10 @@ def spawn_workers(
         base.append("--stop-on-error")
     if args.shard:
         base += ["--shard", args.shard]
+    if args.only_methods:
+        base += ["--only-methods", *args.only_methods]
+    if args.exclude_methods:
+        base += ["--exclude-methods", *args.exclude_methods]
 
     def start(i: int) -> tuple[subprocess.Popen, Any]:
         handle = open(run_root / "logs" / f"worker-{i}.log", "a", encoding="utf-8")
@@ -949,12 +995,12 @@ def run_worker(args: argparse.Namespace, plan: dict[str, Any], stages: list[dict
         worker=args.worker_name,
     )
     grid = [s for s in stages if s.get("kind", "grid") == "grid"]
-    shard = parse_shard(args.shard)
+    selection = Selection.from_args(args)
     try:
         while True:
             ran = busy = failed = 0
             for s in grid:
-                report = pipeline.run_stage(s["name"], select_shard(expand_stage(s), shard))
+                report = pipeline.run_stage(s["name"], selection(expand_stage(s)))
                 ran += report.ran
                 busy += report.busy
                 failed += report.failed_now
@@ -969,13 +1015,14 @@ def run_worker(args: argparse.Namespace, plan: dict[str, Any], stages: list[dict
 def stage_reports(
     pipeline: Pipeline,
     stages: list[dict[str, Any]],
-    shard: tuple[int, int] | None = None,
+    selection: Selection | None = None,
 ) -> tuple[dict[str, Any], bool]:
     """Completion of each stage from the files on disk, without running."""
     status: dict[str, Any] = {}
     incomplete = False
+    selection = selection or Selection()
     for s in stages:
-        points = select_shard(expand_stage(s), shard)
+        points = selection(expand_stage(s))
         report = StageReport(stage=s["name"], total=len(points))
         for point in points:
             path = pipeline.raw_dir / point.filename
@@ -1035,6 +1082,20 @@ def main(argv: list[str] | None = None) -> int:
         "--shard", default=None, help="run only shard i of N points, e.g. 0/4 (see --help)"
     )
     parser.add_argument(
+        "--only-methods",
+        nargs="*",
+        default=None,
+        metavar="METHOD",
+        help="run only these arms on this machine (see 'Several machines')",
+    )
+    parser.add_argument(
+        "--exclude-methods",
+        nargs="*",
+        default=None,
+        metavar="METHOD",
+        help="run everything except these arms on this machine",
+    )
+    parser.add_argument(
         "--unlock-after",
         type=float,
         default=None,
@@ -1061,8 +1122,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.worker:
         return run_worker(args, plan, stages)
-    shard = parse_shard(args.shard)
-    grid_points = [p for s in stages for p in select_shard(expand_stage(s), shard)]
+    selection = Selection.from_args(args)
+    grid_points = [p for s in stages for p in selection(expand_stage(s))]
     all_plan_points = [p for s in plan["stages"] for p in expand_stage(s)]
     parallel = plan.get("parallel", {})
     workers = args.workers or int(parallel.get("workers", 1))
@@ -1078,10 +1139,10 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"plan {plan['name']}: {len(stages)} stage(s), {len(grid_points)} point(s), "
         f"{workers} worker(s), {threads} thread(s) per run"
-        + (f", shard {args.shard}" if shard else "")
+        + (f", {selection.describe()}" if selection.describe() else "")
     )
     for s in stages:
-        n = len(select_shard(expand_stage(s), shard))
+        n = len(selection(expand_stage(s)))
         print(f"  {s['name']:22} {s.get('kind', 'grid'):6} {n:6} point(s)")
     print(
         f"commit {fingerprint['commit'][:12]}{' (DIRTY)' if fingerprint['dirty'] else ''} -> run root {run_root}"  # noqa: E501
@@ -1140,7 +1201,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print("\ncompletion in this run root:")
         for s in stages:
-            pts = select_shard(expand_stage(s), shard)
+            pts = selection(expand_stage(s))
             if not pts:
                 continue
             directory = (
@@ -1207,12 +1268,12 @@ def main(argv: list[str] | None = None) -> int:
                 status=(
                     None
                     if args.status_every <= 0
-                    else lambda: status_line(run_root, grid_stages, shard)
+                    else lambda: status_line(run_root, grid_stages, selection)
                 ),
                 status_every=args.status_every,
             )
         pipeline.ledger.refresh()
-        status, incomplete = stage_reports(pipeline, grid_stages, shard)
+        status, incomplete = stage_reports(pipeline, grid_stages, selection)
         for s in timing_stages:
             timing = TimingPipeline(
                 run_root=run_root,
@@ -1221,7 +1282,7 @@ def main(argv: list[str] | None = None) -> int:
                 env=worker_env(threads, run_root, jahs_max_datasets, jahs_parallel),
                 worker="timing",
             )
-            report = timing.run_stage(s["name"], select_shard(expand_stage(s), shard))
+            report = timing.run_stage(s["name"], selection(expand_stage(s)))
             status[s["name"]] = asdict(report) | {"done": report.done}
             incomplete |= not report.done
         shutdown_jahs_server(run_root, pipeline.log)
