@@ -125,6 +125,41 @@ Pierwszy etap (`checks`) trwa ok. 25 minut: testy biblioteki, testy eksperyment�
 determinizmu wszystkich 64 ramion. Uruchom go tylko na jednej maszynie; na pozostałych dodaj
 `--skip-checks`.
 
+### 5a. OSS Vizier na osobnej maszynie (wariant A)
+
+Ramię `oss_vizier` trzyma przy budżecie 350 ok. 34 GB RAM — na maszynie z 30 GB wypycha mostek
+JAHS do swapu i zatrzymuje wszystkie pozostałe workery (tak padł przebieg z 2026-09-21). Dlatego
+liczymy je osobno, na maszynie z 64 GB, a reszta siatki leci bez niego. Plik planu musi być na
+obu maszynach **identyczny** — inaczej zmienia się hash planu i wyników nie da się scalić.
+
+Maszyna siatki (CPX63, 30 GB) — wszystko poza Vizierem i bez etapu czasów:
+
+```bash
+nohup bash scripts/run_pipeline.sh --workers 6 --exclude-methods oss_vizier   --stages s1_headline s2_design_evolution s3_final s4_design_defense   s5_nas_bench_201 s6_heldout_seeds s7_multi_fidelity s8_fcnet   > ~/pipeline.log 2>&1 &
+```
+
+Maszyna Vizierowa (CCX43, 16 dedykowanych vCPU, 64 GB, ok. 0,35 €/h). Slot `heavy_gp` i tak
+przepuszcza jeden przebieg Viziera naraz, więc więcej niż jeden worker nic nie daje:
+
+```bash
+nohup bash scripts/run_pipeline.sh --workers 1 --only-methods oss_vizier --skip-checks   > ~/pipeline.log 2>&1 &
+```
+
+1444 punkty po kolei to ok. 7 dni. Dwie takie maszyny z `--shard 0/2` i `--shard 1/2` (obok
+`--only-methods oss_vizier`) skracają to do ok. 3,5 dnia przy tym samym koszcie łącznym.
+
+**Etap `s9_timing` w całości — bez filtrów ramion — na maszynie Vizierowej**, po zakończeniu
+siatki, bo tylko ona ma dość pamięci na Viziera przy budżecie 350, a tabela sprzętu w artykule
+musi opisywać jedną maszynę (zastrzeżenie 2 i 3 poniżej). Dedykowane vCPU są do pomiaru czasów
+i tak właściwsze niż współdzielone:
+
+```bash
+bash scripts/run_pipeline.sh --stages s9_timing --workers 1
+```
+
+Obie maszyny to AMD EPYC pod tym samym Linuksem i z tymi samymi kołami z `uv.lock`, więc siatkę
+wolno rozdzielić między nie; etap `checks` (w tym determinizm) robi tylko maszyna siatki.
+
 ## 6. Podgląd postępu
 
 - W terminalu co 10 minut pojawia się linia `STATUS ...` z postępem etapów, listą liczonych
