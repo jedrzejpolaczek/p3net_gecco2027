@@ -160,6 +160,32 @@ bash scripts/run_pipeline.sh --stages s9_timing --workers 1
 Obie maszyny to AMD EPYC pod tym samym Linuksem i z tymi samymi kołami z `uv.lock`, więc siatkę
 wolno rozdzielić między nie; etap `checks` (w tym determinizm) robi tylko maszyna siatki.
 
+### 5b. Jeden zbiór JAHS naraz (awaria 2026-09-23)
+
+Wspólny mostek trzyma jeden zbiór JAHS-Bench-201 (12 GB). Gdy workery rozjadą się po dwóch
+przestrzeniach — jeden kończy długi przebieg w `jahs_bench_201`, pozostali weszli już w
+`jahs_bench_201_colorectal` — mostek przeładowuje 12 GB między zapytaniami, a w chwili przełączenia
+trzyma oba zbiory naraz. Na maszynie 30 GB oznaczało to 31 GB zajęte, swap pod korek i pięć godzin
+całkowitego zastoju przy usłudze nadal w stanie `active`.
+
+Dwie poprawki, obie w kodzie objętym hashem przebiegu:
+
+1. `Pipeline.wait_for_bridge` — worker nie zaczyna nowej przestrzeni, dopóki ktoś inny liczy punkt
+   z innego zbioru JAHS. Czeka (z logiem `WAIT`), najwyżej godzinę. Przestrzenie spoza JAHS nie
+   czekają nigdy.
+2. `query_server.py` — przy zmianie zbioru najpierw giną procesy obsługi i zwalniany jest stary
+   zbiór (`malloc_trim`, bo glibc sam nie oddaje 12 GB systemowi), a dopiero potem ładowany nowy.
+   Log mostka podaje RSS przed i po oraz ostrzega, gdy ten sam zbiór ładowany jest kolejny raz.
+
+W jednostce systemd warto też trzymać `MemoryMax`, żeby mostek w razie czego zginął, zamiast topić
+maszynę w swapie:
+
+```
+MemoryHigh=26G
+MemoryMax=28G
+MemorySwapMax=2G
+```
+
 ## 6. Podgląd postępu
 
 - W terminalu co 10 minut pojawia się linia `STATUS ...` z postępem etapów, listą liczonych

@@ -388,3 +388,83 @@ def test_filters_compose_with_sharding():
 def test_selection_describes_itself_for_the_log():
     described = rp.Selection(shard=(1, 4), exclude_methods=frozenset({"oss_vizier"})).describe()
     assert "shard 1/4" in described and "oss_vizier" in described
+
+
+# -- one JAHS dataset at a time ------------------------------------------
+#
+# The shared bridge holds one dataset (12 GB). Two workers on two datasets
+# make it reload between queries and, at the switch, hold both at once --
+# which stopped the run of 2026-09-23 for five hours.
+
+JAHS_SPACES = {
+    "jahs_bench_201": {"substrate": "jahs_bench_201", "dataset": "cifar10"},
+    "jahs_bench_201_colorectal": {
+        "substrate": "jahs_bench_201",
+        "dataset": "colorectal_histology",
+    },
+    "nas_hpo_bench_ii": {"substrate": "nas_hpo_bench_ii"},
+}
+
+
+def _bridge_pipeline(tmp_path):
+    pipeline = _pipeline(tmp_path, CountingRunSingle())
+    pipeline.load_search_space_config = JAHS_SPACES.__getitem__
+    pipeline.lock_dir.mkdir(parents=True, exist_ok=True)
+    return pipeline
+
+
+def test_bridge_dataset_only_for_benchmarks_that_use_the_bridge(tmp_path):
+    pipeline = _bridge_pipeline(tmp_path)
+    assert pipeline.bridge_dataset("jahs_bench_201") == "cifar10"
+    assert pipeline.bridge_dataset("jahs_bench_201_colorectal") == "colorectal_histology"
+    assert pipeline.bridge_dataset("nas_hpo_bench_ii") is None
+
+
+def test_busy_datasets_come_from_the_locks_and_ignore_slot_locks(tmp_path):
+    pipeline = _bridge_pipeline(tmp_path)
+    for name in (
+        "p3net__jahs_bench_201__budget50__seed1.lock",
+        "mo_ls__jahs_bench_201_colorectal__budget50__seed2.lock",
+        "tpe__nas_hpo_bench_ii__budget50__seed3.lock",
+        "slot-gpu-0.lock",
+    ):
+        (pipeline.lock_dir / name).write_text("1\nhost\n", encoding="utf-8")
+    assert pipeline.busy_bridge_datasets() == {"cifar10", "colorectal_histology"}
+
+
+def test_a_space_that_does_not_use_the_bridge_never_waits(tmp_path):
+    pipeline = _bridge_pipeline(tmp_path)
+    (pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed1.lock").write_text(
+        "1\nhost\n", encoding="utf-8"
+    )
+    pipeline.wait_for_bridge("nas_hpo_bench_ii", poll=0.0, limit=0.0)
+
+
+def test_a_worker_does_not_wait_for_its_own_dataset(tmp_path):
+    pipeline = _bridge_pipeline(tmp_path)
+    (pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed1.lock").write_text(
+        "1\nhost\n", encoding="utf-8"
+    )
+    pipeline.wait_for_bridge("jahs_bench_201", poll=0.0, limit=0.0)
+
+
+def test_a_worker_waits_out_a_straggler_on_another_dataset(tmp_path):
+    pipeline = _bridge_pipeline(tmp_path)
+    straggler = pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed1.lock"
+    straggler.write_text("1\nhost\n", encoding="utf-8")
+    logged: list[str] = []
+    pipeline.log = logged.append
+    polls = 0
+    original = pipeline.busy_bridge_datasets
+
+    def releasing() -> set[str]:
+        nonlocal polls
+        polls += 1
+        if polls > 2:
+            straggler.unlink(missing_ok=True)
+        return original()
+
+    pipeline.busy_bridge_datasets = releasing
+    pipeline.wait_for_bridge("jahs_bench_201_colorectal", poll=0.0, limit=30.0)
+    assert polls > 2, "returned before the straggler released its lock"
+    assert any("WAIT" in line for line in logged)

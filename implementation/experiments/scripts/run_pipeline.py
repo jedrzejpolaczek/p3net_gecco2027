@@ -545,6 +545,56 @@ class Pipeline:
 
     # -- running ----------------------------------------------------------
 
+    def bridge_dataset(self, space_name: str) -> str | None:
+        """The JAHS-Bench-201 dataset this search space makes the shared
+        bridge load, or None for benchmarks that do not use the bridge."""
+        config = self.load_search_space_config(space_name)
+        if config.get("substrate") != "jahs_bench_201":
+            return None
+        return config.get("dataset")
+
+    def busy_bridge_datasets(self) -> set[str]:
+        """Datasets other workers are querying right now, from the locks."""
+        datasets: set[str] = set()
+        for lock in self.lock_dir.glob("*.lock"):
+            if lock.name.startswith("slot-") or lock_is_stale(lock):
+                continue
+            parts = lock.name[: -len(".lock")].split("__")
+            if len(parts) < 2:
+                continue
+            try:
+                dataset = self.bridge_dataset(parts[1])
+            except Exception:  # noqa: BLE001 -- an unreadable lock must not stop a worker
+                continue
+            if dataset is not None:
+                datasets.add(dataset)
+        return datasets
+
+    def wait_for_bridge(self, space_name: str, poll: float = 20.0, limit: float = 3600.0) -> None:
+        """Do not start a dataset while another worker is still on a different one.
+
+        The shared bridge keeps one JAHS-Bench-201 dataset resident (12 GB).
+        Two workers on two datasets make it reload 12 GB between queries,
+        which is both ruinously slow and, at the moment of the switch, twice
+        the memory: on 2026-09-23 that filled a 30 GB machine, pushed it into
+        swap and stopped the run for five hours. Waiting out a straggler
+        costs minutes, so the worker waits -- but never for ever, since a
+        lock this worker cannot explain must not stall the whole machine."""
+        mine = self.bridge_dataset(space_name)
+        if mine is None:
+            return
+        deadline = time.monotonic() + limit
+        announced = False
+        while time.monotonic() < deadline:
+            others = self.busy_bridge_datasets() - {mine}
+            if not others:
+                return
+            if not announced:
+                self.log(f"WAIT {space_name}: bridge busy with {', '.join(sorted(others))}")
+                announced = True
+            time.sleep(poll)
+        self.log(f"WAIT {space_name}: giving up after {limit:.0f}s, starting anyway")
+
     def _claim(self, point: Point) -> list[Path] | None:
         """Locks for `point` (and its resource slot), or None if not now."""
         point_lock = self.lock_dir / f"{point.key}.lock"
@@ -599,6 +649,7 @@ class Pipeline:
         session_start = time.monotonic()
         session_done = 0
         for space_name, space_points in by_space.items():
+            self.wait_for_bridge(space_name)
             space_config = self.load_search_space_config(space_name)
             substrate = None
             try:
