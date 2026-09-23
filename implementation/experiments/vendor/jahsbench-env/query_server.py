@@ -47,6 +47,7 @@ benchmark's cumulative training time up to `epochs`, in seconds.
 from __future__ import annotations
 
 import argparse
+import ctypes
 import gc
 import json
 import multiprocessing
@@ -55,7 +56,7 @@ import socket
 import sys
 import threading
 import time
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 
 import jahs_bench
 from jahs_bench.lib.core.constants import EDGE_LIST, OP_NAMES, nb201_to_ops
@@ -76,8 +77,41 @@ _OUR_EDGE_INDEX_TO_JAHS_OP_NUMBER = {
 _ACTIVATION_TO_JAHS = {"relu": "ReLU", "hardswish": "Hardswish", "mish": "Mish"}
 
 #: Loaded datasets, least recently used first (see --max-datasets).
-_benchmarks: "OrderedDict[str, jahs_bench.Benchmark]" = OrderedDict()
+_benchmarks: OrderedDict[str, jahs_bench.Benchmark] = OrderedDict()
 _max_datasets = 8
+#: How many times each dataset has been loaded. More than once means the
+#: workers are spread across datasets and every switch costs a full reload.
+_loads: Counter[str] = Counter()
+
+
+def _rss_gb() -> float:
+    """This process's resident memory, for the switch log."""
+    try:
+        with open("/proc/self/statm", encoding="utf-8") as handle:
+            pages = int(handle.read().split()[1])
+    except (OSError, IndexError, ValueError):
+        return float("nan")
+    return pages * os.sysconf("SC_PAGE_SIZE") / 2**30
+
+
+def _trim_memory() -> None:
+    """Give the freed pages back to the operating system.
+
+    glibc keeps large freed blocks on its own heap, so dropping a 12 GB
+    Benchmark shows up in Python but not in the machine's free memory --
+    and free memory is exactly what the next dataset needs."""
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):  # not glibc: nothing to trim
+        pass
+
+
+def _release_datasets(keep: str | None = None) -> None:
+    for name in [n for n in _benchmarks if n != keep]:
+        del _benchmarks[name]
+        print(f"released {name}", file=sys.stderr, flush=True)
+    _trim_memory()
 
 
 def _get_benchmark(dataset: str, data_dir: str) -> jahs_bench.Benchmark:
@@ -87,7 +121,7 @@ def _get_benchmark(dataset: str, data_dir: str) -> jahs_bench.Benchmark:
     while len(_benchmarks) >= _max_datasets:
         evicted, benchmark = _benchmarks.popitem(last=False)
         del benchmark
-        gc.collect()
+        _trim_memory()
         print(f"evicted {evicted} (max-datasets={_max_datasets})", file=sys.stderr, flush=True)
     _benchmarks[dataset] = jahs_bench.Benchmark(task=dataset, download=False, save_dir=data_dir)
     return _benchmarks[dataset]
@@ -143,25 +177,49 @@ def _pool_handle(request: dict) -> dict:
 
 
 def _ensure_pool(dataset: str):
-    """A pool of handlers forked with `dataset` already loaded."""
+    """A pool of handlers forked with `dataset` already loaded.
+
+    The order here is what keeps the switch affordable. The handlers
+    inherited the previous dataset's pages, so while they are alive those
+    12 GB cannot be released, and loading the next dataset on top of them
+    costs 24 GB or more. That peak took a 30 GB machine into swap, where it
+    stopped answering and stalled every worker for five hours
+    (2026-09-23; results/runs/.../jahs/jahs-server.log). So: stop the
+    handlers, release the old dataset, and only then load the new one."""
     global _pool, _pool_dataset
     with _state_lock:
         if _pool is not None and _pool_dataset == dataset:
             return _pool
-        _get_benchmark(dataset, _data_dir)  # load in the parent, then fork
-        if _pool is not None:
-            _pool.terminate()
-            _pool.join()
+        _shutdown_pool()
+        _release_datasets(keep=dataset)
+        before = _rss_gb()
+        _get_benchmark(dataset, _data_dir)
         _pool = multiprocessing.get_context("fork").Pool(_pool_size)
         _pool_dataset = dataset
-        print(f"forked {_pool_size} handlers for {dataset}", file=sys.stderr, flush=True)
+        _loads[dataset] += 1
+        print(
+            f"forked {_pool_size} handlers for {dataset} (load #{_loads[dataset]}, "
+            f"rss {before:.1f} -> {_rss_gb():.1f} GB)",
+            file=sys.stderr,
+            flush=True,
+        )
+        if _loads[dataset] > 1:
+            print(
+                f"WARNING {dataset} loaded {_loads[dataset]} times: workers are spread "
+                "across datasets and every switch reloads 12 GB",
+                file=sys.stderr,
+                flush=True,
+            )
         return _pool
 
 
 def _shutdown_pool() -> None:
+    global _pool, _pool_dataset
     if _pool is not None:
         _pool.terminate()
         _pool.join()
+    _pool = None
+    _pool_dataset = None
 
 
 def _answer(line: str, data_dir: str) -> dict:
