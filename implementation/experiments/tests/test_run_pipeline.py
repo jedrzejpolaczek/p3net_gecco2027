@@ -396,6 +396,11 @@ def test_selection_describes_itself_for_the_log():
 # make it reload between queries and, at the switch, hold both at once --
 # which stopped the run of 2026-09-23 for five hours.
 
+#: A lock file as another worker leaves it: its pid, then its host.
+LOCK_HELD_ELSEWHERE = """1
+host
+"""
+
 JAHS_SPACES = {
     "jahs_bench_201": {"substrate": "jahs_bench_201", "dataset": "cifar10"},
     "jahs_bench_201_colorectal": {
@@ -432,39 +437,72 @@ def test_busy_datasets_come_from_the_locks_and_ignore_slot_locks(tmp_path):
     assert pipeline.busy_bridge_datasets() == {"cifar10", "colorectal_histology"}
 
 
-def test_a_space_that_does_not_use_the_bridge_never_waits(tmp_path):
+def test_the_bridge_dataset_in_use_is_the_one_a_worker_joins(tmp_path):
     pipeline = _bridge_pipeline(tmp_path)
     (pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed1.lock").write_text(
-        "1\nhost\n", encoding="utf-8"
+        LOCK_HELD_ELSEWHERE, encoding="utf-8"
     )
-    pipeline.wait_for_bridge("nas_hpo_bench_ii", poll=0.0, limit=0.0)
+    remaining = {
+        "jahs_bench_201_colorectal": [],
+        "nas_hpo_bench_ii": [],
+        "jahs_bench_201": [],
+    }
+    assert pipeline.next_space(remaining) == "jahs_bench_201"
 
 
-def test_a_worker_does_not_wait_for_its_own_dataset(tmp_path):
+def test_a_free_bridge_means_plan_order(tmp_path):
+    pipeline = _bridge_pipeline(tmp_path)
+    remaining = {"jahs_bench_201": [], "nas_hpo_bench_ii": []}
+    assert pipeline.next_space(remaining) == "jahs_bench_201"
+
+
+def test_a_busy_foreign_dataset_sends_the_worker_to_work_without_the_bridge(tmp_path):
     pipeline = _bridge_pipeline(tmp_path)
     (pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed1.lock").write_text(
-        "1\nhost\n", encoding="utf-8"
+        LOCK_HELD_ELSEWHERE, encoding="utf-8"
     )
-    pipeline.wait_for_bridge("jahs_bench_201", poll=0.0, limit=0.0)
+    remaining = {"jahs_bench_201_colorectal": [], "nas_hpo_bench_ii": []}
+    assert pipeline.next_space(remaining) == "nas_hpo_bench_ii"
 
 
-def test_a_worker_waits_out_a_straggler_on_another_dataset(tmp_path):
+def test_only_foreign_datasets_left_means_come_back_later(tmp_path):
     pipeline = _bridge_pipeline(tmp_path)
-    straggler = pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed1.lock"
-    straggler.write_text("1\nhost\n", encoding="utf-8")
-    logged: list[str] = []
-    pipeline.log = logged.append
-    polls = 0
-    original = pipeline.busy_bridge_datasets
+    (pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed1.lock").write_text(
+        LOCK_HELD_ELSEWHERE, encoding="utf-8"
+    )
+    assert pipeline.next_space({"jahs_bench_201_colorectal": []}) is None
 
-    def releasing() -> set[str]:
-        nonlocal polls
-        polls += 1
-        if polls > 2:
-            straggler.unlink(missing_ok=True)
-        return original()
 
-    pipeline.busy_bridge_datasets = releasing
-    pipeline.wait_for_bridge("jahs_bench_201_colorectal", poll=0.0, limit=30.0)
-    assert polls > 2, "returned before the straggler released its lock"
-    assert any("WAIT" in line for line in logged)
+def test_points_left_for_later_are_reported_busy_not_complete(tmp_path):
+    """The worker's main loop stops only when nothing is left to do anywhere.
+    Points skipped because another dataset is loaded must therefore count as
+    busy -- reported as done, they would end the run with holes in it."""
+    runner = CountingRunSingle()
+    pipeline = _pipeline(tmp_path, runner)
+    pipeline.load_search_space_config = JAHS_SPACES.__getitem__
+    pipeline.lock_dir.mkdir(parents=True, exist_ok=True)
+    (pipeline.lock_dir / "p3net__jahs_bench_201__budget50__seed9.lock").write_text(
+        LOCK_HELD_ELSEWHERE, encoding="utf-8"
+    )
+    points = [
+        rp.Point("stage", "random_search", "jahs_bench_201_colorectal", 12, seed)
+        for seed in (1, 2, 3)
+    ]
+    report = pipeline.run_stage("stage", points)
+    assert runner.calls == 0, "started a second dataset"
+    assert report.busy == 3
+    assert report.complete == 0
+
+
+def test_the_dearest_budget_runs_first_so_the_tail_of_a_space_is_cheap():
+    points = rp.expand_stage(
+        {
+            "name": "s",
+            "methods": ["random_search"],
+            "search_spaces": ["a", "b"],
+            "budgets": [50, 350, 100],
+            "seeds": [1],
+        }
+    )
+    assert [p.budget for p in points] == [350, 100, 50, 350, 100, 50]
+    assert [p.search_space for p in points] == ["a"] * 3 + ["b"] * 3

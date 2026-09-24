@@ -170,9 +170,14 @@ całkowitego zastoju przy usłudze nadal w stanie `active`.
 
 Dwie poprawki, obie w kodzie objętym hashem przebiegu:
 
-1. `Pipeline.wait_for_bridge` — worker nie zaczyna nowej przestrzeni, dopóki ktoś inny liczy punkt
-   z innego zbioru JAHS. Czeka (z logiem `WAIT`), najwyżej godzinę. Przestrzenie spoza JAHS nie
-   czekają nigdy.
+1. `Pipeline.next_space` — worker nigdy nie otwiera drugiego zbioru. Dołącza do zbioru, który jest
+   już załadowany; jeśli mostek jest wolny, bierze pierwszą przestrzeń w kolejności planu; jeśli
+   mostek zajmuje obcy zbiór, bierze pracę, która mostka nie dotyka (NAS-HPO-Bench-II, FCNet,
+   NAS-Bench-201); a gdy nie ma nic z tego, zostawia punkty na kolejne okrążenie (log `LATER`) i
+   wraca do nich po 30 sekundach. Pierwsza wersja tego mechanizmu czekała z godzinnym limitem i po
+   jego upływie startowała mimo wszystko — czyli sama wywoływała młynek, przed którym miała chronić
+   (2026-09-24). Do tego budżety w każdej przestrzeni idą od najdroższego, więc ogon przestrzeni,
+   na który czekają pozostali, to przebiegi 30-sekundowe zamiast 25-minutowych.
 2. `query_server.py` — przy zmianie zbioru najpierw giną procesy obsługi i zwalniany jest stary
    zbiór (`malloc_trim`, bo glibc sam nie oddaje 12 GB systemowi), a dopiero potem ładowany nowy.
    Log mostka podaje RSS przed i po oraz ostrzega, gdy ten sam zbiór ładowany jest kolejny raz.

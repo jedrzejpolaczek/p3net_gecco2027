@@ -98,11 +98,11 @@ parallel:
   # share its memory copy-on-write). 0 = one per worker. With a single handler
   # the bridge answers one query at a time and becomes the machine's
   # bottleneck: measured load average 1.9 of 16 cores on cheap JAHS arms.
-  # Only one JAHS dataset is ever loaded (jahs_max_datasets: 1) and workers
-  # wait for each other at a search-space boundary rather than making the
-  # bridge alternate between two (run_pipeline.py, Pipeline.wait_for_bridge):
-  # a switch reloads 12 GB, and holding two datasets at once filled a 30 GB
-  # machine and stalled the run of 2026-09-23.
+  # Only one JAHS dataset is ever loaded (jahs_max_datasets: 1): a worker
+  # never opens a second one, and takes work that does not need the bridge
+  # instead (run_pipeline.py, Pipeline.next_space). A switch reloads 12 GB,
+  # and holding two datasets at once filled a 30 GB machine and stalled the
+  # run of 2026-09-23.
   jahs_parallel: 0
   # Threads for numerical libraries in every run, whatever the worker count,
   # so parallelism changes neither results nor per-run CPU accounting.

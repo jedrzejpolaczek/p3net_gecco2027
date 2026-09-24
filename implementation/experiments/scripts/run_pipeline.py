@@ -248,6 +248,13 @@ def load_plan(path: Path) -> dict[str, Any]:
 
 
 def expand_stage(stage: dict[str, Any]) -> list[Point]:
+    """The stage's points, search space by search space, dearest budget first.
+
+    Both orders serve the shared JAHS-Bench-201 bridge, which holds one
+    dataset at a time. Grouping by search space keeps every worker on the
+    same dataset; running the dearest budget first makes the tail of a space
+    -- the stretch where the others wait for the last worker -- 30-second
+    runs instead of 25-minute ones."""
     if stage.get("kind", "grid") not in ("grid", "timing"):
         return []
     seeds = _expand_seeds(stage["seeds"])
@@ -255,7 +262,7 @@ def expand_stage(stage: dict[str, Any]) -> list[Point]:
         Point(stage["name"], method, space, int(budget), seed)
         for space in stage["search_spaces"]
         for method in stage_methods(stage)
-        for budget in sorted(stage["budgets"])
+        for budget in sorted(stage["budgets"], reverse=True)
         for seed in seeds
     ]
 
@@ -570,30 +577,36 @@ class Pipeline:
                 datasets.add(dataset)
         return datasets
 
-    def wait_for_bridge(self, space_name: str, poll: float = 20.0, limit: float = 3600.0) -> None:
-        """Do not start a dataset while another worker is still on a different one.
+    def next_space(self, unstarted: dict[str, list[Point]]) -> str | None:
+        """Which of `unstarted` this worker can start now, or None to come back.
 
-        The shared bridge keeps one JAHS-Bench-201 dataset resident (12 GB).
-        Two workers on two datasets make it reload 12 GB between queries,
-        which is both ruinously slow and, at the moment of the switch, twice
-        the memory: on 2026-09-23 that filled a 30 GB machine, pushed it into
-        swap and stopped the run for five hours. Waiting out a straggler
-        costs minutes, so the worker waits -- but never for ever, since a
-        lock this worker cannot explain must not stall the whole machine."""
-        mine = self.bridge_dataset(space_name)
-        if mine is None:
-            return
-        deadline = time.monotonic() + limit
-        announced = False
-        while time.monotonic() < deadline:
-            others = self.busy_bridge_datasets() - {mine}
-            if not others:
-                return
-            if not announced:
-                self.log(f"WAIT {space_name}: bridge busy with {', '.join(sorted(others))}")
-                announced = True
-            time.sleep(poll)
-        self.log(f"WAIT {space_name}: giving up after {limit:.0f}s, starting anyway")
+        The shared bridge holds one JAHS-Bench-201 dataset (12 GB). Two
+        workers on two datasets make it reload 12 GB between queries and, at
+        the switch, hold both at once -- that is what stalled the run of
+        2026-09-23. So a worker never opens a second dataset. It looks for
+        work in this order:
+
+          1. a space on the dataset already in use -- join the others;
+          2. if the bridge is free, the first space in plan order;
+          3. otherwise anything that does not go through the bridge at all
+             (NAS-HPO-Bench-II, FCNet, NAS-Bench-201) -- the overflow valve
+             that keeps a worker busy instead of idle;
+          4. nothing: the caller leaves those points for a later pass.
+
+        Order matters. Preferring work without the bridge over rule 2 would
+        push every JAHS point to the end of the run, where there is no
+        overflow work left to do and the waiting would be worst."""
+        busy = self.busy_bridge_datasets()
+        for name in unstarted:
+            dataset = self.bridge_dataset(name)
+            if dataset is not None and dataset in busy:
+                return name
+        if not busy:
+            return next(iter(unstarted))
+        for name in unstarted:
+            if self.bridge_dataset(name) is None:
+                return name
+        return None
 
     def _claim(self, point: Point) -> list[Path] | None:
         """Locks for `point` (and its resource slot), or None if not now."""
@@ -648,8 +661,21 @@ class Pipeline:
 
         session_start = time.monotonic()
         session_done = 0
-        for space_name, space_points in by_space.items():
-            self.wait_for_bridge(space_name)
+        unstarted = dict(by_space)
+        while unstarted:
+            space_name = self.next_space(unstarted)
+            if space_name is None:
+                # Only datasets another worker is using are left. Those points
+                # are not lost: they count as busy, so the worker's main loop
+                # comes back to them instead of treating the plan as finished.
+                left = sum(len(p) for p in unstarted.values())
+                report.busy += left
+                self.log(
+                    f"LATER {stage_name}: {left} point(s) in "
+                    f"{', '.join(sorted(unstarted))} need another dataset"
+                )
+                break
+            space_points = unstarted.pop(space_name)
             space_config = self.load_search_space_config(space_name)
             substrate = None
             try:
