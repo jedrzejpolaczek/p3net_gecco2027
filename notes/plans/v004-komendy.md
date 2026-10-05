@@ -1,90 +1,12 @@
-# Dokonczenie przebiegu v004
+# Dokonczenie v004: punkt i komenda
 
-## 0. Codzienna kontrola
-
-```bash
-/root/p3status.sh
-```
-
-## 1. Koniec glownej siatki
+## 0. Kontrola
 
 ```bash
-grep -c "All requested stages complete" /root/pipeline.log
+clear; /root/p3s.sh
 ```
 
-## 2. Wylaczenie uslugi
-
-```bash
-systemctl disable --now p3net.service; sleep 10; pkill -9 -f query_server.py; pkill -9 -f run_pipeline; free -g | head -3
-```
-
-## 3. NAS-Bench-201, dwa workery
-
-```bash
-cd /root/p3net_gecco2027/implementation/experiments
-PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh --workers 2 --skip-checks --stages s5_nas_bench_201 > /root/s5.log 2>&1 &
-```
-
-## 3b. Miejsce na dysku
-
-```bash
-df -h / | tail -1; du -sh /root/p3net_gecco2027/implementation/experiments/results/runs/*/logs
-```
-
-Ponizej 5 GB wolnego: przytnij logi workerow (`truncate -s 0 <plik>`) albo podepnij wolumen.
-
-## 4. Rescale maszyny, potem sprawdzenie
-
-```bash
-cd /root/p3net_gecco2027/implementation/experiments && uv run python scripts/check_data.py && free -g | head -3
-```
-
-## 5. OSS Vizier, cztery shardy
-
-```bash
-cd /root/p3net_gecco2027/implementation/experiments
-for i in 0 1 2 3; do
-  PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh \
-    --run-root /root/p3net_gecco2027/implementation/experiments/results/runs/vizier-$i \
-    --shard $i/4 --only-methods oss_vizier --workers 1 --skip-checks \
-    --stages s1_headline s6_heldout_seeds s8_fcnet > /root/vizier-$i.log 2>&1 &
-done
-```
-
-## 6. Postep Viziera, koniec przy sumie 1444
-
-```bash
-for i in 0 1 2 3; do echo "shard $i: $(ls results/runs/vizier-$i/raw 2>/dev/null | wc -l)"; done; free -g | head -3
-```
-
-## 7. BoTorch, osiem shardow
-
-```bash
-cd /root/p3net_gecco2027/implementation/experiments
-for i in 0 1 2 3 4 5 6 7; do
-  PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh \
-    --run-root /root/p3net_gecco2027/implementation/experiments/results/runs/botorch-$i \
-    --shard $i/8 --only-methods botorch_qnehvi botorch_qparego --workers 1 --skip-checks \
-    --stages s1_headline s6_heldout_seeds s8_fcnet > /root/botorch-$i.log 2>&1 &
-done
-```
-
-## 8. Postep BoTorcha, koniec przy sumie 2888
-
-```bash
-for i in 0 1 2 3 4 5 6 7; do echo "shard $i: $(ls results/runs/botorch-$i/raw 2>/dev/null | wc -l)"; done; free -g | head -3
-```
-
-## 9. Scalenie surowych plikow
-
-```bash
-cd /root/p3net_gecco2027/implementation/experiments
-cp -n results/runs/vizier-*/raw/*.json results/runs/b4d25cac/raw/
-cp -n results/runs/botorch-*/raw/*.json results/runs/b4d25cac/raw/
-ls results/runs/b4d25cac/raw | wc -l
-```
-
-## 10. Etap czasow, maszyna bezczynna
+## 1. Etap czasow, maszyna bezczynna
 
 ```bash
 pgrep -af "run_pipeline|query_server"
@@ -92,14 +14,47 @@ cd /root/p3net_gecco2027/implementation/experiments
 PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh --stages s9_timing --workers 1 > /root/timing.log 2>&1 &
 ```
 
-## 11. Kompletnosc, kazdy etap N/N complete
+## 2. Sprawdzenie etapu czasow
+
+```bash
+ls /root/p3net_gecco2027/implementation/experiments/results/runs/b4d25cac/timing/raw | wc -l
+grep -c "ALL REQUESTED STAGES COMPLETE" /root/timing.log
+```
+
+## 3. Nowy kod (dopiero teraz)
+
+```bash
+cd /root/p3net_gecco2027 && git fetch origin && git reset --hard origin/main && git log --oneline -1
+```
+
+## 4. Trzy ramiona gaussowskie, budzety 50 i 100
 
 ```bash
 cd /root/p3net_gecco2027/implementation/experiments
-uv run python scripts/run_pipeline.py --dry-run --run-root /root/p3net_gecco2027/implementation/experiments/results/runs/b4d25cac
+PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh \
+  --plan configs/pipeline/v004-gp-small.yaml \
+  --run-root /root/p3net_gecco2027/implementation/experiments/results/runs/gp-small \
+  --only-methods oss_vizier botorch_qnehvi botorch_qparego \
+  --workers 2 --skip-checks \
+  --stages s1_headline s6_heldout_seeds s8_fcnet > /root/gp.log 2>&1 &
 ```
 
-## 12. Metryki
+## 5. Postep ramion gaussowskich
+
+```bash
+ls /root/p3net_gecco2027/implementation/experiments/results/runs/gp-small/raw 2>/dev/null | wc -l
+free -g | head -2; df -h / | tail -1
+```
+
+## 6. Scalenie surowych plikow
+
+```bash
+cd /root/p3net_gecco2027/implementation/experiments
+cp -n results/runs/gp-small/raw/*.json results/runs/b4d25cac/raw/
+ls results/runs/b4d25cac/raw | wc -l
+```
+
+## 7. Metryki po przebiegu
 
 ```bash
 cd /root/p3net_gecco2027/implementation/experiments
@@ -107,8 +62,8 @@ uv run python scripts/posthoc_metrics.py --raw results/runs/b4d25cac/raw
 uv run python scripts/check_data.py
 ```
 
-## 13. Wyniki na laptop, PowerShell lokalnie
+## 8. Wyniki na laptop (PowerShell lokalnie)
 
-```powershell
+```bash
 scp -r root@SERWER:/root/p3net_gecco2027/implementation/experiments/results/runs/b4d25cac .\implementation\experiments\results\runs\
 ```
