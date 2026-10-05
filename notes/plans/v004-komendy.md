@@ -22,8 +22,16 @@ systemctl disable --now p3net.service; sleep 10; pkill -9 -f query_server.py; pk
 
 ```bash
 cd /root/p3net_gecco2027/implementation/experiments
-nohup bash scripts/run_pipeline.sh --workers 2 --skip-checks --stages s5_nas_bench_201 > /root/s5.log 2>&1 &
+PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh --workers 2 --skip-checks --stages s5_nas_bench_201 > /root/s5.log 2>&1 &
 ```
+
+## 3b. Miejsce na dysku
+
+```bash
+df -h / | tail -1; du -sh /root/p3net_gecco2027/implementation/experiments/results/runs/*/logs
+```
+
+Ponizej 5 GB wolnego: przytnij logi workerow (`truncate -s 0 <plik>`) albo podepnij wolumen.
 
 ## 4. Rescale maszyny, potem sprawdzenie
 
@@ -36,7 +44,7 @@ cd /root/p3net_gecco2027/implementation/experiments && uv run python scripts/che
 ```bash
 cd /root/p3net_gecco2027/implementation/experiments
 for i in 0 1 2 3; do
-  nohup bash scripts/run_pipeline.sh \
+  PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh \
     --run-root /root/p3net_gecco2027/implementation/experiments/results/runs/vizier-$i \
     --shard $i/4 --only-methods oss_vizier --workers 1 --skip-checks \
     --stages s1_headline s6_heldout_seeds s8_fcnet > /root/vizier-$i.log 2>&1 &
@@ -54,7 +62,7 @@ for i in 0 1 2 3; do echo "shard $i: $(ls results/runs/vizier-$i/raw 2>/dev/null
 ```bash
 cd /root/p3net_gecco2027/implementation/experiments
 for i in 0 1 2 3 4 5 6 7; do
-  nohup bash scripts/run_pipeline.sh \
+  PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh \
     --run-root /root/p3net_gecco2027/implementation/experiments/results/runs/botorch-$i \
     --shard $i/8 --only-methods botorch_qnehvi botorch_qparego --workers 1 --skip-checks \
     --stages s1_headline s6_heldout_seeds s8_fcnet > /root/botorch-$i.log 2>&1 &
@@ -81,7 +89,7 @@ ls results/runs/b4d25cac/raw | wc -l
 ```bash
 pgrep -af "run_pipeline|query_server"
 cd /root/p3net_gecco2027/implementation/experiments
-nohup bash scripts/run_pipeline.sh --stages s9_timing --workers 1 > /root/timing.log 2>&1 &
+PYTHONWARNINGS=ignore nohup bash scripts/run_pipeline.sh --stages s9_timing --workers 1 > /root/timing.log 2>&1 &
 ```
 
 ## 11. Kompletnosc, kazdy etap N/N complete
