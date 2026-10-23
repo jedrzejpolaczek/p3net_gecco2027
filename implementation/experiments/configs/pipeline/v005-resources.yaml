@@ -1,0 +1,90 @@
+# A8 resource test for v005 (notes/plans/v005-plan.md A8; runbook notes/plans/v005-a8-runbook.md):
+# every v005 method x every search space at budgets 100 and 350, one seed, on the target
+# machine, under grid conditions (parallel workers, shared JAHS bridge). The raw files carry
+# wall/CPU time and peak memory (measurement/resources.py); scripts/summarize_resources_v005.py
+# turns them into the per-method table and the projected cost of configs/pipeline/v005.yaml.
+#
+# NB201 runs with the v004 objectives (nas_bench_201.yaml) here only because the energy table is
+# measured last (BM-2); for timing an energy-table lookup and a FLOPs lookup cost the same.
+#
+# OSS Vizier runs in its own stage, started separately with --workers 1: v004 measured ~34 GB
+# at budget 350.
+
+name: v005-resources
+
+search_spaces: &spaces
+  - nas_bench_201
+  - nas_hpo_bench_ii_v005
+  - jahs_bench_201_v005
+  - jahs_bench_201_colorectal_v005
+  - jahs_bench_201_fashion_v005
+  - fcnet_protein_structure_v005
+  - fcnet_naval_propulsion_v005
+  - fcnet_parkinsons_telemonitoring_v005
+  - fcnet_slice_localization_v005
+mf_search_spaces: &mf_spaces
+  - nas_hpo_bench_ii_v005
+  - jahs_bench_201_v005
+  - jahs_bench_201_colorectal_v005
+  - jahs_bench_201_fashion_v005
+  - fcnet_protein_structure_v005
+  - fcnet_naval_propulsion_v005
+  - fcnet_parkinsons_telemonitoring_v005
+  - fcnet_slice_localization_v005
+budgets: &budgets [100, 350]
+
+method_groups:
+  main: &main
+    - v005_p3net
+    - v005_p3net_gate
+    - v005_p3net_nolink
+    - v005_p3_canonical
+    - v005_p3_elympus
+    - v005_mo_dsa
+    - v005_mo_psa
+    - v005_nsga_net
+    - v005_nsganetv2
+    - v005_reinforce
+    - v005_regevo
+    - v005_mo_ls
+    - v005_shemoa
+    - v005_mobananas
+    - v005_motpe
+    - v005_nsga3
+    - v005_smac3_parego
+    - v005_qnehvi
+    - v005_qparego
+    - v005_moead
+    - v005_random_search
+  mf: &mf
+    - v005_hyperband
+    - v005_asha
+    - v005_shemoa_mf
+    - v005_mosh_bananas
+    - v005_mo_bohb
+
+parallel:
+  workers: 6
+  jahs_max_datasets: 1
+
+stages:
+  - name: resources_main
+    kind: grid
+    methods: [*main]
+    search_spaces: *spaces
+    budgets: *budgets
+    seeds: [61]
+
+  - name: resources_mf
+    kind: grid
+    methods: [*mf]
+    search_spaces: *mf_spaces
+    budgets: *budgets
+    seeds: [61]
+
+  - name: resources_vizier  # run alone: --stages resources_vizier --workers 1
+    kind: grid
+    methods: [v005_vizier]
+    search_spaces: *spaces
+    budgets: *budgets
+    seeds: [61]

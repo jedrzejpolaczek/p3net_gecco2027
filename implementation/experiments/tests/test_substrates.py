@@ -117,7 +117,7 @@ def test_jahs_bench_201_accepts_documented_datasets():
 def test_jahs_bench_201_bridge_environment_documented_when_missing():
     """Without the bridge built, querying must fail with a clear
     explanation, not an opaque FileNotFoundError from subprocess.Popen."""
-    substrate = JAHSBench201Substrate(data_dir="unused")
+    substrate = JAHSBench201Substrate(data_dir="unused", f2_source="size_mb")
     if BRIDGE_PYTHON.exists():
         pytest.skip("bridge environment is present in this environment")
     genotype = Genotype(values=("none",) * 6 + (1e-3, 1e-5, "relu", False))
@@ -130,7 +130,7 @@ def test_jahs_bench_201_live_query_end_to_end():
     """One consolidated test covering the full substrate lifecycle
     (query_f1, analytic_f2 sharing the query cache, close()) rather than
     separate tests each paying the multi-minute bridge-startup cost."""
-    substrate = JAHSBench201Substrate(dataset="cifar10")
+    substrate = JAHSBench201Substrate(dataset="cifar10", f2_source="size_mb")
     try:
         genotype = Genotype(values=("none",) * 6 + (0.1, 5e-4, "relu", False))
         f1 = substrate.query_f1(genotype, substrate.fidelity_ladder()[-1])
@@ -149,13 +149,13 @@ def test_jahs_bench_201_live_query_end_to_end():
 
 
 def test_nas_hpo_bench_ii_fidelity_ladder_fixed_at_tabulated_range():
-    substrate = NASHPOBenchIISubstrate()
+    substrate = NASHPOBenchIISubstrate(f2_at_fidelity="full")  # v004 accounting
     ladder = substrate.fidelity_ladder()
     assert ladder[-1].config["epochs"] == MAX_TABULATED_EPOCHS
 
 
 def test_nas_hpo_bench_ii_never_queries_the_200_epoch_surrogate():
-    substrate = NASHPOBenchIISubstrate()
+    substrate = NASHPOBenchIISubstrate(f2_at_fidelity="full")  # v004 accounting
     beyond_tabulated = FidelityLevel(rank=1, config={"epochs": 200})
     with pytest.raises(ValueError, match="tabulated range"):
         substrate.query_f1(_nas_hpo_bench_ii_genotype(), beyond_tabulated)
@@ -163,7 +163,7 @@ def test_nas_hpo_bench_ii_never_queries_the_200_epoch_surrogate():
 
 @_requires_real_nashpobench_data
 def test_nas_hpo_bench_ii_query_f1_returns_a_real_error_rate():
-    substrate = NASHPOBenchIISubstrate()
+    substrate = NASHPOBenchIISubstrate(f2_at_fidelity="full")  # v004 accounting
     # cellcode '3|33|333' (all edges "none") is the fully-disconnected,
     # chance-level-accuracy network -- verified empirically (see
     # search_spaces/nas_hpo_bench_ii_genotype.py's module docstring).
@@ -174,7 +174,7 @@ def test_nas_hpo_bench_ii_query_f1_returns_a_real_error_rate():
 
 @_requires_real_nashpobench_data
 def test_nas_hpo_bench_ii_analytic_f2_returns_the_real_training_cost():
-    substrate = NASHPOBenchIISubstrate()
+    substrate = NASHPOBenchIISubstrate(f2_at_fidelity="full")  # v004 accounting
     genotype = _nas_hpo_bench_ii_genotype()
     cost = substrate.analytic_f2(genotype)
     assert cost > 0.0
@@ -185,7 +185,7 @@ def test_nas_hpo_bench_ii_shares_one_query_cache_between_f1_and_f2():
     """query_f1 and analytic_f2 must not double-query the real API for
     the same genotype -- see substrates/nas_hpo_bench_ii.py's module
     docstring on why analytic_f2 isn't actually analytic here."""
-    substrate = NASHPOBenchIISubstrate()
+    substrate = NASHPOBenchIISubstrate(f2_at_fidelity="full")  # v004 accounting
     genotype = _nas_hpo_bench_ii_genotype()
     substrate.query_f1(genotype, substrate.fidelity_ladder()[-1])
     assert len(substrate._query_cache) == 1
@@ -200,7 +200,7 @@ def test_nas_hpo_bench_ii_objectives_matches_a_direct_real_query():
     from search_spaces.nas_hpo_bench_ii_genotype import genotype_to_cellcode
 
     edges = ("nor_conv_3x3", "avg_pool_3x3", "skip_connect", "none", "nor_conv_3x3", "none")
-    substrate = NASHPOBenchIISubstrate()
+    substrate = NASHPOBenchIISubstrate(f2_at_fidelity="full")  # v004 accounting
     genotype = _nas_hpo_bench_ii_genotype(edges=edges)
     f1, f2 = substrate.objectives(genotype)
 
@@ -230,7 +230,7 @@ def test_nas_bench_201_fidelity_ladder_has_exactly_one_level_at_200_epochs():
     introduce a second new variable alongside removing Theta, breaking the
     isolation this experiment exists to provide -- not a limitation to
     lift casually."""
-    substrate = NASBench201Substrate()
+    substrate = NASBench201Substrate(f1_source="test", f2_source="flops")
     ladder = substrate.fidelity_ladder()
     assert len(ladder) == 1
     assert ladder[0].config["epochs"] == 200
@@ -249,7 +249,7 @@ def test_nas_bench_201_query_f1_is_deterministic_across_repeated_queries():
     edges = ("nor_conv_3x3", "avg_pool_3x3", "skip_connect", "none", "nor_conv_3x3", "none")
     results = set()
     for _ in range(10):
-        substrate = NASBench201Substrate()  # fresh instance, no cache reuse
+        substrate = NASBench201Substrate(f1_source="test", f2_source="flops")  # fresh instance, no cache reuse
         f1 = substrate.query_f1(_nas_bench_201_genotype(edges=edges), substrate.fidelity_ladder()[-1])
         results.add(f1)
     assert len(results) == 1
@@ -257,7 +257,7 @@ def test_nas_bench_201_query_f1_is_deterministic_across_repeated_queries():
 
 @_requires_real_nats_bench_data
 def test_nas_bench_201_query_f1_returns_a_real_error_rate():
-    substrate = NASBench201Substrate()
+    substrate = NASBench201Substrate(f1_source="test", f2_source="flops")
     genotype = _nas_bench_201_genotype()
     f1 = substrate.query_f1(genotype, substrate.fidelity_ladder()[-1])
     assert 0.0 <= f1 <= 100.0
@@ -265,7 +265,7 @@ def test_nas_bench_201_query_f1_returns_a_real_error_rate():
 
 @_requires_real_nats_bench_data
 def test_nas_bench_201_analytic_f2_returns_real_flops():
-    substrate = NASBench201Substrate()
+    substrate = NASBench201Substrate(f1_source="test", f2_source="flops")
     genotype = _nas_bench_201_genotype()
     f2 = substrate.analytic_f2(genotype)
     assert f2 > 0.0
@@ -277,7 +277,7 @@ def test_nas_bench_201_shares_one_query_cache_between_f1_and_f2():
     same genotype -- same deviation from Substrate's general contract as
     both existing substrates (see substrates/nas_bench_201.py's module
     docstring)."""
-    substrate = NASBench201Substrate()
+    substrate = NASBench201Substrate(f1_source="test", f2_source="flops")
     genotype = _nas_bench_201_genotype()
     substrate.query_f1(genotype, substrate.fidelity_ladder()[-1])
     assert len(substrate._query_cache) == 1
@@ -290,7 +290,7 @@ def test_nas_bench_201_objectives_matches_a_direct_real_query():
     from search_spaces.nas_bench_201_genotype import genotype_to_arch_str
 
     edges = ("nor_conv_3x3", "avg_pool_3x3", "skip_connect", "none", "nor_conv_3x3", "none")
-    substrate = NASBench201Substrate()
+    substrate = NASBench201Substrate(f1_source="test", f2_source="flops")
     genotype = _nas_bench_201_genotype(edges=edges)
     f1, f2 = substrate.objectives(genotype)
 

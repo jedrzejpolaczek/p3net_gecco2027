@@ -1,0 +1,5813 @@
+{
+  "method": "nsganetv2",
+  "search_space": "fcnet_slice_localization",
+  "budget": 100,
+  "seed": 30,
+  "evaluations_used": 100,
+  "history": [
+    {
+      "genotype": [
+        256,
+        64,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.01,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.020589628955349326,
+        642.9302368164062
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        128,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.003159806248731911,
+        149.16187286376953
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        16,
+        "relu",
+        "tanh",
+        0.0,
+        0.6,
+        0.1,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.970199927687645,
+        201.06330490112305
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.3,
+        0.005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.02547204354777932,
+        320.2273483276367
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        64,
+        "tanh",
+        "tanh",
+        0.0,
+        0.6,
+        0.005,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.014674729434773326,
+        669.9834136962891
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        512,
+        "relu",
+        "tanh",
+        0.6,
+        0.6,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.00737758562900126,
+        375.0118637084961
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.1,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.9862446188926697,
+        226.68678283691406
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        64,
+        "relu",
+        "relu",
+        0.6,
+        0.3,
+        0.1,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.9862469285726547,
+        508.4209671020508
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        256,
+        "relu",
+        "relu",
+        0.6,
+        0.0,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.14054357074201107,
+        179.33930206298828
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        512,
+        "relu",
+        "relu",
+        0.6,
+        0.6,
+        0.01,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.9869609922170639,
+        262.0655059814453
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        64,
+        "tanh",
+        "tanh",
+        0.3,
+        0.6,
+        0.005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.014949550852179527,
+        372.24192810058594
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        64,
+        "tanh",
+        "relu",
+        0.3,
+        0.6,
+        0.1,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.4194411188364029,
+        90.14774703979492
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        16,
+        "tanh",
+        "relu",
+        0.6,
+        0.3,
+        0.005,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.04459880571812391,
+        986.1826324462891
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.0,
+        0.0,
+        0.01,
+        "const",
+        8
+      ],
+      "objectives": [
+        0.007840127451345325,
+        581.4237365722656
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.0,
+        0.3,
+        0.005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.002481563249602914,
+        178.0589141845703
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        16,
+        "relu",
+        "relu",
+        0.6,
+        0.0,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.024719678331166506,
+        102.28163146972656
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        512,
+        "tanh",
+        "tanh",
+        0.0,
+        0.3,
+        0.01,
+        "const",
+        8
+      ],
+      "objectives": [
+        0.7409047409892082,
+        1885.4168701171875
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "relu",
+        "tanh",
+        0.0,
+        0.3,
+        0.0005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.002585601177997887,
+        310.3134994506836
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        256,
+        "relu",
+        "tanh",
+        0.6,
+        0.6,
+        0.05,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.31081436574459076,
+        538.1141967773438
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        256,
+        "relu",
+        "tanh",
+        0.6,
+        0.3,
+        0.001,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.0022295895614661276,
+        844.82568359375
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        32,
+        "relu",
+        "tanh",
+        0.6,
+        0.3,
+        0.001,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.009446015814319253,
+        1226.3929748535156
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        64,
+        "tanh",
+        "tanh",
+        0.6,
+        0.6,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.01604783907532692,
+        114.69880104064941
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.01,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.011569285881705582,
+        248.1042938232422
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.3,
+        0.0,
+        0.1,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.014532496454194188,
+        89.82485389709473
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "relu",
+        "relu",
+        0.6,
+        0.0,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.10707087256014347,
+        93.29289436340332
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        64,
+        "tanh",
+        "relu",
+        0.6,
+        0.6,
+        0.01,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.060825708322227,
+        95.32413482666016
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        64,
+        "relu",
+        "tanh",
+        0.0,
+        0.3,
+        0.001,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.004510310071054846,
+        1165.5211181640625
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.3,
+        0.1,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.30342333018779755,
+        136.19014358520508
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "tanh",
+        "tanh",
+        0.6,
+        0.6,
+        0.01,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.02719528740271926,
+        1364.7595520019531
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.0,
+        0.0,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.0014037673536222428,
+        163.4412078857422
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.6,
+        0.6,
+        0.1,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.9862315207719803,
+        637.0581665039062
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.6,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.0220649684779346,
+        219.9117774963379
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "relu",
+        "relu",
+        0.6,
+        0.0,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.012130801216699183,
+        130.5686798095703
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        64,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.01,
+        "const",
+        8
+      ],
+      "objectives": [
+        0.030867550754919648,
+        568.3265075683594
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.005,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.003078199632000178,
+        164.38903427124023
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        512,
+        "relu",
+        "tanh",
+        0.6,
+        0.0,
+        0.0005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.018379393965005875,
+        363.2770462036133
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        128,
+        "tanh",
+        "tanh",
+        0.6,
+        0.0,
+        0.005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.01943734660744667,
+        166.00321197509766
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        16,
+        "relu",
+        "relu",
+        0.6,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.15012383088469505,
+        90.14108276367188
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.6,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.00566220935434103,
+        173.19318008422852
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        256,
+        "relu",
+        "tanh",
+        0.6,
+        0.3,
+        0.05,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.1574319340288639,
+        705.6406402587891
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.001,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.001996995008084923,
+        174.34309768676758
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "tanh",
+        "tanh",
+        0.6,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.007400469738058746,
+        89.95685005187988
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "relu",
+        "tanh",
+        0.3,
+        0.3,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.004223751951940358,
+        103.1279411315918
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.0,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.01921743294224143,
+        175.24671936035156
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.0,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.0034566635149531066,
+        235.43884658813477
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "tanh",
+        "tanh",
+        0.6,
+        0.6,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.02753619570285082,
+        92.61139106750488
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        64,
+        "relu",
+        "tanh",
+        0.6,
+        0.0,
+        0.001,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.004584597307257354,
+        694.8002014160156
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "relu",
+        "relu",
+        0.6,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.1369350291788578,
+        94.39204025268555
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.3,
+        0.0,
+        0.005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.0028110131388530135,
+        171.97735977172852
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        16,
+        "tanh",
+        "relu",
+        0.6,
+        0.0,
+        0.001,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.004162102704867721,
+        102.5583724975586
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        64,
+        "relu",
+        "tanh",
+        0.3,
+        0.6,
+        0.005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.011855309829115868,
+        171.63172912597656
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.3,
+        0.001,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.028421697672456503,
+        166.05874633789062
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "relu",
+        "relu",
+        0.6,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.008508760249242187,
+        140.50444412231445
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.6,
+        0.001,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.025138729717582464,
+        105.05243682861328
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.0,
+        0.6,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.006266576121561229,
+        172.38329315185547
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.6,
+        0.3,
+        0.005,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.027550881262868643,
+        620.1265258789062
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.6,
+        0.0,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.011908024782314897,
+        96.35619735717773
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.6,
+        0.6,
+        0.005,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.062247118912637234,
+        165.89689254760742
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.3,
+        0.001,
+        "const",
+        8
+      ],
+      "objectives": [
+        0.021359093487262726,
+        1155.9412231445312
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        64,
+        "relu",
+        "tanh",
+        0.0,
+        0.0,
+        0.001,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.001508099230704829,
+        581.8487548828125
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.0032935176277533174,
+        90.37846374511719
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        64,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.001,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.0049867244670167565,
+        166.00355529785156
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.001,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.0019007506198249757,
+        310.5359344482422
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        256,
+        "tanh",
+        "tanh",
+        0.6,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.009488224517554045,
+        111.44120788574219
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        64,
+        "relu",
+        "tanh",
+        0.3,
+        0.0,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.003145089780446142,
+        92.71307754516602
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        256,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.001,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.0012804638827219605,
+        169.8731689453125
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.3,
+        0.0,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.0038455399917438626,
+        96.0788745880127
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.6,
+        0.3,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.008632623357698321,
+        103.15663146972656
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.6,
+        0.0,
+        0.0005,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.006211894564330578,
+        172.65949249267578
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        128,
+        "tanh",
+        "tanh",
+        0.0,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.005688061355613172,
+        91.3714599609375
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.6,
+        0.0,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.007380646537058055,
+        90.91330146789551
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.0,
+        0.0,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.0015868417103774846,
+        83.8128776550293
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        16,
+        "tanh",
+        "relu",
+        0.6,
+        0.0,
+        0.001,
+        "const",
+        8
+      ],
+      "objectives": [
+        0.004260236688423902,
+        681.3807220458984
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.0,
+        0.3,
+        0.005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.0032123011187650263,
+        324.30029296875
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.0,
+        0.3,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.0058955897111445665,
+        90.85110473632812
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "relu",
+        "tanh",
+        0.6,
+        0.6,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.022238554432988167,
+        95.73329544067383
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "relu",
+        "relu",
+        0.6,
+        0.3,
+        0.001,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.007618827745318413,
+        132.00129318237305
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        64,
+        "tanh",
+        "tanh",
+        0.6,
+        0.0,
+        0.01,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.017198447370901704,
+        92.69722747802734
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        16,
+        "tanh",
+        "relu",
+        0.0,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.004941802937537432,
+        100.05321311950684
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.3,
+        0.6,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.006917150923982263,
+        103.83116340637207
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.0005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.002912961703259498,
+        310.86341857910156
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.001,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.0021161545591894537,
+        97.52521705627441
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.3,
+        0.3,
+        0.001,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.010303375544026494,
+        93.48223686218262
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "tanh",
+        "tanh",
+        0.3,
+        0.3,
+        0.0005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.006249220343306661,
+        169.12360000610352
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.3,
+        0.0,
+        0.001,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.003249450877774507,
+        91.00778198242188
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        64,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.0030602997285313904,
+        167.84103775024414
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "tanh",
+        "tanh",
+        0.6,
+        0.0,
+        0.001,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.006704970030114055,
+        90.0334529876709
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.01,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.0045903201680630445,
+        90.64365196228027
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.3,
+        0.3,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.011166640790179372,
+        93.11892890930176
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "tanh",
+        "tanh",
+        0.6,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.003321653523016721,
+        137.17671585083008
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "relu",
+        "tanh",
+        0.3,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.0035592896165326238,
+        90.35406112670898
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.0,
+        0.3,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.005237967357970774,
+        89.81925392150879
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        64,
+        "tanh",
+        "tanh",
+        0.3,
+        0.6,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.014296612236648798,
+        96.02030372619629
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        256,
+        "tanh",
+        "relu",
+        0.3,
+        0.3,
+        0.001,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.008104751235805452,
+        352.08213806152344
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        256,
+        "tanh",
+        "tanh",
+        0.6,
+        0.0,
+        0.001,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.0057430805172771215,
+        179.56168365478516
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.0,
+        0.6,
+        0.001,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.013362463098019361,
+        89.12795639038086
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.001,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.001141095592174679,
+        298.66732025146484
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "tanh",
+        "relu",
+        0.3,
+        0.3,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.014649748685769737,
+        103.07573318481445
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.0015358803211711347,
+        85.76818466186523
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "relu",
+        0.3,
+        0.6,
+        0.005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.03943575546145439,
+        93.20645904541016
+      ]
+    }
+  ],
+  "diagnostics": {
+    "duplication_rate": 0.020172910662824207,
+    "resources": {
+      "wall_seconds": 0.02340256399475038,
+      "cpu_seconds": 0.02000000001862645,
+      "benchmark_seconds": 0.0009424305753782392,
+      "benchmark_queries": 100,
+      "analytic_cost_seconds": 0.0,
+      "analytic_cost_queries": 0,
+      "optimizer_seconds": 0.02246013341937214,
+      "bridge_cpu_seconds": null,
+      "process_peak_rss_mb": 2307.765625,
+      "bridge_peak_rss_mb": null,
+      "gpu_peak_memory_mb": null,
+      "device": "cpu",
+      "simulated_training_seconds": 28668.49529647827
+    },
+    "surrogate_decisions": {
+      "offered": 240,
+      "limit": 500,
+      "records": [
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            32,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.001,
+            "cosine",
+            8
+          ],
+          "predicted": -1.731995015177926,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            64,
+            "tanh",
+            "tanh",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -1.3968846064149383,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.01,
+            "const",
+            64
+          ],
+          "predicted": -1.3613903223044868,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": -1.2880824782096734,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -1.0871724718791587,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "relu",
+            0.6,
+            0.6,
+            0.01,
+            "const",
+            64
+          ],
+          "predicted": -0.9693000353926022,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.001,
+            "cosine",
+            8
+          ],
+          "predicted": -0.7985682054018767,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": -0.7872347277319202,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "tanh",
+            "tanh",
+            0.6,
+            0.6,
+            0.01,
+            "cosine",
+            8
+          ],
+          "predicted": -0.7777553612091486,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.7376000146795145,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.6,
+            0.6,
+            0.1,
+            "cosine",
+            8
+          ],
+          "predicted": -0.7032404908884277,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.6899733359574737,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.6716573933536465,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.01,
+            "const",
+            8
+          ],
+          "predicted": -0.6051781883360889,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": -0.4712213128259741,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            512,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.0005,
+            "cosine",
+            16
+          ],
+          "predicted": -0.1759725046803828,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": -0.17304604036499557,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.16905514833600396,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.13055926290365158,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            512,
+            256,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.05,
+            "cosine",
+            32
+          ],
+          "predicted": -0.12207734890570127,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            16,
+            "tanh",
+            "tanh",
+            0.6,
+            0.3,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": -0.090844869334155,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            512,
+            256,
+            "relu",
+            "tanh",
+            0.3,
+            0.3,
+            0.05,
+            "cosine",
+            32
+          ],
+          "predicted": -0.03326098373237041,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "const",
+            32
+          ],
+          "predicted": 0.036977402468511916,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "tanh",
+            0.3,
+            0.6,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.09562326352754824,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            16
+          ],
+          "predicted": 0.09861700126634945,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "relu",
+            "relu",
+            0.3,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.11353604350449889,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            16,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.11826969290476,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.4583637581980713,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            512,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.001,
+            "const",
+            16
+          ],
+          "predicted": 0.46464949782166065,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            256,
+            "tanh",
+            "tanh",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.46991626812914644,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.4716664622129194,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            512,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.4986884715512908,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.01,
+            "const",
+            32
+          ],
+          "predicted": 0.5191457134378978,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": 0.5472341464304763,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.3,
+            0.01,
+            "const",
+            8
+          ],
+          "predicted": 0.5758984225147992,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            512,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.7228229651342539,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "tanh",
+            "tanh",
+            0.0,
+            0.6,
+            0.01,
+            "const",
+            64
+          ],
+          "predicted": 0.7451819108890715,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            512,
+            "tanh",
+            "tanh",
+            0.0,
+            0.6,
+            0.005,
+            "cosine",
+            8
+          ],
+          "predicted": 0.7926993636966161,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.8588059318431748,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            256,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.8695006181380782,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "tanh",
+            0.0,
+            0.6,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.8740779269308301,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.05,
+            "cosine",
+            32
+          ],
+          "predicted": 0.8772862967241541,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            16,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.9314962285524487,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.01,
+            "const",
+            32
+          ],
+          "predicted": 0.9927327227400755,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            512,
+            64,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.1,
+            "cosine",
+            32
+          ],
+          "predicted": 0.9949443921708468,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 1.0696528161494188,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            64,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.01,
+            "const",
+            16
+          ],
+          "predicted": 1.0990624353987135,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 1.1649373455304022,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.1,
+            "const",
+            32
+          ],
+          "predicted": 1.2130444976511892,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.01,
+            "const",
+            32
+          ],
+          "predicted": 1.22558778280034,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            512,
+            256,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 1.2704458895043231,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            512,
+            "tanh",
+            "relu",
+            0.0,
+            0.6,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 1.2723600713277896,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 1.315756183956612,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            16
+          ],
+          "predicted": 1.3990791961399942,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 1.5359306169526477,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            256,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 1.6125692413219763,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            256,
+            "relu",
+            "tanh",
+            0.3,
+            0.0,
+            0.01,
+            "cosine",
+            16
+          ],
+          "predicted": 1.6726502824969245,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.1,
+            "cosine",
+            16
+          ],
+          "predicted": 1.6852968734678948,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 1.8478676107444296,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.1,
+            "cosine",
+            16
+          ],
+          "predicted": 2.251827710175877,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": -0.7728953976409625,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.4891727645286789,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.3,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.40120851020780884,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.37174817641482877,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.3275062448002098,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "tanh",
+            0.6,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.30594816488071647,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            64,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.001,
+            "cosine",
+            8
+          ],
+          "predicted": -0.28778828444586674,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.2596307145077867,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": -0.25554367740880995,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.001,
+            "const",
+            64
+          ],
+          "predicted": -0.23690627332057984,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "tanh",
+            0.3,
+            0.6,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": -0.2106553876012376,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": -0.20920734936606283,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.18481651733565102,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.001,
+            "const",
+            64
+          ],
+          "predicted": -0.14767903573290292,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.6,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.12724282118211983,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.3,
+            0.005,
+            "cosine",
+            8
+          ],
+          "predicted": -0.11651186162334809,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.099214065048775,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.6,
+            0.6,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": -0.0903249637347362,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.001,
+            "const",
+            8
+          ],
+          "predicted": -0.06274932716428,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            8
+          ],
+          "predicted": -0.06263356662828179,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.053199215919673304,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            512,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.04378999968996128,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.001,
+            "const",
+            64
+          ],
+          "predicted": 0.04507323292557619,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.6,
+            0.001,
+            "const",
+            64
+          ],
+          "predicted": 0.04709267715180376,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.051293928123648413,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.07000973288213114,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": 0.07023560261271869,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.118852240819948,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            16
+          ],
+          "predicted": 0.11910419614504864,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            512,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.001,
+            "const",
+            64
+          ],
+          "predicted": 0.123016660705185,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.13817800469322913,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            16
+          ],
+          "predicted": 0.17652038568718878,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.1849214861456987,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": 0.2068842994020703,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": 0.20757726968232532,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": 0.21001379261227318,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            64,
+            "tanh",
+            "tanh",
+            0.3,
+            0.6,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.22533947258085296,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            256,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.2689458764377637,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.2872224356757084,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": 0.29611153698974724,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            16
+          ],
+          "predicted": 0.3053283097979384,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.3058497185275748,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "tanh",
+            "relu",
+            0.6,
+            0.6,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.30696450915752477,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "relu",
+            0.6,
+            0.6,
+            0.01,
+            "const",
+            64
+          ],
+          "predicted": 0.3163765320767874,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.325048173207345,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.33077796032011275,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            128,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.3326113638673456,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.33885286089331923,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.6,
+            0.6,
+            0.01,
+            "const",
+            32
+          ],
+          "predicted": 0.3443295720410805,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": 0.3854658092730327,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": 0.4198135565323746,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.4249506052707933,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "relu",
+            0.3,
+            0.6,
+            0.1,
+            "cosine",
+            32
+          ],
+          "predicted": 0.4410701661770434,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.0005,
+            "const",
+            32
+          ],
+          "predicted": 0.46448080969004013,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "tanh",
+            0.3,
+            0.6,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 0.5340350372202285,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 0.5494995397363089,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.5818901001974031,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            128,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.1,
+            "const",
+            32
+          ],
+          "predicted": 0.6568950589244942,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 0.6855022480340385,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 0.701000037675702,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.39104831768438464,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": -0.25932267362313577,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "const",
+            16
+          ],
+          "predicted": -0.22920595337348693,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "tanh",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.19594737252183797,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "tanh",
+            0.3,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.16659852398809305,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": -0.16452436749491295,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.08068715657342274,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.6,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.07691924291127616,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.0005,
+            "const",
+            32
+          ],
+          "predicted": -0.05814197854718672,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.05694934574207006,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.04999773199336477,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.04104604159670033,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.001,
+            "const",
+            8
+          ],
+          "predicted": -0.03829275588300529,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": -0.03803622814667257,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.030502747702685906,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.023729651693019715,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": -0.00880178082612737,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.01,
+            "const",
+            64
+          ],
+          "predicted": -0.0041909038276153054,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "relu",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.001461597639663581,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.6,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.001305623760342156,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "tanh",
+            0.6,
+            0.6,
+            0.001,
+            "cosine",
+            8
+          ],
+          "predicted": 0.0009748319215813206,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.0005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.0010573184571492644,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.010200186823840801,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.018133951388607017,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.023481346389826796,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "relu",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.025275212095444366,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.035557125895702424,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            32,
+            "tanh",
+            "tanh",
+            0.6,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.0360262580105703,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.03933253493504049,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.06245060577447559,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": 0.06617094862914485,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.0748043293583171,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": 0.07853047362340954,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            512,
+            32,
+            "tanh",
+            "relu",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.08138320235702204,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.08356522460164262,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.08675923293849461,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            64,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.08893429990300009,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.01,
+            "cosine",
+            32
+          ],
+          "predicted": 0.09428270280329451,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.09951953311665451,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            512,
+            256,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.001,
+            "cosine",
+            16
+          ],
+          "predicted": 0.09964835708219133,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.3,
+            0.3,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.1003739250151241,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": 0.10742831543347087,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": 0.10862000911876268,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.13425735793203403,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            256,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": 0.1527549372321069,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            16
+          ],
+          "predicted": 0.19138387856662453,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.21485361246104512,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.27396367769399854,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.6,
+            0.3,
+            0.05,
+            "const",
+            32
+          ],
+          "predicted": 0.3837822689847802,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            16,
+            "tanh",
+            "tanh",
+            0.3,
+            0.6,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 0.40216377035037204,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.49530383912111536,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "tanh",
+            "relu",
+            0.3,
+            0.3,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.5058471330151297,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "relu",
+            0.3,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.505875164054268,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.5292789563000957,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.5340356695997001,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "tanh",
+            0.0,
+            0.6,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.5476659085910152,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "relu",
+            0.3,
+            0.6,
+            0.1,
+            "const",
+            64
+          ],
+          "predicted": 0.5644049598882792,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.6087289908598909,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.6,
+            0.1,
+            "cosine",
+            32
+          ],
+          "predicted": 0.7006335830268385,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            64,
+            64,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.7875266133590141,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.0005,
+            "cosine",
+            16
+          ],
+          "predicted": -0.19058735621027945,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": -0.18256761601903782,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.3,
+            0.3,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": -0.1626852898648582,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "tanh",
+            0.3,
+            0.3,
+            0.0005,
+            "cosine",
+            32
+          ],
+          "predicted": -0.15138361092752967,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.001,
+            "const",
+            64
+          ],
+          "predicted": -0.1481585625704679,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.005,
+            "cosine",
+            32
+          ],
+          "predicted": -0.1332027820782281,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": -0.11032046778246574,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.1095026979896025,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.3,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.10509082274529757,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            128,
+            16,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.0888708870846181,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "relu",
+            "tanh",
+            0.3,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.085168283191697,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.07724902251192256,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "tanh",
+            0.3,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.07712660360369389,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "relu",
+            0.3,
+            0.3,
+            0.001,
+            "const",
+            16
+          ],
+          "predicted": -0.0747887509183136,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": -0.060797198503747096,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.0,
+            0.6,
+            0.001,
+            "const",
+            64
+          ],
+          "predicted": -0.054971431901503776,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            16
+          ],
+          "predicted": -0.05223999737145335,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.3,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.033524078967448134,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.03191201205087235,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.3,
+            0.6,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.030658566012904953,
+          "accepted": true
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.005,
+            "const",
+            8
+          ],
+          "predicted": -0.023858783122823135,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            16
+          ],
+          "predicted": -0.02291147324149112,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            8
+          ],
+          "predicted": -0.017877753989903322,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.01584333737128857,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": -0.0134742667194796,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "relu",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.012768602850945943,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.003620847627162832,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.0041231909206886075,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "tanh",
+            0.0,
+            0.3,
+            0.005,
+            "const",
+            32
+          ],
+          "predicted": 0.018685389568258215,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "relu",
+            0.3,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.01868813498551003,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.001,
+            "cosine",
+            8
+          ],
+          "predicted": 0.02255163833567239,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "relu",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.02820273895292938,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            16,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.030221034908996358,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            32,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.03764893692871199,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            32,
+            "relu",
+            "tanh",
+            0.6,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.0449385871032521,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.045769148043296015,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.04638356780223091,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.05125334267240764,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.001,
+            "const",
+            32
+          ],
+          "predicted": 0.06635185901368412,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": 0.06682732212937234,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.08393340456458637,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.05,
+            "cosine",
+            32
+          ],
+          "predicted": 0.09866712016029272,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "relu",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.1017409973841974,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            512,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": 0.10219012448442333,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.10340800879438139,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": 0.10729698981849331,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            256,
+            "tanh",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": 0.10995591653256134,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            256,
+            "tanh",
+            "tanh",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.11100316869513574,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.0,
+            0.0,
+            0.05,
+            "cosine",
+            32
+          ],
+          "predicted": 0.1112942126156822,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": 0.16736786758461863,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            256,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": 0.17632290705828235,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            32
+          ],
+          "predicted": 0.18429235477869108,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.05,
+            "cosine",
+            8
+          ],
+          "predicted": 0.2480049175355264,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            16,
+            "tanh",
+            "tanh",
+            0.3,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.38050384197948317,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            512,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.001,
+            "cosine",
+            16
+          ],
+          "predicted": 0.4796520592955199,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            16,
+            16,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.5181096279474803,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            64,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.1,
+            "const",
+            16
+          ],
+          "predicted": 0.5319770897131285,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "relu",
+            0.3,
+            0.0,
+            0.1,
+            "cosine",
+            32
+          ],
+          "predicted": 0.5567952046286122,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            32,
+            128,
+            "tanh",
+            "tanh",
+            0.6,
+            0.0,
+            0.1,
+            "const",
+            32
+          ],
+          "predicted": 0.5638230162499545,
+          "accepted": false
+        },
+        {
+          "kind": "selection",
+          "source": "predictor",
+          "candidate": [
+            256,
+            16,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.1,
+            "cosine",
+            64
+          ],
+          "predicted": 0.7730364505013648,
+          "accepted": false
+        }
+      ]
+    }
+  }
+}

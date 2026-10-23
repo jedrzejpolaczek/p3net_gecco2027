@@ -142,10 +142,18 @@ class ResourceMeter:
         self._bridge_cpu = _cpu_seconds(_bridge_process(self.substrate), tree=True)
         self._cpu = _cpu_seconds(self._process) or 0.0
         self._wall = time.perf_counter()
+        self._load0 = self._load_total()
         return self
+
+    def _load_total(self) -> float | None:
+        inner = getattr(self.substrate, "_substrate", self.substrate)
+        return getattr(inner, "surrogate_load_seconds_total", None)
 
     def __exit__(self, *exc) -> None:
         self.wall_seconds = time.perf_counter() - self._wall
+        load = self._load_total()
+        # BM-5: bridge load time within this run (0.0 if it was already loaded); None = no bridge
+        self.surrogate_load_seconds = None if load is None else load - (self._load0 or 0.0)
         self.cpu_seconds = (_cpu_seconds(self._process) or 0.0) - self._cpu
         bridge_now = _cpu_seconds(_bridge_process(self.substrate), tree=True)
         # The bridge may only start during the run (first query).
@@ -176,4 +184,5 @@ class ResourceMeter:
             "process_peak_rss_mb": self.peak_rss_mb,
             "bridge_peak_rss_mb": self.bridge_peak_rss_mb,
             "gpu_peak_memory_mb": self.gpu_peak_memory_mb,
+            "surrogate_load_seconds": getattr(self, "surrogate_load_seconds", None),
         }

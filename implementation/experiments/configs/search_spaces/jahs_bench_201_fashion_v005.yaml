@@ -1,0 +1,24 @@
+# v005 objectives (notes/plans/v005-sources/benchmarks.md): copy of jahs_bench_201_fashion.yaml with the sources set
+# explicitly -- the runner's defaults stay those of v004 so the v004 plans reproduce.
+# JAHS-Bench-201 search-space config, Fashion-MNIST dataset variant
+# (secondary robustness check, added 2026-08-16 -- see
+# jahs_bench_201_colorectal.yaml's header for the full rationale, shared
+# verbatim by this file).
+#
+# Fashion-MNIST is grayscale (1 channel vs. cifar10's 3) and a different
+# object category (clothing items vs. natural photos), the third and last
+# of substrates.jahs_bench_201.JAHS_DATASETS.
+#
+# Reference: chapters/v003/results/main.tex ("Benchmark and search space").
+
+default_grid: false  # v005 spaces are run only through configs/pipeline/v005*.yaml
+search_space: nas_genotype
+substrate: jahs_bench_201
+dataset: fashion_mnist  # one of substrates.jahs_bench_201.JAHS_DATASETS
+
+fidelity:
+  epochs: 200
+  resolution: 1.0
+
+# v005: f2 = analytic parameter count (BM-3: size_MB varies with HP at a fixed cell)
+f2_source: params

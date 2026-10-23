@@ -1,0 +1,4827 @@
+{
+  "method": "bartnik_p3",
+  "search_space": "fcnet_protein_structure",
+  "budget": 50,
+  "seed": 20,
+  "evaluations_used": 50,
+  "history": [
+    {
+      "genotype": [
+        512,
+        512,
+        "tanh",
+        "relu",
+        0.6,
+        0.6,
+        0.0005,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.37050627917051315,
+        469.5403823852539
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.0,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.3407192826271057,
+        65.82616901397705
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        32,
+        "tanh",
+        "relu",
+        0.6,
+        0.6,
+        0.005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.43100107461214066,
+        85.94215774536133
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        512,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.05,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.492589071393013,
+        484.4414291381836
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        16,
+        "tanh",
+        "tanh",
+        0.3,
+        0.6,
+        0.005,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.43303707242012024,
+        129.35312271118164
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        256,
+        "tanh",
+        "tanh",
+        0.3,
+        0.6,
+        0.001,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.4234444424510002,
+        295.1306915283203
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        16,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.1,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.6656686365604401,
+        65.87413787841797
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        512,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.01,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.3029701039195061,
+        288.4697952270508
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.6,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.3008759468793869,
+        89.52939033508301
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        512,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.0005,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.2409713864326477,
+        438.16127014160156
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        512,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.005,
+        "const",
+        8
+      ],
+      "objectives": [
+        0.6037172377109528,
+        790.9432220458984
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        16,
+        "tanh",
+        "tanh",
+        0.0,
+        0.0,
+        0.1,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.3941584974527359,
+        65.8071231842041
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.26024729758501053,
+        89.85865783691406
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        32,
+        "relu",
+        "tanh",
+        0.0,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.29148827493190765,
+        102.10487937927246
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.6,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.3075849562883377,
+        88.56081008911133
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        512,
+        "relu",
+        "tanh",
+        0.0,
+        0.3,
+        0.001,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.31262916326522827,
+        152.65185546875
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.2637725844979286,
+        104.37460136413574
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.2615556865930557,
+        75.85573959350586
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        256,
+        "relu",
+        "relu",
+        0.0,
+        0.3,
+        0.01,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.3606182634830475,
+        363.95658111572266
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        512,
+        "relu",
+        "tanh",
+        0.0,
+        0.6,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.2879793718457222,
+        152.4568977355957
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.2787647396326065,
+        88.95844078063965
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.2910934314131737,
+        125.3342056274414
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.2751600667834282,
+        91.46410179138184
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        32,
+        "relu",
+        "tanh",
+        0.3,
+        0.3,
+        0.01,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.3298218995332718,
+        293.4547119140625
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        256,
+        "tanh",
+        "tanh",
+        0.3,
+        0.0,
+        0.0005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.34353963285684586,
+        364.07837677001953
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.0,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.29573583602905273,
+        78.65705490112305
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        128,
+        "tanh",
+        "relu",
+        0.6,
+        0.6,
+        0.01,
+        "const",
+        8
+      ],
+      "objectives": [
+        0.6554535627365112,
+        779.7316131591797
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.2676876485347748,
+        76.67800712585449
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        128,
+        "relu",
+        "tanh",
+        0.3,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.3114291802048683,
+        106.35594177246094
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.2801196277141571,
+        92.1466236114502
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        16,
+        "tanh",
+        "tanh",
+        0.6,
+        0.6,
+        0.0005,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.4441942125558853,
+        155.17351531982422
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.31693508476018906,
+        66.66549491882324
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        512,
+        "tanh",
+        "relu",
+        0.6,
+        0.0,
+        0.005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.38147611916065216,
+        358.06585693359375
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "tanh",
+        0.3,
+        0.0,
+        0.1,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.8915255963802338,
+        361.90223693847656
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        512,
+        "relu",
+        "relu",
+        0.6,
+        0.6,
+        0.05,
+        "cosine",
+        32
+      ],
+      "objectives": [
+        0.6539680361747742,
+        207.68163681030273
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.3111339583992958,
+        69.18385124206543
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        32,
+        "relu",
+        "relu",
+        0.0,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.287970632314682,
+        90.97335433959961
+      ]
+    },
+    {
+      "genotype": [
+        16,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.3422313630580902,
+        83.13217735290527
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.2918655052781105,
+        77.69048500061035
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        32,
+        "tanh",
+        "tanh",
+        0.3,
+        0.3,
+        0.0005,
+        "cosine",
+        16
+      ],
+      "objectives": [
+        0.37794531881809235,
+        289.60621643066406
+      ]
+    },
+    {
+      "genotype": [
+        128,
+        32,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.30048615485429764,
+        70.66707992553711
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        256,
+        "relu",
+        "relu",
+        0.6,
+        0.6,
+        0.0005,
+        "cosine",
+        8
+      ],
+      "objectives": [
+        0.2998593598604202,
+        774.4986267089844
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        64,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.1,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.6554281413555145,
+        359.17083740234375
+      ]
+    },
+    {
+      "genotype": [
+        512,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.0,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.2881302237510681,
+        92.29114532470703
+      ]
+    },
+    {
+      "genotype": [
+        64,
+        256,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.0005,
+        "const",
+        32
+      ],
+      "objectives": [
+        0.2845131903886795,
+        184.47804260253906
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        32,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.28691231459379196,
+        84.88767051696777
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "tanh",
+        0.0,
+        0.3,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.29651836305856705,
+        91.16694259643555
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        32,
+        "relu",
+        "tanh",
+        0.0,
+        0.0,
+        0.0005,
+        "cosine",
+        64
+      ],
+      "objectives": [
+        0.34983569383621216,
+        61.68173694610596
+      ]
+    },
+    {
+      "genotype": [
+        32,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.0,
+        0.0005,
+        "const",
+        64
+      ],
+      "objectives": [
+        0.3041522726416588,
+        69.72583389282227
+      ]
+    },
+    {
+      "genotype": [
+        256,
+        128,
+        "relu",
+        "relu",
+        0.0,
+        0.6,
+        0.0005,
+        "const",
+        16
+      ],
+      "objectives": [
+        0.26577551662921906,
+        342.49034118652344
+      ]
+    }
+  ],
+  "diagnostics": {
+    "duplication_rate": 0.42528735632183906,
+    "resources": {
+      "wall_seconds": 83.79833006800618,
+      "cpu_seconds": 83.79000000000815,
+      "benchmark_seconds": 0.0014962907880544662,
+      "benchmark_queries": 50,
+      "analytic_cost_seconds": 0.0,
+      "analytic_cost_queries": 0,
+      "optimizer_seconds": 83.79683377721813,
+      "bridge_cpu_seconds": null,
+      "process_peak_rss_mb": 2288.9140625,
+      "bridge_peak_rss_mb": null,
+      "gpu_peak_memory_mb": null,
+      "device": "cpu",
+      "simulated_training_seconds": 10386.831073760986
+    },
+    "surrogate_decisions": {
+      "offered": 136,
+      "limit": 500,
+      "records": [
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.0796418300271034,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "candidate": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "predicted": -0.06642759010195731,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "predicted": -0.04569920048117637,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.1528460329025984,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.1731032058596611,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.1731032058596611,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            32,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.18846572414040563,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.6,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.15149319820106028,
+          "threshold": -0.0837251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.1404242467880249,
+          "threshold": -0.0837251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.13832092739641666,
+          "threshold": -0.0837251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": -0.11293552644550803,
+          "threshold": -0.0837251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.07528382107615472,
+          "threshold": -0.0837251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.06293966732919215,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.14202964894473552,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.13680672712624076,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.6,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.13680672712624076,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.07292159914970398,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            64,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.1033395630121231,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.17367551609873771,
+          "threshold": -0.0827251598238945,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.06473302200436593,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.06473302200436593,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.059629186019301395,
+          "threshold": -0.0827251598238945,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.09716652393341063,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.09639777131378652,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            32,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.11097659513354302,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.09639777131378652,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            64,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.17112268768250943,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.030946377813816095,
+          "threshold": -0.06761356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.04011982515454293,
+          "threshold": -0.06761356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.020872308388352412,
+          "threshold": -0.06661356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.026356225311756132,
+          "threshold": -0.06661356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            32
+          ],
+          "predicted": -0.09228668108582494,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.14015449099242688,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            128,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.10257697246968744,
+          "threshold": -0.06661356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.001,
+            "cosine",
+            64
+          ],
+          "predicted": -0.0909137188643217,
+          "threshold": -0.06761356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            512,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.06028937108814714,
+          "threshold": -0.06761356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.033957494720816606,
+          "threshold": -0.06761356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            128,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.11342690631747243,
+          "threshold": -0.06761356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.07764955535531043,
+          "threshold": -0.06761356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            32
+          ],
+          "predicted": -0.022300215885043162,
+          "threshold": -0.06761356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.031405958831310254,
+          "threshold": -0.06761356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.0687455336749554,
+          "threshold": -0.06761356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.025819383710622812,
+          "threshold": -0.06761356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.0924968556314707,
+          "threshold": -0.06761356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.0687455336749554,
+          "threshold": -0.06761356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.0687455336749554,
+          "threshold": -0.06761356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08409769609570505,
+          "threshold": -0.06861356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08409769609570505,
+          "threshold": -0.06861356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.14558819465339184,
+          "threshold": -0.06861356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            64,
+            64,
+            "relu",
+            "tanh",
+            0.3,
+            0.3,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.07080404631793497,
+          "threshold": -0.06861356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            128,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.1124290791153908,
+          "threshold": -0.06861356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.3,
+            0.3,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": -0.13485536687076094,
+          "threshold": -0.06961356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.001,
+            "cosine",
+            32
+          ],
+          "predicted": -0.09977908685803416,
+          "threshold": -0.06961356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.05791018426418304,
+          "threshold": -0.06961356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.06082465767860412,
+          "threshold": -0.06961356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.097528066188097,
+          "threshold": -0.06961356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            64,
+            256,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.1,
+            "cosine",
+            16
+          ],
+          "predicted": -0.14667196445167063,
+          "threshold": -0.06961356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.027519417628645904,
+          "threshold": -0.06961356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.024013716429471976,
+          "threshold": -0.06961356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.05722823187708853,
+          "threshold": -0.06961356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.02390330657362938,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            32
+          ],
+          "predicted": -0.09904119148850443,
+          "threshold": -0.07061356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08767476156353948,
+          "threshold": -0.07061356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.03182102158665656,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.076461413949728,
+          "threshold": -0.07061356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "tanh",
+            0.3,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.06466293074190615,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.0576214402914047,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.023824346140027042,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.023824346140027042,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.01,
+            "const",
+            64
+          ],
+          "predicted": -0.09718216933310031,
+          "threshold": -0.07061356985569,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.023824346140027042,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.023824346140027042,
+          "threshold": -0.07061356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.05640137419104574,
+          "threshold": -0.07161356985569,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            64,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.08579218640923503,
+          "threshold": -0.05476444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.03526243470609186,
+          "threshold": -0.05476444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.02224977515637877,
+          "threshold": -0.05476444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            64,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.01,
+            "cosine",
+            16
+          ],
+          "predicted": -0.09171396531164644,
+          "threshold": -0.05476444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.057085952982306454,
+          "threshold": -0.05476444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.025497694239020374,
+          "threshold": -0.05576444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.3,
+            0.0,
+            0.005,
+            "cosine",
+            16
+          ],
+          "predicted": -0.08318587832152846,
+          "threshold": -0.05576444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.025497694239020374,
+          "threshold": -0.05576444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.025193906053900705,
+          "threshold": -0.05576444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.07183909498155117,
+          "threshold": -0.05576444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.058261613026261316,
+          "threshold": -0.05676444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.03279657080769538,
+          "threshold": -0.05676444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.05878404073417187,
+          "threshold": -0.05676444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.029114744812250126,
+          "threshold": -0.05676444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.12074849210679534,
+          "threshold": -0.05676444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.14710721679031846,
+          "threshold": -0.05776444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.06390634804964068,
+          "threshold": -0.05776444959640503,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.03828897178173063,
+          "threshold": -0.05776444959640503,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "predicted": -0.016939240321517002,
+          "threshold": -0.0701625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.022280066683888433,
+          "threshold": -0.0701625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.13600125357508658,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            32,
+            "relu",
+            "relu",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.03400951206684111,
+          "threshold": -0.0701625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.06090547703206539,
+          "threshold": -0.0701625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.0770738112181425,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.0770738112181425,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.051456652432680106,
+          "threshold": -0.0701625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.025129686295986164,
+          "threshold": -0.0701625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            16,
+            "relu",
+            "tanh",
+            0.6,
+            0.0,
+            0.01,
+            "const",
+            64
+          ],
+          "predicted": -0.17946560680866241,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.16132680475711825,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            64,
+            "relu",
+            "tanh",
+            0.3,
+            0.3,
+            0.01,
+            "cosine",
+            64
+          ],
+          "predicted": -0.14401220090687272,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            128,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.1152672138810158,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.07283247396349907,
+          "threshold": -0.0711625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            64,
+            "relu",
+            "tanh",
+            0.3,
+            0.3,
+            0.0005,
+            "cosine",
+            32
+          ],
+          "predicted": -0.0931922163814306,
+          "threshold": -0.0711625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            128,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.10877548687160016,
+          "threshold": -0.0711625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            128,
+            32,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.045059088915586465,
+          "threshold": -0.0711625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08013565108180049,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08013565108180049,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            256,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.09820779420435427,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08013565108180049,
+          "threshold": -0.0701625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.024347259327769266,
+          "threshold": -0.0701625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.07858564481139185,
+          "threshold": -0.0711625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.02684161521494388,
+          "threshold": -0.0711625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.03126350186765192,
+          "threshold": -0.0711625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.07858564481139185,
+          "threshold": -0.0711625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.16708479493856432,
+          "threshold": -0.0711625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.02474906541407107,
+          "threshold": -0.0721625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08193735457956791,
+          "threshold": -0.0721625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            16,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.11477563425898551,
+          "threshold": -0.0721625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.04484085008502009,
+          "threshold": -0.0721625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.05444875873625277,
+          "threshold": -0.0721625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.005,
+            "const",
+            64
+          ],
+          "predicted": -0.12477672547101976,
+          "threshold": -0.0721625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.04220138810575008,
+          "threshold": -0.0721625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            512,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.022956055030226685,
+          "threshold": -0.0721625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.026367914527654635,
+          "threshold": -0.0721625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            16,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.08445516534149644,
+          "threshold": -0.0731625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            32,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.04124991387128829,
+          "threshold": -0.0731625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.024289121776819245,
+          "threshold": -0.0731625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.024289121776819245,
+          "threshold": -0.0731625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.057482026442885414,
+          "threshold": -0.0731625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            128,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.3,
+            0.05,
+            "const",
+            64
+          ],
+          "predicted": -0.16443331316113474,
+          "threshold": -0.0731625719666481,
+          "accepted": false
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            32,
+            "relu",
+            "tanh",
+            0.0,
+            0.0,
+            0.0005,
+            "cosine",
+            64
+          ],
+          "predicted": -0.05638378009200096,
+          "threshold": -0.0731625719666481,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            32,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.0,
+            0.0005,
+            "const",
+            64
+          ],
+          "predicted": -0.056666017621755604,
+          "threshold": -0.05951476842164993,
+          "accepted": true
+        },
+        {
+          "kind": "improvement",
+          "source": "gate",
+          "reference": [
+            512,
+            512,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "candidate": [
+            256,
+            128,
+            "relu",
+            "relu",
+            0.0,
+            0.6,
+            0.0005,
+            "const",
+            16
+          ],
+          "predicted": -0.026387514919042565,
+          "threshold": -0.06318088620901108,
+          "accepted": true
+        }
+      ]
+    }
+  }
+}

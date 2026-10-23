@@ -70,6 +70,13 @@ class NASBench201Substrate(Substrate):
 
     dataset: str = "cifar10"
     data_dir: str | Path = DEFAULT_DATA_DIR
+    #: v005 (benchmarks.md BM-1 a, BM-2): f1 = validation error of the `cifar10-valid`
+    #: setting (train on train, evaluate on valid, mean over the logged seeds), f2 = the
+    #: measured inference energy (p3net.v005.benchmarks.NB201Energy). v004 used
+    #: f1_source="test" (test error of `cifar10`) and f2_source="flops".
+    f1_source: str = "valid"
+    f2_source: str = "energy"
+    energy_table: str | Path | None = None
     _api: Any = field(default=None, init=False, repr=False)
     _query_cache: dict[tuple[Genotype, int], tuple[float, float]] = field(
         default_factory=dict, init=False, repr=False
@@ -116,10 +123,17 @@ class NASBench201Substrate(Substrate):
         # repeated default calls). Substrate.deterministic=True (base.py) is
         # a project-wide assumption; is_random=False averages across the
         # architecture's own logged trials instead, deterministically.
-        info = api.get_more_info(index, self.dataset, hp=hp, is_random=False)
-        cost = api.get_cost_info(index, self.dataset, hp=hp)
-        error_rate = 100.0 - info["test-accuracy"]  # this project's minimisation convention
-        result = (error_rate, float(cost["flops"]))
+        if self.f1_source == "valid":
+            info = api.get_more_info(index, f"{self.dataset}-valid", hp=hp, is_random=False)
+            error_rate = 100.0 - info["valid-accuracy"]  # this project's minimisation convention
+        else:  # v004
+            info = api.get_more_info(index, self.dataset, hp=hp, is_random=False)
+            error_rate = 100.0 - info["test-accuracy"]
+        if self.f2_source == "energy":
+            f2 = self._energy().energy(genotype)
+        else:  # v004
+            f2 = float(api.get_cost_info(index, self.dataset, hp=hp)["flops"])
+        result = (error_rate, float(f2))
         self._query_cache[cache_key] = result
         return result
 
@@ -132,6 +146,16 @@ class NASBench201Substrate(Substrate):
         # shares the real query cache with query_f1, always at r_K.
         _, flops = self._query(genotype, self.fidelity_ladder()[-1])
         return flops
+
+    def f1_split(self) -> str:
+        return self.f1_source
+
+    def _energy(self):
+        if getattr(self, "_energy_table", None) is None:
+            from p3net.v005.benchmarks import DEFAULT_TABLE, NB201Energy
+
+            self._energy_table = NB201Energy(self.energy_table or DEFAULT_TABLE)
+        return self._energy_table
 
     def _info(self, genotype: Genotype) -> dict:
         config = decode_nas_bench_201_genotype(genotype)
@@ -146,11 +170,18 @@ class NASBench201Substrate(Substrate):
         return float(self._info(genotype)["train-all-time"])
 
     def full_fidelity_metrics(self, genotype: Genotype) -> dict[str, float]:
-        """No validation split is recorded for this dataset setting (f1 is
-        already the test error, following Bartnik)."""
+        """Post-run metrics (never seen by the methods): the validation accuracy behind
+        f1 and the test accuracy reported after the run (BM-1 a)."""
         info = self._info(genotype)
-        return {
+        out = {
             "train_acc": float(info["train-accuracy"]),
             "test_acc": float(info["test-accuracy"]),
             "training_seconds": float(info["train-all-time"]),
         }
+        if self.f1_source == "valid":
+            config = decode_nas_bench_201_genotype(genotype)
+            api = self._get_api()
+            index = api.query_index_by_arch(genotype_to_arch_str(config.edges))
+            v = api.get_more_info(index, f"{self.dataset}-valid", hp=str(FULL_TRAINING_EPOCHS), is_random=False)
+            out["valid_acc"] = float(v["valid-accuracy"])
+        return out

@@ -54,7 +54,7 @@ def test_multi_fidelity_rungs_for_100_epochs():
 @needs_data
 @pytest.mark.parametrize("task", FCNET_TASKS)
 def test_every_configuration_is_found_and_rows_are_aligned(task):
-    substrate = FCNetSubstrate(task=task)
+    substrate = FCNetSubstrate(task=task, f2_at_fidelity="full")  # v004 accounting
     space = fcnet_search_space()
     d = INPUT_DIMENSIONS[task]
     rng = random.Random(1)
@@ -70,7 +70,7 @@ def test_every_configuration_is_found_and_rows_are_aligned(task):
 
 @needs_data
 def test_fidelity_and_training_time_accounting():
-    substrate = FCNetSubstrate(task="protein_structure")
+    substrate = FCNetSubstrate(task="protein_structure", f2_at_fidelity="full")  # v004 accounting
     g = fcnet_search_space().sample_uniform(random.Random(3))
     assert substrate.objectives_at_epochs(g, 100) == substrate.objectives(g)
     assert substrate.objectives_at_epochs(g, 4)[1] == substrate.objectives(g)[1]

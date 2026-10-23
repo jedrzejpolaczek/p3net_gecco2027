@@ -109,3 +109,26 @@ arm's value.
 
 Any change to this plan after phase 4 starts is recorded here with the date and the reason, and the
 affected results are marked in the paper.
+
+Recorded on 2026-10-16, after the v004 run finished and the three analysis passes
+(`notes/analysis-v004/reports/01–03`) were complete. Deviations 1 and 2 were known earlier (dates
+given); the others were found during the analysis. None of them was used to choose what to report.
+
+| # | Deviation from this plan | Found | Reason | Effect on results | How it is handled |
+|---|---|---|---|---|---|
+| 1 | The three Gaussian-process arms (`oss_vizier`, `botorch_qnehvi`, `botorch_qparego`) were run only at budgets 50 and 100, in a separate run root (`results/runs/gp-small`, plan `configs/pipeline/v004-gp-small.yaml`, commit 1bba34af) | 2026-09-21 (Vizier out of memory at budget 350), 2026-09-25 (BoTorch timings), decided 2026-10-05 | Measured cost on the 30 GB machine: Vizier ~34 GB resident at budget 350; qNEHVI 8 419 s and 12 GB per run at 350; qParEGO 3 192 s per run at 350. The single-GPU slot serialises both BoTorch arms, so qNEHVI at 350 alone would take ~35 calendar days | Q1 Holm families have 24 arms at budgets 50/100 and 21 at 200/350; no GP result above budget 100; method code identical to the main run root | GP arms reported in a separate table for budgets 50/100; the missing columns are stated in Limitations |
+| 2 | The repository's reporting code (`implementation/experiments/stats/significance.py`) still computes the paired Wilcoxon signed-rank test, not the two-sided Mann–Whitney U required by §4 | before phase 4 (audit checklist A1, 2026-10-07); not fixed before the run | Planned for phase 5, not done yet | No v004 number has been produced with it; the analysis reports use Mann–Whitney U from separate scripts | Fix the reporting code (and its tests and captions) before any v004/v005 number enters the paper |
+| 3 | The NAS-Bench-201 frozen front cannot be built "from s1, s3 and s7" (§3): NAS-Bench-201 is run only in s5 | 2026-10-16 | Plan error: §3 did not anticipate that the descriptive benchmark has its own stage | Front built from all s5 runs on seeds 1–30 (15 points). The benchmark's exact oracle front (15 625 architectures) was not used | NB201 stays descriptive (§6); the front source is stated with the results |
+| 4 | Knee-point retraining on the GPU (§5, phase 4b) was not done | 2026-10-16 | No training code matching each benchmark was prepared; the task had no owner date or script | No retrained accuracies | Reported as missing; planned as an explicitly partial retraining in the next pre-registration |
+| 5 | Surrogate decision quality (§5) and generalisation gaps were not computed: `scripts/posthoc_metrics.py` was never run | 2026-10-16 | No checklist tied each §5 analysis to a script and an output file | No labelled decision metrics or test-set fronts in the repository | Partial exploratory substitute in report 02 (§4.3, §4.5) for the tabular spaces only; JAHS-Bench-201 not labelled |
+| 6 | The sequential timing stage s9 did not record bridge memory (`bridge_peak_rss_mb`) or GPU memory (`gpu_peak_memory_mb`); the JAHS-Bench-201 bridge loading time is not reported separately (§5) | 2026-10-16 | Fields empty in every s9 record; no post-run check of the resource fields | Process memory on JAHS-Bench-201 excludes the ~12 GB bridge; no GPU figures | Stated in the cost table; resource fields to be asserted non-empty in the next run |
+| 7 | The JAHS-Bench-201 frozen fronts include points of the GP arms from `gp-small` (seeds 1–30, budgets 50/100) | 2026-10-16 | Consistent with the letter of §3 (they are s1 arms), recorded because they come from a separate run root | Changes the HV denominator for every arm equally | Stated with the front definition |
+
+**Status of v004 after the implementation audit (2026-10-16).** Report 01 found that several
+implementations differ from their sources or from the paper's description: P3Net's linkage subsets
+include the root (so the surrogate's subset restriction is inactive), SMAC3 runs only its initial design
+at budgets ≤ 100, MOEA/D stops before the budget on FCNet, and the Bartnik reconstruction and several
+baselines are simplified. The author decided to correct the implementations, verify them against their
+sources, and rerun under a new pre-registration (v005) with new confirmatory seeds. v004 results are
+therefore kept as the record of this pre-registration, but are not the main results of the paper; they
+are cited only as exploratory evidence that motivated the corrections.

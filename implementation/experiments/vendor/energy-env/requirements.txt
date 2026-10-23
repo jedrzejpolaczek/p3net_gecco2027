@@ -1,0 +1,9 @@
+# Environment for the NB201 inference-energy measurement (benchmarks.md, BM-2).
+# Separate from the experiments environment so the measurement does not touch uv.lock.
+#   uv venv vendor/energy-env/.venv --python 3.13
+#   uv pip install --python vendor/energy-env/.venv -r vendor/energy-env/requirements.txt \
+#       --index-url https://download.pytorch.org/whl/cu126 --extra-index-url https://pypi.org/simple --index-strategy unsafe-best-match
+#   uv pip install --python vendor/energy-env/.venv --no-deps xautodl==1.0.0   # its numpy pin does not build on 3.13
+torch==2.14.0+cu126
+nvidia-ml-py
+numpy

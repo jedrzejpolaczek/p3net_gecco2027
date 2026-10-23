@@ -55,6 +55,8 @@ from methods.bartnik_p3 import BartnikP3
 from methods.multi_fidelity import AshaMO, BohbMO, HyperbandMO, MultiFidelityRunner
 from methods.przewozniczek_p3elympus import PrzewozniczekP3ELyMPuS
 from methods.reinforce_mo import ReinforceMO
+from methods.v005_adapter import V005_METHODS, build_v005_method
+from measurement.v005_checks import level4_checks
 from search_spaces.fcnet_genotype import fcnet_search_space, fcnet_validity
 from search_spaces.nas_bench_201_genotype import (
     nas_bench_201_search_space,
@@ -94,10 +96,19 @@ _SEARCH_SPACE_BUILDERS = {
 # substrate name (configs/search_spaces/*.yaml "substrate" field) ->
 # (search_space_config) -> Substrate.
 _SUBSTRATE_BUILDERS = {
-    "jahs_bench_201": lambda cfg: JAHSBench201Substrate(dataset=cfg.get("dataset", "cifar10")),
-    "nas_hpo_bench_ii": lambda cfg: NASHPOBenchIISubstrate(),
-    "nas_bench_201": lambda cfg: NASBench201Substrate(dataset=cfg.get("dataset", "cifar10")),
-    "fcnet": lambda cfg: FCNetSubstrate(task=cfg["task"]),
+    # v004 objectives unless the config asks otherwise (v005: f2_source "params")
+    "jahs_bench_201": lambda cfg: JAHSBench201Substrate(
+        dataset=cfg.get("dataset", "cifar10"), f2_source=cfg.get("f2_source", "size_mb")
+    ),
+    # v004 f2 at every fidelity unless the config asks otherwise (v005: f2_at_fidelity "observed", MF-1 a)
+    "nas_hpo_bench_ii": lambda cfg: NASHPOBenchIISubstrate(f2_at_fidelity=cfg.get("f2_at_fidelity", "full")),
+    # v004 objectives unless the config asks otherwise (v005: f1_source "valid", f2_source "energy")
+    "nas_bench_201": lambda cfg: NASBench201Substrate(
+        dataset=cfg.get("dataset", "cifar10"),
+        f1_source=cfg.get("f1_source", "test"),
+        f2_source=cfg.get("f2_source", "flops"),
+    ),
+    "fcnet": lambda cfg: FCNetSubstrate(task=cfg["task"], f2_at_fidelity=cfg.get("f2_at_fidelity", "full")),
 }
 
 
@@ -170,6 +181,7 @@ def build_method(
     cache,
     seed: int | None = None,
     substrate=None,
+    budget: int | None = None,
 ):
     """Method configs deliberately hold only YAML-serialisable data
     (population sizes, kappa, ...) -- model_factory is a Python callable
@@ -189,6 +201,12 @@ def build_method(
     -- every other config ignores it."""
     kind = method_config["method"]
     params = dict(method_config.get("params", {}))
+
+    if kind in V005_METHODS:  # v005 methods (methods/v005_adapter.py); they need the budget
+        if budget is None:
+            raise ValueError(f"{kind} requires build_method to be given the budget")
+        return build_v005_method(kind, params, search_space=search_space, budget=budget, seed=seed or 0,
+                                 substrate=substrate)
 
     if kind == "p3net":
         if substrate is None:
@@ -363,6 +381,7 @@ def run_single(
             cache=cache,
             seed=seed,
             substrate=timed,
+            budget=budget,
         )
         if getattr(method, "multi_fidelity", False):
             # Multi-fidelity track: budget in full-evaluation equivalents
@@ -381,6 +400,11 @@ def run_single(
     resources = meter.as_dict()
     resources["device"] = getattr(method, "device", "cpu")
     resources["simulated_training_seconds"] = simulated_training_seconds(substrate, state, method)
+    if hasattr(method, "v005_info"):  # level 4 (measurement/v005_checks.py)
+        method.level4 = level4_checks(kind=method.kind, budget=budget, evaluations_used=state.evaluations_used,
+                                      cost_used=getattr(method, "cost_used", None),
+                                      multi_fidelity=getattr(method, "multi_fidelity", False),
+                                      info=method.v005_info, resources=resources)
     return RunResult(state=state, cache=cache, method=method, resources=resources)
 
 
@@ -447,6 +471,10 @@ def _diagnostics(result: RunResult) -> dict[str, Any]:
     decision_log = getattr(result.method, "decision_log", None)
     if decision_log is not None:
         diagnostics["surrogate_decisions"] = decision_log.as_dict()
+    v005_info = getattr(result.method, "v005_info", None)  # v005 methods: config, diagnostics, stop_reason
+    if v005_info is not None:
+        diagnostics["v005"] = v005_info
+        diagnostics["level4"] = getattr(result.method, "level4", None)
     fidelity_queries = getattr(result.method, "fidelity_queries", None)
     if fidelity_queries is not None:
         diagnostics["cost_used"] = result.method.cost_used
@@ -497,6 +525,17 @@ def persist_run(
         "history": [_observation_to_dict(obs) for obs in result.state.history],
         "diagnostics": _diagnostics(result),
     }
+    if getattr(result.method, "v005_info", None) is not None:
+        # v005 record layout (v005-interfaces.md §7, Benchmarki): resource fields at the top level.
+        # None = not applicable on this run (no JAHS server, no GPU) or not measured (load time).
+        res = result.resources
+        payload["resources"] = {
+            "peak_memory_server_mb": res.get("bridge_peak_rss_mb"),
+            "peak_memory_gpu_mb": res.get("gpu_peak_memory_mb"),
+            "surrogate_load_seconds": res.get("surrogate_load_seconds"),
+            "method_wall_seconds": res.get("optimizer_seconds"),
+            "peak_memory_process_mb": res.get("process_peak_rss_mb"),
+        }
     tmp_path = out_path.with_name(out_path.name + ".tmp")
     with open(tmp_path, "w", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, indent=2))

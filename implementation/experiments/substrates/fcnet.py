@@ -105,6 +105,9 @@ def _key(genotype: Genotype) -> str:
 class FCNetSubstrate(Substrate):
     task: str = "protein_structure"
     data_dir: str | Path = DEFAULT_DATA_DIR
+    #: MF-1 a (v005, mf-track.md): f2 at e < E epochs is the time observed up to epoch e
+    #: (`training_seconds`); "full" = v004 (time of the whole training at every fidelity).
+    f2_at_fidelity: str = "observed"
     _arrays: dict[str, np.ndarray] | None = field(default=None, init=False, repr=False)
     _row: dict[str, int] | None = field(default=None, init=False, repr=False)
 
@@ -125,6 +128,10 @@ class FCNetSubstrate(Substrate):
     def fidelity_ladder(self) -> tuple[FidelityLevel, ...]:
         return (FidelityLevel(rank=0, config={"epochs": MAX_EPOCHS}),)
 
+    def f1_split(self) -> str:
+        """f1 comes from the validation split (benchmarks.md BM-4)."""
+        return "valid"
+
     def query_f1(self, genotype: Genotype, fidelity: FidelityLevel) -> float:
         epochs = int(fidelity.config.get("epochs", MAX_EPOCHS))
         if not 1 <= epochs <= MAX_EPOCHS:
@@ -134,6 +141,12 @@ class FCNetSubstrate(Substrate):
     def analytic_f2(self, genotype: Genotype) -> float:
         # Like the other tabular benchmarks, read from the table, not analytic.
         return float(self._arrays_row("runtime", genotype))
+
+    def objectives_at_epochs(self, genotype: Genotype, epochs: int):
+        f1, f2 = super().objectives_at_epochs(genotype, epochs)
+        if self.f2_at_fidelity == "observed" and epochs < self.max_epochs():
+            f2 = self.training_seconds(genotype, epochs)
+        return f1, f2
 
     def training_seconds(self, genotype: Genotype, epochs: int) -> float:
         return self.analytic_f2(genotype) * epochs / MAX_EPOCHS

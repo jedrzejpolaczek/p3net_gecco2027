@@ -61,7 +61,7 @@ def shared(monkeypatch, tmp_path, fake_bridge):
 
 def test_own_bridge_skips_library_output_on_stdout(fake_bridge, monkeypatch):
     monkeypatch.delenv(jahs.SERVER_DIR_ENV, raising=False)
-    substrate = jahs.JAHSBench201Substrate()
+    substrate = jahs.JAHSBench201Substrate(f2_source="size_mb")
     try:
         base = float(sum(len(str(v)) for v in GENOTYPE.values[:6]))
         f1, f2 = substrate.objectives(GENOTYPE)
@@ -72,8 +72,8 @@ def test_own_bridge_skips_library_output_on_stdout(fake_bridge, monkeypatch):
 
 
 def test_shared_bridge_is_started_once_and_reused(shared):
-    first = jahs.JAHSBench201Substrate()
-    second = jahs.JAHSBench201Substrate()
+    first = jahs.JAHSBench201Substrate(f2_source="size_mb")
+    second = jahs.JAHSBench201Substrate(f2_source="size_mb")
     try:
         assert first.objectives(GENOTYPE) == second.objectives(GENOTYPE)
         port_file = shared / "jahs-server.port"
@@ -88,7 +88,7 @@ def test_shared_bridge_is_started_once_and_reused(shared):
 
 
 def test_shared_bridge_serves_concurrent_clients_consistently(shared):
-    substrates = [jahs.JAHSBench201Substrate() for _ in range(4)]
+    substrates = [jahs.JAHSBench201Substrate(f2_source="size_mb") for _ in range(4)]
     results: list[list] = [[] for _ in substrates]
     epochs = [1, 7, 22, 67, 200]
 
@@ -111,13 +111,13 @@ def test_shared_bridge_serves_concurrent_clients_consistently(shared):
 
 
 def test_closing_a_substrate_leaves_the_shared_bridge_running(shared):
-    first = jahs.JAHSBench201Substrate()
+    first = jahs.JAHSBench201Substrate(f2_source="size_mb")
     first.objectives(GENOTYPE)
     port_file = shared / "jahs-server.port"
     port = int(port_file.read_text(encoding="utf-8").splitlines()[0])
     first.close()
 
-    second = jahs.JAHSBench201Substrate()
+    second = jahs.JAHSBench201Substrate(f2_source="size_mb")
     try:
         second.objectives(GENOTYPE)
         assert int(port_file.read_text(encoding="utf-8").splitlines()[0]) == port
@@ -126,7 +126,7 @@ def test_closing_a_substrate_leaves_the_shared_bridge_running(shared):
 
 
 def test_bridge_errors_are_raised(shared):
-    substrate = jahs.JAHSBench201Substrate()
+    substrate = jahs.JAHSBench201Substrate(f2_source="size_mb")
     substrate.dataset = "unknown_dataset"
     try:
         with pytest.raises(RuntimeError, match="unknown dataset"):
@@ -136,7 +136,7 @@ def test_bridge_errors_are_raised(shared):
 
 
 def test_shared_bridge_shuts_down_on_request(shared):
-    substrate = jahs.JAHSBench201Substrate()
+    substrate = jahs.JAHSBench201Substrate(f2_source="size_mb")
     substrate.objectives(GENOTYPE)
     substrate.close()
 
@@ -175,7 +175,7 @@ def test_a_bridge_that_cannot_start_fails_immediately(monkeypatch, tmp_path):
     monkeypatch.setattr(jahs, "BRIDGE_SCRIPT", broken)
     monkeypatch.setenv(jahs.SERVER_DIR_ENV, str(tmp_path))
 
-    substrate = jahs.JAHSBench201Substrate()
+    substrate = jahs.JAHSBench201Substrate(f2_source="size_mb")
     started = time.monotonic()
     with pytest.raises(RuntimeError, match="exited with 3"):
         substrate.objectives(GENOTYPE)

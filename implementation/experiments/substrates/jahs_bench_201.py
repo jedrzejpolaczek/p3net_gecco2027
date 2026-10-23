@@ -50,6 +50,8 @@ from file_locks import FileLock
 from search_spaces.nas_genotype import decode_nas_genotype
 from substrates.base import FidelityLevel, Substrate
 
+PARAM_TABLE = Path(__file__).resolve().parent.parent / "results" / "benchmark_tables" / "jahs_param_counts.json"
+
 JAHS_DATASETS: tuple[str, ...] = ("cifar10", "colorectal_histology", "fashion_mnist")
 
 _EXPERIMENTS_ROOT = Path(__file__).resolve().parent.parent
@@ -96,10 +98,21 @@ class JAHSBench201Substrate(Substrate):
 
     dataset: str = "cifar10"
     data_dir: str | Path = DEFAULT_DATA_DIR
+    #: v005 (benchmarks.md BM-3, results/checks/bm3_jahs_size_vs_hp_cifar10.md): f2 = the
+    #: parameter count of the cell network (N = 5, W = 16), from
+    #: results/benchmark_tables/jahs_param_counts.json -- `size_MB` varies with the
+    #: hyperparameters at a fixed cell (surrogate noise). v004 used f2_source="size_mb".
+    f2_source: str = "params"
+    param_table: str | Path = PARAM_TABLE
+    _params: Any = field(default=None, init=False, repr=False)
     _process: Any = field(default=None, init=False, repr=False)
     _stderr: Any = field(default=None, init=False, repr=False)
     _socket: Any = field(default=None, init=False, repr=False)
     _stream: Any = field(default=None, init=False, repr=False)
+    #: BM-5 / #29: seconds spent in queries that (re)started the bridge or were this instance's first
+    #: query (bridge start, dataset load, waiting for the load lock); cumulative over the instance.
+    surrogate_load_seconds_total: float = field(default=0.0, init=False, repr=False)
+    _queried: bool = field(default=False, init=False, repr=False)
     _query_cache: dict[tuple[Genotype, int], dict[str, float]] = field(
         default_factory=dict, init=False, repr=False
     )
@@ -287,6 +300,8 @@ class JAHSBench201Substrate(Substrate):
             "dataset": self.dataset,
             "epochs": epochs,
         }
+        loading = not self._queried or self._process is not None and self._process.poll() is not None
+        started = time.perf_counter()
         server_dir = os.environ.get(SERVER_DIR_ENV)
         if server_dir:
             # One bridge for the whole machine (SERVER_DIR_ENV's docstring).
@@ -312,15 +327,31 @@ class JAHSBench201Substrate(Substrate):
                     f"non-response line(s)): {stderr}"
                 )
             response = json.loads(line)
+        if loading:
+            self.surrogate_load_seconds_total += time.perf_counter() - started
+        self._queried = True
         if "error" in response:
             raise RuntimeError(f"jahs-bench bridge query failed: {response['error']}")
         self._query_cache[cache_key] = response
         return response
 
+    def f1_split(self) -> str:
+        return "valid"
+
+    def param_count(self, genotype: Genotype) -> float:
+        """BM-3: analytic parameter count of the cell (independent of the hyperparameters)."""
+        if self._params is None:
+            self._params = json.loads(Path(self.param_table).read_text(encoding="utf-8"))["params"]
+        edges = decode_nas_genotype(genotype).edges
+        arch = f"|{edges[0]}~0|+|{edges[1]}~0|{edges[2]}~1|+|{edges[3]}~0|{edges[4]}~1|{edges[5]}~2|"
+        return float(self._params[arch][self.dataset])
+
     def _query(self, genotype: Genotype, fidelity: FidelityLevel) -> tuple[float, float]:
         response = self._response(genotype, fidelity.config.get("epochs", 200))
         error_rate = 100.0 - response["valid_acc"]
-        return error_rate, response["size_mb"]
+        if self.f2_source == "params":
+            return error_rate, self.param_count(genotype)
+        return error_rate, response["size_mb"]  # v004
 
     def query_f1(self, genotype: Genotype, fidelity: FidelityLevel) -> float:
         error_rate, _ = self._query(genotype, fidelity)

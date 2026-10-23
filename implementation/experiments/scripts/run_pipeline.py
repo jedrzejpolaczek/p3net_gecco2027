@@ -110,6 +110,7 @@ import psutil  # noqa: E402
 import yaml  # noqa: E402
 
 from file_locks import FileLock, lock_is_stale, release_lock, try_lock  # noqa: E402
+from measurement.v005_checks import all_ok  # noqa: E402
 from scripts import run_experiment  # noqa: E402
 
 DEFAULT_PLAN = EXPERIMENTS_ROOT / "configs" / "pipeline" / "v004.yaml"
@@ -810,6 +811,31 @@ def preflight(points: Iterable[Point]) -> list[str]:
     return problems
 
 
+NOTES_PLANS = REPO_ROOT / "notes" / "plans"
+
+
+def cards_and_claims(notes: Path = NOTES_PLANS) -> dict[str, Any]:
+    """v005-verification-protocol.md §5.5: every source card approved (status line
+    "ZATWIERDZONA"); every row of v005-claims.md names a test and is marked as passing."""
+    problems: list[str] = []
+    for card in sorted((notes / "v005-sources").glob("*.md")):
+        status = next((ln for ln in card.read_text(encoding="utf-8").splitlines() if ln.startswith("Status:")), "")
+        if "ZATWIERDZONA" not in status:
+            problems.append(f"card not approved: {card.name}")
+    claims = notes / "v005-claims.md"
+    if not claims.exists():
+        problems.append("v005-claims.md missing")
+    else:
+        for ln in claims.read_text(encoding="utf-8").splitlines():
+            cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+            if len(cells) >= 5 and cells[0].startswith("C-"):
+                if not cells[3] or cells[3] in ("-", "—"):
+                    problems.append(f"{cells[0]}: no test")
+                if "✅" not in cells[4] and "niesprawdzalne" not in cells[4]:
+                    problems.append(f"{cells[0]}: status {ascii(cells[4])}")  # ascii: Windows consoles
+    return {"passed": not problems, "problems": problems}
+
+
 def run_checks(
     stage: dict[str, Any],
     plan_points: list[Point],
@@ -824,7 +850,7 @@ def run_checks(
             pipeline.log("CHECKS already passed for this code state -- skipped")
             return True
 
-    results: dict[str, Any] = {"git": fingerprint, "suites": {}, "determinism": {}}
+    results: dict[str, Any] = {"git": fingerprint, "suites": {}, "determinism": {}, "level4": {}}
     lib_root = EXPERIMENTS_ROOT.parent / "lib"
     env = dict(os.environ, PYTHONPATH=str(lib_root / "src"))
     for name, cwd in (("lib", lib_root), ("experiments", EXPERIMENTS_ROOT)):
@@ -853,11 +879,24 @@ def run_checks(
             same = histories[0] == histories[1]
             results["determinism"][method] = same
             pipeline.log(f"CHECKS determinism {method}: {'identical' if same else 'DIFFERS'}")
+            level4 = getattr(r.method, "level4", None)  # v005 methods (measurement/v005_checks.py)
+            if level4 is not None:
+                ok = all_ok(level4)
+                results["level4"][method] = {"passed": ok, "checks": level4}
+                pipeline.log(f"CHECKS level 4 {method}: {'passed' if ok else 'FAILED'}")
     finally:
         _close(substrate)
 
-    passed = all(s["returncode"] == 0 for s in results["suites"].values()) and all(
-        results["determinism"].values()
+    if stage.get("cards", False):  # protocol §5.5: approved source cards, every claim has a test
+        results["cards"] = cards_and_claims()
+        pipeline.log(f"CHECKS cards/claims: {'passed' if results['cards']['passed'] else 'FAILED'} "
+                     f"{results['cards']['problems'][:5]}")
+
+    passed = (
+        all(s["returncode"] == 0 for s in results["suites"].values())
+        and all(results["determinism"].values())
+        and all(v["passed"] for v in results["level4"].values())
+        and results.get("cards", {"passed": True})["passed"]
     )
     results["passed"] = passed
     marker.write_text(json.dumps(results, indent=2), encoding="utf-8")

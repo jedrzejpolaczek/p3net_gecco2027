@@ -55,6 +55,9 @@ class NASHPOBenchIISubstrate(Substrate):
     """
 
     data_dir: str | Path = DEFAULT_DATA_DIR
+    #: MF-1 a (v005, mf-track.md): f2 at e < E epochs is the time observed up to epoch e
+    #: (`training_seconds`); "full" = v004 (time of the whole training at every fidelity).
+    f2_at_fidelity: str = "observed"
     _api: Any = field(default=None, init=False, repr=False)
     _query_cache: dict[tuple[Genotype, int], tuple[float, float]] = field(
         default_factory=dict, init=False, repr=False
@@ -110,6 +113,10 @@ class NASHPOBenchIISubstrate(Substrate):
         self._query_cache[cache_key] = result
         return result
 
+    def f1_split(self) -> str:
+        """f1 comes from the validation split (benchmarks.md BM-4)."""
+        return "valid"
+
     def query_f1(self, genotype: Genotype, fidelity: FidelityLevel) -> float:
         error_rate, _ = self._query(genotype, fidelity)
         return error_rate
@@ -119,6 +126,12 @@ class NASHPOBenchIISubstrate(Substrate):
         # -- shares the real query cache with query_f1, always at r_K.
         _, cost = self._query(genotype, self.fidelity_ladder()[-1])
         return cost
+
+    def objectives_at_epochs(self, genotype: Genotype, epochs: int):
+        f1, f2 = super().objectives_at_epochs(genotype, epochs)
+        if self.f2_at_fidelity == "observed" and epochs < self.max_epochs():
+            f2 = self.training_seconds(genotype, epochs)
+        return f1, f2
 
     def training_seconds(self, genotype: Genotype, epochs: int) -> float:
         """Training plus per-epoch validation time up to `epochs` -- the

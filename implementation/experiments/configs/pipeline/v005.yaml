@@ -1,0 +1,99 @@
+# Experiment plan for paper v0.0.5 -- DRAFT until the v005 preregistration freezes it
+# (notes/plans/v005-plan.md, A1/A12; seeds 61-90 = confirmation seeds).
+#
+# Consumed by scripts/run_pipeline.py like v004.yaml (one run root = one plan = one code
+# version). Methods are the v005 implementations (configs/methods/v005_*.yaml, run
+# through methods/v005_adapter.py); the v004 plan and configs are left as they were.
+
+name: v005
+
+search_spaces: &spaces
+  - nas_bench_201_v005
+  - nas_hpo_bench_ii_v005
+  - jahs_bench_201_v005
+  - jahs_bench_201_colorectal_v005
+  - jahs_bench_201_fashion_v005
+  - fcnet_protein_structure_v005
+  - fcnet_naval_propulsion_v005
+  - fcnet_parkinsons_telemonitoring_v005
+  - fcnet_slice_localization_v005
+mf_search_spaces: &mf_spaces  # mf-track.md: NB201 has a single fidelity
+  - nas_hpo_bench_ii_v005
+  - jahs_bench_201_v005
+  - jahs_bench_201_colorectal_v005
+  - jahs_bench_201_fashion_v005
+  - fcnet_protein_structure_v005
+  - fcnet_naval_propulsion_v005
+  - fcnet_parkinsons_telemonitoring_v005
+  - fcnet_slice_localization_v005
+budgets: &budgets [50, 100, 200, 350]
+
+method_groups:
+  main: &main
+    - v005_p3net
+    - v005_p3net_gate
+    - v005_p3net_nolink
+    - v005_p3_canonical
+    - v005_mo_dsa
+    - v005_mo_psa
+    - v005_nsga_net
+    - v005_nsganetv2
+    - v005_reinforce
+    - v005_regevo
+    - v005_mo_ls
+    - v005_shemoa
+    - v005_mobananas
+    - v005_motpe
+    - v005_nsga3
+    - v005_smac3_parego
+    - v005_vizier
+    - v005_qnehvi
+    - v005_qparego
+    - v005_moead
+    - v005_random_search
+  elympus: &elympus  # separate track, supplement (A7)
+    - v005_p3_elympus
+  mf: &mf
+    - v005_hyperband
+    - v005_asha
+    - v005_shemoa_mf
+    - v005_mosh_bananas
+    - v005_mo_bohb
+
+# Same keys as v004.yaml (memory notes there): one JAHS dataset ~12 GB.
+parallel:
+  workers: 6
+  jahs_max_datasets: 1
+
+stages:
+  - name: checks
+    kind: checks
+    # v005-verification-protocol.md §5: test suites (levels 1-2), determinism (every method
+    # twice on the same seed), level 4 on those runs (measurement/v005_checks.py), approved
+    # source cards and a test for every claim (cards: true).
+    cards: true
+    determinism:
+      search_space: nas_hpo_bench_ii_v005
+      budget: 20
+      seed: 1
+
+  - name: main
+    kind: grid
+    methods: [*main]
+    search_spaces: *spaces
+    budgets: *budgets
+    seeds: {from: 61, to: 90}
+
+  - name: elympus
+    kind: grid
+    methods: [*elympus]
+    search_spaces: *spaces
+    budgets: *budgets
+    seeds: {from: 61, to: 90}
+
+  - name: mf
+    kind: grid
+    methods: [*mf]
+    search_spaces: *mf_spaces
+    budgets: *budgets
+    seeds: {from: 61, to: 90}

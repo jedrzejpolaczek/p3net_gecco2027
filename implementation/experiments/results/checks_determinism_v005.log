@@ -1,0 +1,32 @@
+v005_p3net           determinism=identical level4=ok
+v005_p3net_gate      determinism=identical level4=ok
+v005_p3net_nolink    determinism=identical level4=ok
+v005_p3_canonical    determinism=identical level4=ok
+v005_p3_elympus      determinism=identical level4=ok
+v005_mo_dsa          determinism=identical level4=ok
+v005_mo_psa          determinism=identical level4=ok
+v005_nsga_net        determinism=identical level4=ok
+Traceback (most recent call last):
+  File "<stdin>", line 12, in <module>
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\experiments\scripts\run_experiment.py", line 398, in run_single
+    state = runner.run(method)
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\lib\src\p3net\harness\runner.py", line 66, in run
+    proposals = method.propose(state)
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\experiments\methods\v005_adapter.py", line 125, in propose
+    return [self.codec.to_values(g) for g in self.method.propose(self._state)]
+                                             ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\lib\src\p3net\v005\baselines\nsganetv2.py", line 268, in propose
+    batch = self._next(min(K_ITER, remaining))
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\lib\src\p3net\v005\baselines\nsganetv2.py", line 236, in _next
+    n1, m1 = adaptive_switching(X, Y[:, 0], self.rng)
+             ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\lib\src\p3net\v005\baselines\nsganetv2.py", line 119, in adaptive_switching
+    model = _POOL[winner]().fit(X, y, rng)
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\lib\src\p3net\v005\baselines\nsganetv2.py", line 45, in fit
+    self.m = RBFInterpolator(X, y, kernel="cubic", degree=1)
+             ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Workspace\Uczelnia\p3net_gecco2027\implementation\experiments\.venv\Lib\site-packages\scipy\interpolate\_rbfinterp.py", line 321, in __init__
+    raise ValueError(
+    ...<2 lines>...
+        )
+ValueError: At least 9 data points are required when `degree` is 1 and the number of dimensions is 8.
