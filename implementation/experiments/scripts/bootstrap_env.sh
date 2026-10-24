@@ -12,7 +12,7 @@
 #     bash scripts/bootstrap_env.sh
 #
 # Benchmark data is NOT downloaded here -- see scripts/download_data.py and
-# notes/plans/v004-cloud-run.md.
+# notes/archive/v004-cloud-run.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -54,7 +54,7 @@ cat <<'EOF'
 Environments ready. Next:
   uv run python scripts/download_data.py     # FCNet + JAHS surrogates
   # copy data/cache/nashpobench2 and data/cache/nats_bench from a machine
-  # that has them (Google Drive only) -- see notes/plans/v004-cloud-run.md
+  # that has them (Google Drive only) -- see notes/archive/v004-cloud-run.md
   uv run python scripts/check_data.py        # one real query per benchmark
   bash scripts/run_pipeline.sh --workers 8   # the experiments
 EOF

@@ -56,10 +56,13 @@ nohup bash scripts/run_pipeline.sh --plan configs/pipeline/v005-resources.yaml \
     --stages resources_vizier --workers 1 > ~/a8_vizier.log 2>&1 &
 ```
 
-7. Postęp w dowolnej chwili:
+7. Postęp w dowolnej chwili, dla wszystkich trzech faz (A8, Vizier, posthoc): co jest gotowe, co liczy się teraz i jak długo,
+   ETA wg czasów tych samych metod, błędy, RAM, dysk, ostatnie linie logów:
 
 ```bash
-uv run python scripts/run_pipeline.py --plan configs/pipeline/v005-resources.yaml --dry-run
+cd ~/p3net_gecco2027/implementation/experiments
+bash scripts/a8_status.sh                  # raz
+watch -n 300 bash scripts/a8_status.sh     # odświeżanie co 5 min (Ctrl+C kończy podgląd, nie obliczenia)
 ```
 
 ## 4. Wynik
