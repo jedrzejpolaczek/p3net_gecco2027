@@ -250,14 +250,12 @@ def test_fixed_budget_summary_table_scopes_holm_correction_per_cell():
     included in the same call.
 
     Cell "A"/budget 10 has one baseline, completely separated from p3net
-    across 6 paired seeds (exact two-sided Wilcoxon raw p = 2*(1/2)**6 =
-    0.03125): with the correct m=1 family for that cell, this is significant
-    at alpha=0.05 on its own. Cell "B"/budget 10 has three unrelated,
-    perfectly-null baselines (raw p=1.0 each, by construction: exactly half
-    the paired seeds favour each side). Pooling every cell's comparisons into
-    one m=4 family before correcting -- the bug this test guards against --
-    inflates cell A's adjusted p to 0.125, wrongly erasing its significance;
-    scoping the correction to cell A alone must not.
+    across 6 runs each (two-sided Mann-Whitney U, audit A1): with the correct
+    m=1 family for that cell its adjusted p equals the raw p. Cell "B"/budget
+    10 has three unrelated, perfectly-null baselines (raw p=1.0 each, by
+    construction: the same values on both sides). Pooling every cell's
+    comparisons into one m=4 family before correcting -- the bug this test
+    guards against -- would multiply cell A's p by 4.
     """
     runs = []
     # Cell A: p3net vs. "separated" -- p3net strictly ahead in every one of
@@ -265,9 +263,9 @@ def test_fixed_budget_summary_table_scopes_holm_correction_per_cell():
     for seed in range(6):
         runs.append(_run("p3net", "A", 10, seed, [(1.0, 1.0)]))
         runs.append(_run("separated", "A", 10, seed, [(5.0, 5.0)]))
-    # Cell B: p3net vs. three null baselines -- 6 paired seeds each, split
-    # 3-3 so the paired Wilcoxon statistic is exactly at its median (raw
-    # p=1.0), and a p3net row so the cell is picked up at all.
+    # Cell B: p3net vs. three null baselines -- 6 runs each, the same multiset
+    # of values on both sides (raw p=1.0), and a p3net row so the cell is
+    # picked up at all.
     for seed in range(6):
         p3net_point = (1.0, 1.0) if seed < 3 else (5.0, 5.0)
         runs.append(_run("p3net", "B", 10, seed, [p3net_point]))
@@ -277,7 +275,10 @@ def test_fixed_budget_summary_table_scopes_holm_correction_per_cell():
 
     rows = fixed_budget_summary_table(runs)
     separated_row = next(r for r in rows if r.search_space == "A" and r.method == "separated")
-    assert separated_row.adjusted_p_value == pytest.approx(0.03125)
+    from scipy.stats import mannwhitneyu
+
+    raw = mannwhitneyu([1.0] * 6, [5.0] * 6, alternative="two-sided").pvalue
+    assert separated_row.adjusted_p_value == pytest.approx(raw)
     assert separated_row.reject_null is True
 
 

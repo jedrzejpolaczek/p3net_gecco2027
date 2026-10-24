@@ -18,7 +18,7 @@ regression) fails fast rather than after minutes of real queries.
 Usage (from implementation/experiments):
     uv run python scripts/run_nas_bench_201_isolation.py
 
-Writes results/nas_bench_201_isolation_result.md with the Wilcoxon +
+Writes results/nas_bench_201_isolation_result.md with the Mann-Whitney U +
 Holm-Bonferroni + Cliff's delta result for each budget tested -- the
 exact analysis a human would otherwise have to request separately.
 """
@@ -85,7 +85,7 @@ def run_full_grid() -> None:
 
 
 def analyze() -> str:
-    """Wilcoxon signed-rank + Holm-Bonferroni + Cliff's delta, p3net vs
+    """Two-sided Mann-Whitney U + Holm-Bonferroni + Cliff's delta, p3net vs
     random_search, per budget -- the same stats/significance.py machinery
     the main comparison grid uses, scoped to just this one baseline pair
     and search space."""

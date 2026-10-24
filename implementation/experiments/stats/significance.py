@@ -1,8 +1,11 @@
 """
-Statistical comparison: paired Wilcoxon signed-rank + Holm-Bonferroni +
+Statistical comparison: two-sided Mann-Whitney U + Holm-Bonferroni +
 effect size.
 
-Implements paired Wilcoxon signed-rank tests for exactly the defined
+Implements two-sided Mann-Whitney U tests (v004 preregistration §4, audit item A1:
+runs of different arms with the same seed number share no common random numbers, so
+they are not paired -- this replaces the paired Wilcoxon signed-rank test of v0.0.3)
+for exactly the defined
 comparison set -- P3Net vs. each of the other nine arms, per benchmark and
 per budget tier -- NOT every pairwise combination among all arms/
 baselines (the correction count in holm_bonferroni_correction depends on
@@ -21,7 +24,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from scipy.stats import wilcoxon
+from scipy.stats import mannwhitneyu
 
 
 def cliffs_delta(a: Sequence[float], b: Sequence[float]) -> float:
@@ -73,9 +76,9 @@ def holm_bonferroni_correction(
 @dataclass(frozen=True)
 class Comparison:
     """One entry in the defined comparison set: P3Net vs. one other arm,
-    for one benchmark and one budget tier. p3net_scores/baseline_scores
-    are paired (same run seed at the same index in both) -- required by
-    the paired Wilcoxon signed-rank test."""
+    for one benchmark and one budget tier. p3net_scores/baseline_scores are
+    the per-seed values of each arm -- independent samples, possibly of
+    different sizes (a missing run is missing, not imputed)."""
 
     baseline: str
     benchmark: str
@@ -101,12 +104,12 @@ def compare_p3net_to_baselines(
     p_values: list[float] = []
     effect_sizes: list[float] = []
     for comparison in comparisons:
-        if len(comparison.p3net_scores) != len(comparison.baseline_scores):
+        if len(comparison.p3net_scores) < 2 or len(comparison.baseline_scores) < 2:
             raise ValueError(
-                f"paired comparison requires equal-length paired samples "
+                f"Mann-Whitney U needs at least two values per arm "
                 f"({comparison.baseline}/{comparison.benchmark}/budget{comparison.budget})"
             )
-        _, p_value = wilcoxon(comparison.p3net_scores, comparison.baseline_scores)
+        _, p_value = mannwhitneyu(comparison.p3net_scores, comparison.baseline_scores, alternative="two-sided")
         p_values.append(float(p_value))
         effect_sizes.append(cliffs_delta(comparison.p3net_scores, comparison.baseline_scores))
 

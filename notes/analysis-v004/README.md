@@ -35,6 +35,8 @@ Python: `implementation/experiments/.venv` (można nadpisać zmienną `PY`).
 | `analyze.py` | zamraża fronty JAHS/NB201 (prereg §3: s1+s3+s7, seedy 1–30), liczy metrykę per przebieg (HV 2D względem frontu albo IGD+ znormalizowany do frontu oracle), testy Q1–Q4, Q7, vs RS, NB201 (dwustronny MWU, Holm w komórce, Cliff's δ) | `per_run.csv`, `comparisons.csv`, `summary.csv`, `fronts_info.json`, `diag.pkl` |
 | `timing.py` | tabela z etapu s9 (sekwencyjnie, budżet 350, seed 1) | `timing.csv` |
 | `ladder.py` | rozkład S5 → RF → RF+FIHC → RF+FIHC-eLyMPuS na kroki; jakość surogatu z `surrogate_quality_log`; profil f1/f2 ocenionych punktów | wydruk |
+| `equivalence.py` | A9: TOST (bootstrapowy 90% CI Cliff's δ, marginesy 0.147 / 0.33) dla par „bez różnicy” i S4′ vs S5 | `equivalence.csv`, wydruk |
+| `hvdecomp.py` | A9: HV JAHS rozbity na tanią / dokładną część frontu (front zamrożony A6); `duplication_rate` per metoda | `hvdecomp.csv`, wydruk |
 | `summaries.py` | zestawienia: wygrane/porażki per grupa przestrzeni, vs RS, Q2/Q3, rankingi wg typu problemu (wszystkie budżety i tylko 50/100), udział bootstrapu, kompromis jakość–czas względem S5 | `summaries.txt` |
 
 ## Konwencje

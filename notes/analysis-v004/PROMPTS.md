@@ -106,7 +106,7 @@ jeśli coś liczysz lub sprawdzasz dodatkowo, napisz to.
 Zadanie: skonfrontować wyniki z artykułem v0.0.3, checklistą audytu, notatką o usprawnieniach i literaturą — jako materiał do dyskusji
 o aktualizacji artykułu. Raport zapisuj przyrostowo do notes/analysis-v004/reports/03-paper-confrontation.md. Nie edytuj artykułu.
 
-1. Checklista notes/plans/v004-audit-checklist.md, punkty B1–B10: dla każdego — która gałąź się zrealizowała, z jakim dowodem, co to zmienia w tekście.
+1. Checklista notes/archive/v004-audit-checklist.md, punkty B1–B10: dla każdego — która gałąź się zrealizowała, z jakim dowodem, co to zmienia w tekście.
 2. Każde twierdzenie artykułu chapters/v003/ (abstrakt, kontrybucje, Problem Formulation, Proposed Optimizer, Setup, Headline, Diagnosis, Isolation,
    Wnioski, Limitations, Future work, także Related Work tam, gdzie dotyka wyników): utrzymane / do zmiany / upada — z uzasadnieniem i odnośnikiem
    do raportu 1 lub 2. Osobno: zdania opisujące metody, które raport 1 wykazał jako nieścisłe (np. opis surogatu, piramidy, baseline'ów).

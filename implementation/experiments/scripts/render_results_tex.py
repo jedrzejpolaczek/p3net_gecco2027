@@ -151,14 +151,25 @@ def render_fixed_budget_tables(rows: list[Row]) -> str:
         metric_key = space_rows[0].metric
         metric = METRIC_NAMES.get(metric_key, metric_key)
         precision = 4
+        # A2 (audit): n from the data -- a cell can have fewer runs -- and the size of each
+        # budget's Holm family whenever it differs (e.g. the GP arms ran only at 50 and 100).
+        ns = sorted({r.n for r in space_rows})
+        n_text = f"$n={ns[0]}$ runs per row" if len(ns) == 1 else f"$n={ns[0]}$--${ns[-1]}$ runs per row"
+        family = {
+            b: sum(1 for r in space_rows if r.budget == b and r.method != "p3net" and r.adj_p is not None)
+            for b in budgets
+        }
+        fam_text = ""
+        if len(set(family.values())) > 1:
+            fam_text = " Holm family size: " + ", ".join(f"{m} at budget {b}" for b, m in sorted(family.items())) + "."
         out += [
             "\\begin{table}[t]",
             "    \\centering",
             "    \\footnotesize",
             f"    \\caption{{Fixed-budget summary, {SPACE_NAMES[space]}: median and IQR of {metric}; "
-            "Holm--Bonferroni-corrected Wilcoxon $p$ and Cliff's $\\delta$ of each method vs.\\ P3Net, "
-            "corrected per (search space, budget) cell. $n=30$ seeds per row; $^{*}$ rejects $H_0$ at "
-            "$\\alpha=0.05$. Positive $\\delta$ favours P3Net.}",
+            "Holm--Bonferroni-corrected two-sided Mann--Whitney $U$ $p$ and Cliff's $\\delta$ of each method "
+            f"vs.\\ P3Net, corrected per (search space, budget) cell.{fam_text} {n_text}; $^{{*}}$ rejects "
+            "$H_0$ at $\\alpha=0.05$; -- = no comparison (fewer than two runs). Positive $\\delta$ favours P3Net.}",
             f"    \\label{{tab:fixed-budget-{SPACE_LABELS[space]}}}",
             "    \\begin{tabular}{@{}lrrrr@{}}",
             "        \\toprule",
@@ -175,11 +186,13 @@ def render_fixed_budget_tables(rows: list[Row]) -> str:
                         f"\\textbf{{{r.iqr:.{precision}f}}} & -- & -- \\\\"
                     )
                     continue
-                p = f"{r.adj_p:.3f}"
+                # A2: an arm without a comparison in this cell renders "--", like the heatmaps
+                p = "--" if r.adj_p is None else f"{r.adj_p:.3f}"
                 if r.reject:
                     p = f"\\textbf{{{p}$^{{*}}$}}"
+                effect = "--" if r.effect is None else f"{r.effect:+.3f}"
                 out.append(
-                    f"        {name} & {r.median:.{precision}f} & {r.iqr:.{precision}f} & {p} & {r.effect:+.3f} \\\\"
+                    f"        {name} & {r.median:.{precision}f} & {r.iqr:.{precision}f} & {p} & {effect} \\\\"
                 )
         out += ["        \\bottomrule", "    \\end{tabular}", "\\end{table}", ""]
     return "\n".join(out)

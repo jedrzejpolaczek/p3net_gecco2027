@@ -109,180 +109,138 @@ def _cell_label(row: Row) -> str:
     return f"{SPACE_NAMES.get(row.search_space, row.search_space)}, budget~{row.budget}"
 
 
-def render_fixed_budget_paragraph(rows: list[Row]) -> str:
+def reference_method(rows: list[Row]) -> str:
+    """A3 (audit): the reference arm, read from the data -- the method with no comparison of
+    its own in every cell where other methods have one."""
+    cells: dict[tuple[str, int], list[Row]] = defaultdict(list)
+    for r in rows:
+        cells[(r.search_space, r.budget)].append(r)
+    candidates = None
+    for cell_rows in cells.values():
+        if not any(r.reject is not None for r in cell_rows):
+            continue
+        here = {r.method for r in cell_rows if r.reject is None and r.adj_p is None}
+        candidates = here if candidates is None else candidates & here
+    if not candidates or len(candidates) != 1:
+        raise ValueError(f"cannot identify the reference arm from the table: {sorted(candidates or [])}")
+    return next(iter(candidates))
+
+
+def _name(method: str) -> str:
+    return DISPLAY_NAMES.get(method, method)
+
+
+def _favours_ref(r: Row) -> bool:
+    return bool(r.reject) and (r.effect or 0) > 0
+
+
+def _favours_base(r: Row) -> bool:
+    return bool(r.reject) and (r.effect or 0) < 0
+
+
+def render_fixed_budget_paragraph(rows: list[Row], families: dict[str, set[str]] | None = None) -> str:
+    """A3: every count with its direction, every significant result listed (no top-k), the
+    reference arm from the data; optional method families (e.g. the reference's own
+    engine) come from the caller, not from the text."""
+    ref = _name(reference_method(rows))
     comparisons = [r for r in rows if r.reject is not None]
     rejected = [r for r in comparisons if r.reject]
-    favour_ref = [r for r in rejected if (r.effect or 0) > 0]
-    favour_base = [r for r in rejected if (r.effect or 0) < 0]
+    favour_ref = [r for r in rejected if _favours_ref(r)]
+    favour_base = [r for r in rejected if _favours_base(r)]
 
-    ref_internal = [r for r in favour_ref if r.method in P3_ENGINE_FAMILY]
-    ref_external = [r for r in favour_ref if r.method not in P3_ENGINE_FAMILY]
-    base_internal = [r for r in favour_base if r.method in P3_ENGINE_FAMILY]
-    base_external = [r for r in favour_base if r.method not in P3_ENGINE_FAMILY]
-
-    def listing(items: list[Row], limit: int = 4) -> str:
-        parts = [
-            f"{DISPLAY_NAMES.get(r.method, r.method)}, {_cell_label(r)}, "
-            f"$\\delta={r.effect:+.3f}$, $p={r.adj_p:.3f}$"
-            for r in sorted(items, key=lambda r: -abs(r.effect or 0))[:limit]
-        ]
-        return "; ".join(parts)
+    def listing(items: list[Row]) -> str:
+        return "; ".join(
+            f"{_name(r.method)}, {_cell_label(r)}, $\\delta={r.effect:+.3f}$, $p={r.adj_p:.3f}$"
+            for r in sorted(items, key=lambda r: (r.method, r.search_space, r.budget))
+        )
 
     out = [
-        f"\\textbf{{{len(rejected)} of the {len(comparisons)} comparisons reject the null "
-        f"hypothesis}} at $\\alpha=0.05$. "
-        f"{_word(len(favour_base)).capitalize()} favour the baseline over P3Net; "
-        f"{_word(len(favour_ref))} favour P3Net. "
-        "The composition of each side matters more than the raw count. ",
-        f"Of the {_word(len(favour_ref))} P3Net-favouring rejections, {_word(len(ref_internal))} "
-        f"{'is' if len(ref_internal) == 1 else 'are'} internal to the P3 engine's own "
-        "surrogate-type/population comparisons (P3-alone, P3-alone-pop20, P3-alone-pop40, or "
-        "P3+absolute-regressor) -- exactly the family the central question "
-        "(Section~\\ref{sec:introduction}) is staked on -- and "
-        f"{_word(len(ref_external))} {'is' if len(ref_external) == 1 else 'are'} "
-        "against a differently-engineered baseline",
+        f"\\textbf{{{len(rejected)} of the {len(comparisons)} comparisons reject the null hypothesis}} "
+        f"at $\\alpha=0.05$. {_word(len(favour_base)).capitalize()} favour the baseline over {ref}; "
+        f"{_word(len(favour_ref))} favour {ref}."
     ]
-    if ref_external:
-        out.append(f" ({listing(ref_external)})")
-    out.append(". ")
-    out.append(
-        f"Of the {_word(len(favour_base))} baseline-favouring rejections, "
-        f"{_word(len(base_external))} "
-        f"{'is a loss' if len(base_external) == 1 else 'are losses'} to a "
-        "differently-engineered method (SH-EMOA, TPE, NSGA-Net, or NSGANetV2) and "
-        f"{_word(len(base_internal))} "
-        f"{'is a loss' if len(base_internal) == 1 else 'are losses'} \\emph{{within}} the "
-        "P3-engine family itself -- cases where plain P3-alone, its population-size variants, "
-        "or the absolute-regressor variant beats P3Net's own relative surrogate outright"
-    )
-    if base_internal:
-        out.append(f" ({listing(base_internal)})")
-    out.append(".")
+    for label, members in (families or {}).items():
+        fr = [r for r in favour_ref if r.method in members]
+        fb = [r for r in favour_base if r.method in members]
+        n = sum(1 for r in comparisons if r.method in members)
+        out.append(f" Within {label} ({n} comparisons): {_word(len(fr))} favour {ref}, "
+                   f"{_word(len(fb))} favour the other arm.")
+    if favour_ref:
+        out.append(f" Significant in favour of {ref}: {listing(favour_ref)}.")
+    if favour_base:
+        out.append(f" Significant in favour of the baseline: {listing(favour_base)}.")
     return "".join(out)
 
 
-def render_ablation_family_paragraph(rows: list[Row]) -> str:
-    by_space: dict[str, list[Row]] = defaultdict(list)
-    for r in rows:
-        if r.reject is not None and r.method in P3_ENGINE_FAMILY:
-            by_space[r.search_space].append(r)
-
+def render_ablation_family_paragraph(rows: list[Row], family: set[str] | None = None) -> str:
+    """Per search space, the reference arm against the given family (A3: the family is an
+    argument, budget counts come from the data). Without a family: empty."""
+    if not family:
+        return ""
+    ref = _name(reference_method(rows))
     sentences = []
-    for space in sorted(by_space, key=lambda s: -sum(1 for r in by_space[s] if r.reject and (r.effect or 0) > 0)):
-        wins = [r for r in by_space[space] if r.reject and (r.effect or 0) > 0]
-        losses = [r for r in by_space[space] if r.reject and (r.effect or 0) < 0]
+    for space in sorted({r.search_space for r in rows}):
+        space_rows = [r for r in rows if r.search_space == space and r.reject is not None and r.method in family]
+        if not space_rows:
+            continue
+        n_budgets = len({r.budget for r in rows if r.search_space == space})
+        wins = [r for r in space_rows if _favours_ref(r)]
+        losses = [r for r in space_rows if _favours_base(r)]
         per_arm: dict[str, int] = defaultdict(int)
         for r in wins:
             per_arm[r.method] += 1
-        detail = ", ".join(
-            f"{DISPLAY_NAMES.get(m, m)} at {v} of 4 budgets" for m, v in sorted(per_arm.items())
-        )
+        detail = ", ".join(f"{_name(m)} at {v} of {n_budgets} budgets" for m, v in sorted(per_arm.items()))
+        loss_detail = ", ".join(f"{_name(r.method)} at budget~{r.budget} ($\\delta={r.effect:+.3f}$)"
+                                for r in sorted(losses, key=lambda r: (r.budget, r.method)))
         name = SPACE_NAMES.get(space, space)
         if wins and not losses:
-            sentences.append(f"On {name}, P3Net significantly beats {detail}, with no ablation loss anywhere.")
-        elif wins and losses:
-            loss_detail = ", ".join(
-                f"{DISPLAY_NAMES.get(r.method, r.method)} at budget~{r.budget} "
-                f"($\\delta={r.effect:+.3f}$)"
-                for r in sorted(losses, key=lambda r: r.budget)
-            )
-            sentences.append(
-                f"On {name}, P3Net beats {detail}, but loses to {loss_detail}."
-            )
+            sentences.append(f"On {name}, {ref} significantly beats {detail}, with no loss in this family.")
+        elif wins:
+            sentences.append(f"On {name}, {ref} beats {detail}, but loses to {loss_detail}.")
         elif losses:
-            loss_detail = ", ".join(
-                f"{DISPLAY_NAMES.get(r.method, r.method)} at budget~{r.budget} "
-                f"($\\delta={r.effect:+.3f}$)"
-                for r in sorted(losses, key=lambda r: r.budget)
-            )
-            sentences.append(
-                f"On {name}, no ablation comparison favours P3Net at any budget, and it loses to "
-                f"{loss_detail}."
-            )
+            sentences.append(f"On {name}, no comparison in this family favours {ref}; it loses to {loss_detail}.")
         else:
-            sentences.append(
-                f"On {name}, no ablation comparison reaches significance in either direction."
-            )
+            sentences.append(f"On {name}, no comparison in this family reaches significance in either direction.")
     return " ".join(sentences)
 
 
-def render_external_trend_paragraph(rows: list[Row]) -> str:
-    """How losses to differently-engineered baselines grow with budget, and
-    the primary-baseline (NSGANetV2) record per search space."""
-    external = {"sh_emoa", "tpe", "nsga_net", "nsganetv2"}
+def render_external_trend_paragraph(rows: list[Row], external: set[str] | None = None) -> str:
+    """Significant results by budget, both directions (A3), over `external` arms (default: all
+    non-reference arms)."""
+    ref_key = reference_method(rows)
+    ref = _name(ref_key)
+    arms = external or {r.method for r in rows} - {ref_key}
     budgets = sorted({r.budget for r in rows})
-    losses = {
-        b: sum(
-            1
-            for r in rows
-            if r.budget == b and r.method in external and r.reject and (r.effect or 0) < 0
-        )
-        for b in budgets
-    }
-    trend = ", ".join(
-        (f"none at budget~{b}" if losses[b] == 0 else f"{losses[b]} at budget~{b}") for b in budgets
-    )
-
-    nsga2 = [r for r in rows if r.method == "nsganetv2" and r.reject is not None]
-    by_space: dict[str, list[Row]] = defaultdict(list)
-    for r in nsga2:
-        by_space[r.search_space].append(r)
-    lost_everywhere_from: list[str] = []
-    never: list[str] = []
-    other: list[str] = []
-    for space, space_rows in sorted(by_space.items()):
-        sig_losses = sorted(r.budget for r in space_rows if r.reject and (r.effect or 0) < 0)
-        sig_wins = [r for r in space_rows if r.reject and (r.effect or 0) > 0]
-        name = SPACE_NAMES.get(space, space)
-        if not sig_losses and not sig_wins:
-            never.append(name)
-        elif sig_losses and not sig_wins and sig_losses == [b for b in budgets if b >= sig_losses[0]]:
-            lost_everywhere_from.append(f"{name} (from budget~{sig_losses[0]})")
-        else:
-            other.append(name)
-
-    parts = [f"Significant losses to SH-EMOA, TPE, NSGA-Net, or NSGANetV2 grow with budget: {trend}."]
-    if lost_everywhere_from or never:
-        clause = "Against NSGANetV2 specifically, P3Net"
-        pieces = []
-        if lost_everywhere_from:
-            pieces.append(
-                "loses significantly at every budget on " + " and ".join(lost_everywhere_from)
-            )
-        if never:
-            pieces.append("does not separate at any budget on " + " or ".join(never))
-        parts.append(clause + " " + ", and ".join(pieces) + ".")
-    if other:
-        parts.append("The NSGANetV2 comparison is mixed on " + ", ".join(other) + ".")
-    return " ".join(parts)
+    parts = []
+    for b in budgets:
+        cell = [r for r in rows if r.budget == b and r.method in arms and r.reject is not None]
+        parts.append(f"budget~{b}: {sum(_favours_ref(r) for r in cell)} for {ref}, "
+                     f"{sum(_favours_base(r) for r in cell)} against, of {len(cell)}")
+    return "Significant comparisons by budget -- " + "; ".join(parts) + "."
 
 
 def render_ranking_paragraph(rows: list[Row]) -> str:
-    """Ranks are reported only as a compact per-space trajectory. The
-    prose version of this paragraph was wrong in every one of its four
-    claims; a generated trajectory is both correct and shorter."""
+    """Rank of the reference arm by median primary metric per search space (budgets and
+    reference from the data)."""
+    ref_key = reference_method(rows)
     by_cell: dict[tuple[str, int], list[Row]] = defaultdict(list)
     for r in rows:
         by_cell[(r.search_space, r.budget)].append(r)
-
+    budgets_all = sorted({b for _, b in by_cell})
     lines = []
     for space in sorted({s for s, _ in by_cell}):
         budgets = sorted({b for s, b in by_cell if s == space})
-        ranks = []
-        n_arms = 0
+        ranks, sizes = [], []
         for b in budgets:
             group = by_cell[(space, b)]
             minimised = group[0].metric == "igd_plus"
             ordered = sorted(group, key=lambda r: r.median, reverse=not minimised)
-            n_arms = len(ordered)
-            ranks.append(next(i + 1 for i, r in enumerate(ordered) if r.method == "p3net"))
-        lines.append(
-            f"{SPACE_NAMES.get(space, space)} {'/'.join(str(x) for x in ranks)} of {n_arms}"
-        )
-    return (
-        "P3Net's rank by median primary metric, per search space across the four budget tiers "
-        "(50/100/200/350): " + "; ".join(lines) + "."
-    )
+            sizes.append(len(ordered))
+            ranks.append(next(i + 1 for i, r in enumerate(ordered) if r.method == ref_key))
+        of = str(sizes[0]) if len(set(sizes)) == 1 else "/".join(str(x) for x in sizes)
+        lines.append(f"{SPACE_NAMES.get(space, space)} {'/'.join(str(x) for x in ranks)} of {of}")
+    return (f"{_name(ref_key)}'s rank by median primary metric, per search space across the budget tiers "
+            f"({'/'.join(str(b) for b in budgets_all)}): " + "; ".join(lines) + ".")
 
 
 def main(argv: list[str] | None = None) -> None:

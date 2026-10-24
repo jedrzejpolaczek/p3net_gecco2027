@@ -112,7 +112,7 @@ def test_compare_p3net_to_baselines_applies_holm_correction_across_exactly_the_g
     assert results_with_extra[0].adjusted_p_value >= results_alone[0].adjusted_p_value
 
 
-def test_compare_p3net_to_baselines_rejects_unpaired_samples():
+def test_compare_p3net_to_baselines_rejects_fewer_than_two_values():
     bad = Comparison(
         baseline="random_search",
         benchmark="nas_hpo_bench_ii",
@@ -122,6 +122,16 @@ def test_compare_p3net_to_baselines_rejects_unpaired_samples():
     )
     with pytest.raises(ValueError):
         compare_p3net_to_baselines([bad])
+
+
+def test_compare_p3net_to_baselines_is_two_sided_mann_whitney_on_unequal_samples():
+    """v004 preregistration §4 (audit A1): independent samples, two-sided Mann-Whitney U;
+    unequal sizes are allowed (missing runs are missing, not paired away)."""
+    from scipy.stats import mannwhitneyu
+
+    a, b = (5.0, 4.5, 4.8, 5.2, 4.9, 5.1, 4.7), (8.0, 7.5, 7.8, 8.2, 7.9)
+    result = compare_p3net_to_baselines([Comparison("rs", "x", 50, a, b)])[0]
+    assert result.p_value == pytest.approx(mannwhitneyu(a, b, alternative="two-sided").pvalue)
 
 
 def test_compare_p3net_to_baselines_empty_input():

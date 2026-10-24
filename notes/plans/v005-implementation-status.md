@@ -125,3 +125,22 @@ wcześniej wyjątek przy b = 20). Bramka blokuje dziś tylko brak `v005-claims.m
   FCNet: tysiące konfiguracji) → sort dwukryterialny przez przemiatanie (`mf._fronts_2d`, te same fronty — sprawdzone na
   3000 losowych zbiorach z remisami; kolejność w obrębie frontu wg indeksu). ASHA b = 350: FCNet > 30 min → 285 s,
   NAS-HPO-II → 13 s. Poziom 1 MF 24/24.
+
+## A9 — poprawki kodu raportującego A1–A6 (2026-10-24)
+
+- **A1:** `stats/significance.py` — dwustronny Mann–Whitney U (próby niezależne, różne liczności dozwolone) zamiast
+  sparowanego Wilcoxona; `reporting/tables.py` porównuje wszystkie przebiegi każdego ramienia (nie tylko wspólne seedy);
+  docstringi, podpis tabel i skrypt izolacji NB201 poprawione; testy (`test_significance.py`, regresja zakresu Holma)
+  przepisane na MWU.
+- **A2:** `render_results_tex.py` — „--” przy braku porównania (`adj_p`/`effect` = None), n z danych, rozmiar rodziny
+  Holma per budżet w podpisie, gdy się różni.
+- **A3:** `render_results_narrative.py` — referencja z danych (`reference_method`), liczności zawsze z kierunkiem,
+  wszystkie istotne wyniki (bez top-4), rodziny metod i zbiory ramion jako argumenty, budżety z danych.
+- **A4:** tabela „vs random search” — kolumny „istotnie lepsze” / „istotnie gorsze” (`rejection_counts`).
+- **A5:** `scripts/cost_table_v004.py` → `results/tables/cost_s9.md` (s9: 128 punktów, komplet); adnotacja: ramiona GP
+  mają koszt w s9, ale brak wyników jakości przy b = 200/350; pamięć mostu JAHS w v004 nie zapisana (n/r).
+- **A6:** `scripts/freeze_fronts_v004.py` — fronty best-known JAHS (s1, s3, s7 + GP z gp-small) i NB201 (s5) wyłącznie
+  z seedów 1–30, punkt odniesienia = nadir tych punktów; zapis w `results/reference_fronts/` i
+  `results/tables/reference_front_provenance.md`. Wynik: JAHS 3660 przebiegów (fronty 85 / 25 / 29 punktów; CRC, FMN),
+  NB201 540 przebiegów (front 15); punkty odniesienia w tabeli.
+Testy raportowania 72/72.

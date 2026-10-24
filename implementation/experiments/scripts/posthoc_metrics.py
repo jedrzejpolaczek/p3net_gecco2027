@@ -19,7 +19,7 @@ Crash-safe and resumable like scripts/run_pipeline.py: output is written
 atomically, existing complete outputs are skipped.
 
 Usage (from implementation/experiments):
-    uv run python scripts/posthoc_metrics.py --raw results/runs/<commit>/raw
+    uv run python scripts/posthoc_metrics.py --raw results/runs/<commit>/raw [--pattern "*__jahs_bench_201*"]
 """
 
 from __future__ import annotations
@@ -114,11 +114,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", type=Path, required=True, help="directory of raw run files")
     parser.add_argument("--out", type=Path, default=None, help="default: <raw>/../posthoc")
+    parser.add_argument("--pattern", default="*.json", help='file glob, e.g. "*__jahs_bench_201*"')
     args = parser.parse_args(argv)
     out_dir = args.out or args.raw.parent / "posthoc"
 
     by_space: dict[str, list[Path]] = defaultdict(list)
-    for path in sorted(args.raw.glob("*.json")):
+    for path in sorted(args.raw.glob(args.pattern)):
+        if path.suffix != ".json":
+            continue
         if _complete(out_dir / path.name):
             continue
         by_space[path.name.split("__")[1]].append(path)

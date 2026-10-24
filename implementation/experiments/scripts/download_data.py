@@ -9,7 +9,7 @@
 
 The two manual ones are also the two smallest to copy from a machine that
 already has them, which is what the cloud runbook recommends for all four
-(notes/plans/v004-cloud-run.md): copying the exact bytes that produced the
+(notes/archive/v004-cloud-run.md): copying the exact bytes that produced the
 local results avoids any chance of a different dataset version.
 
 Usage (from implementation/experiments):
@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"{name}: MISSING in {path} -- not downloadable from here "
                 "(Google Drive only); copy it from a machine that has it, see "
-                "notes/plans/v004-cloud-run.md"
+                "notes/archive/v004-cloud-run.md"
             )
             status |= 1
     return status

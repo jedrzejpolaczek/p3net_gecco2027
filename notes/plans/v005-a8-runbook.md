@@ -76,7 +76,26 @@ uv run python scripts/summarize_resources_v005.py results/runs/<run root>
 scp -r user@SERWER:~/p3net_gecco2027/implementation/experiments/results/runs/<run root>  results\runs\
 ```
 
-10. Usuń serwer (rozliczenie godzinowe).
+10. Posthoc JAHS na danych v004 (A9). Uruchamiasz dopiero po kroku 6, bo posthoc ładuje własny most JAHS, około 12 GB
+    na zbiór, i obok A8 by się nie zmieścił. Surowe pliki v004 są w repozytorium, więc nic nie trzeba kopiować.
+    Skrypt można wznawiać po przerwaniu; gotowe pliki są pomijane. Spodziewaj się kilku godzin.
+
+```bash
+cd ~/p3net_gecco2027/implementation/experiments
+nohup bash -c 'for r in b4d25cac gp-small; do
+  uv run python scripts/posthoc_metrics.py --raw results/runs/$r/raw --pattern "*__jahs_bench_201*"; done' \
+    > ~/posthoc_jahs.log 2>&1 &
+grep "file(s) written" ~/posthoc_jahs.log   # na końcu dwie linie: 28080 (b4d25cac) i 1080 (gp-small)
+```
+
+    Kopia na laptopa:
+
+```powershell
+scp -r user@SERWER:~/p3net_gecco2027/implementation/experiments/results/runs/b4d25cac/posthoc  results\runs\b4d25cac\
+scp -r user@SERWER:~/p3net_gecco2027/implementation/experiments/results/runs/gp-small/posthoc  results\runs\gp-small\
+```
+
+11. Usuń serwer (rozliczenie godzinowe).
 
 ## Czego się spodziewać
 

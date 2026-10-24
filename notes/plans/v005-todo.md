@@ -8,15 +8,17 @@ Stan na 2026-10-23. Szczegóły: `v005-plan.md`, `v005-implementation-status.md`
 
 - [x] Poziom 3 na JAHS z celami v005: 26 PASS, 1 TIMEOUT (MO-PSA), 0 FAIL.
 - [x] Statusy w `v005-claims.md`: 43 ✅, 2 czekają na tablicę energii (C-41, C-42).
-- [ ] Analizy na danych v004 (A9): poprawki raportowania A1–A6, S4′ vs S5, TOST dla par „bez różnicy”, dekompozycja HV,
-      JAHS posthoc.
-- [ ] Porządki: nieaktualne komentarze w `configs/methods/p3net_cascade_*.yaml`.
+- [x] A9: poprawki raportowania A1–A6 (fronty zamrożone, `reference_front_provenance.md`).
+- [x] A9: S4′ vs S5, TOST dla par „bez różnicy”, dekompozycja HV + duplikaty → `notes/analysis-v004/reports/04-a9-equivalence-hv.md`.
+- [ ] A9: JAHS posthoc — na Hetznerze po A8 (`v005-a8-runbook.md`, krok 10); analiza po powrocie wyników. — autor uruchamia, Claude analizuje
+- [x] Porządki: odnośniki do `notes/archive/` w `configs/methods/p3net_cascade_*.yaml` (5), `scripts/download_data.py`,
+      `notes/analysis-v004/PROMPTS.md`.
 
 ### Autor projektu
 
 - [x] Runda 6 dla autora testów (Q-49).
-- [ ] Runda 7 dla autora testów (W-BM7: 0.0 dla czasu ładowania, Q-50) — `v005-test-author-prompt.md`.
-- [ ] Commit + push całej pracy (kod, testy, karty, configi `*_v005`, tablice `implementation/experiments/results/
+- [x] Runda 7 dla autora testów (W-BM7: 0.0 dla czasu ładowania, Q-50) — `v005-test-author-prompt.md`.
+- [x] Commit + push całej pracy (kod, testy, karty, configi `*_v005`, tablice `implementation/experiments/results/
       benchmark_tables/`) — po poziomie 3 na JAHS i statusach w `v005-claims.md`.
 - [ ] Test zasobów A8 na Hetznerze wg `v005-a8-runbook.md`; odesłać run root.
 - [ ] Pomiar energii NB201 na laptopie: pilotaż 1000 wejść, potem pełny pomiar (konsola administratora) — koniec etapu A.

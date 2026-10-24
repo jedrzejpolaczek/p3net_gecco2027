@@ -224,6 +224,11 @@ def test_rejection_counts_and_margin_correlation_use_the_rows_they_are_given():
     counts = {c.method: c for c in rejection_counts(ref_rows)}
     assert counts["b0"].cells_significant == 1
     assert counts["b1"].cells_significant == 0
+    # A4: direction -- positive effects favour the reference arm, so b2 (rejected, +0.2) is
+    # worse than the reference; a rejected negative effect is better than it
+    assert counts["b2"].cells_worse_than_reference == 1 and counts["b2"].cells_better_than_reference == 0
+    neg = rejection_counts([row("w", "s", 10, -0.5, True)])[0]
+    assert neg.cells_better_than_reference == 1 and neg.cells_worse_than_reference == 0
 
     result = margin_correlation(ref_rows, ctl_rows)
     assert result is not None

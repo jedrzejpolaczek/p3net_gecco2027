@@ -254,16 +254,17 @@ def fixed_budget_summary_table(
             baseline_scores = scores_by_group.get((search_space, budget, method))
             if not baseline_scores:
                 continue
-            shared_seeds = sorted(set(p3net_scores) & set(baseline_scores))
-            if len(shared_seeds) < 2:
-                continue  # not enough paired seeds for a Wilcoxon signed-rank test
+            if len(p3net_scores) < 2 or len(baseline_scores) < 2:
+                continue  # Mann-Whitney U needs at least two runs per arm
+            # Independent samples (v004 preregistration §4): every run of each arm, not only
+            # the seeds both arms have -- same-number seeds are not paired.
             cell_comparisons.append(
                 Comparison(
                     baseline=method,
                     benchmark=search_space,
                     budget=budget,
-                    p3net_scores=tuple(p3net_scores[s] for s in shared_seeds),
-                    baseline_scores=tuple(baseline_scores[s] for s in shared_seeds),
+                    p3net_scores=tuple(p3net_scores[s] for s in sorted(p3net_scores)),
+                    baseline_scores=tuple(baseline_scores[s] for s in sorted(baseline_scores)),
                 )
             )
         for result in compare_p3net_to_baselines(cell_comparisons, alpha=alpha):

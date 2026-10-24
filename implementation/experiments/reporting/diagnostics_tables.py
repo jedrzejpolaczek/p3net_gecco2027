@@ -573,30 +573,44 @@ class RejectionCountRow:
     method: str
     cells_significant: int
     cells_total: int
+    #: A4 (audit): the significant cells split by direction. Effect sizes in the table are
+    #: oriented so that a positive value favours the table's reference arm (e.g. random search).
+    cells_better_than_reference: int = 0
+    cells_worse_than_reference: int = 0
 
 
 def rejection_counts(rows: Sequence[object]) -> list[RejectionCountRow]:
-    """Per-arm count of (search space, budget) cells in which that arm's
-    comparison against the table's reference arm rejects H0."""
+    """Per-arm count of (search space, budget) cells in which that arm's comparison against
+    the table's reference arm rejects H0 -- in total and by direction (A4: an arm significantly
+    worse than random search must not count like one significantly better)."""
     total: dict[str, int] = defaultdict(int)
     hits: dict[str, int] = defaultdict(int)
+    better: dict[str, int] = defaultdict(int)
+    worse: dict[str, int] = defaultdict(int)
     for r in rows:
         if getattr(r, "reject_null", None) is None:
             continue
         total[r.method] += 1
         if r.reject_null:
             hits[r.method] += 1
+            effect = getattr(r, "effect_size", None) or 0.0
+            if effect < 0:  # favours this arm over the reference
+                better[r.method] += 1
+            elif effect > 0:
+                worse[r.method] += 1
     return [
-        RejectionCountRow(method=m, cells_significant=hits[m], cells_total=total[m])
+        RejectionCountRow(method=m, cells_significant=hits[m], cells_total=total[m],
+                          cells_better_than_reference=better[m], cells_worse_than_reference=worse[m])
         for m in sorted(total)
     ]
 
 
 def render_rejection_counts_markdown(rows: Sequence[RejectionCountRow]) -> str:
-    lines = ["| Method | Cells rejecting H0 | Cells total |", "|---|---|---|"]
-    for r in sorted(rows, key=lambda r: (-r.cells_significant, r.method)):
-        lines.append(f"| {r.method} | {r.cells_significant} | {r.cells_total} |")
-    total_sig = sum(r.cells_significant for r in rows)
-    total_all = sum(r.cells_total for r in rows)
-    lines.append(f"| **all arms** | **{total_sig}** | **{total_all}** |")
+    lines = ["| Method | Cells significantly better than reference | Cells significantly worse than reference "
+             "| Cells total |", "|---|---|---|---|"]
+    for r in sorted(rows, key=lambda r: (-r.cells_better_than_reference, r.cells_worse_than_reference, r.method)):
+        lines.append(f"| {r.method} | {r.cells_better_than_reference} | {r.cells_worse_than_reference} | "
+                     f"{r.cells_total} |")
+    lines.append(f"| **all arms** | **{sum(r.cells_better_than_reference for r in rows)}** | "
+                 f"**{sum(r.cells_worse_than_reference for r in rows)}** | **{sum(r.cells_total for r in rows)}** |")
     return "\n".join(lines) + "\n"
