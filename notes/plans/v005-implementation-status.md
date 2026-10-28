@@ -144,3 +144,21 @@ wcześniej wyjątek przy b = 20). Bramka blokuje dziś tylko brak `v005-claims.m
   `results/tables/reference_front_provenance.md`. Wynik: JAHS 3660 przebiegów (fronty 85 / 25 / 29 punktów; CRC, FMN),
   NB201 540 przebiegów (front 15); punkty odniesienia w tabeli.
 Testy raportowania 72/72.
+
+## A8 — przebieg na Hetznerze (2026-10-24/25, run root `ec1ba9cb`)
+
+- `resources_main` + `resources_mf` (6 workerów): 457/458 po ~20 h. Jedyny brak: `v005_qparego` JAHS C10 b=350.
+- **OOM:** 5 zabitych procesów (14:49–18:58, 9–16 GB RSS każdy). Przy 6 workerach qNEHVI/qParEGO b=350 na JAHS + most
+  JAHS (~12 GB) nie mieszczą się w 30 GB (swap 8 GB); zabity most zrywa połączenie obu ramion GP. qNEHVI przeszedł za 3.
+  próbą (5745 s), qParEGO wyczerpał 3 próby. Zabite próby liczone od zera, w wynikach tylko udana. Zgodne z decyzją A8
+  „bez GP przy b ≥ 200”.
+- Powtórka qParEGO osobno (1 worker), potem Vizier (1 worker, `--max-retries 1`); OOM Viziera przy b=350 też jest wynikiem.
+- Most JAHS przeładowywał zbiory (np. fashion_mnist 2×) — workery rozłożone na różne zbiory; koszt przeładowań wliczony w czas
+  przebiegów, do uwzględnienia w prognozie siatki.
+- Po commicie `e6734ccd9` (tylko skrypt statusu, `bootstrap_env.sh`, runbook — kod metod bez zmian) powtórka qParEGO
+  trafiła do nowego run rootu `e6734ccd`. Z niego bierzemy tylko brakujący punkt (qParEGO JAHS C10 b=350, 1 worker) i
+  Viziera; `summarize_resources_v005.py` przyjmuje kilka run rootów (pierwszy ma pierwszeństwo).
+- **Vizier:** w `e6734ccd` gotowe NB201 i NHB (b=100 i 350; ~30 GB RSS już przy b=100 na NB201). JAHS C10 b=350 zabijany
+  przez OOM przez ~24 h (worker restartowany od zera, bez wpisu w `failures.jsonl`, więc `--max-retries` nie działa)
+  aż do wyczerpania restartów → wynik A8: Vizier b=350 na JAHS nie mieści się w 30 GB. Reszta (JAHS ×3 b=100, FCNet ×4
+  b=100/350, 11 punktów) w osobnym planie `configs/pipeline/v005-resources-vizier-rest.yaml`; CRC/FMN b=350 pominięte.

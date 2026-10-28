@@ -51,8 +51,11 @@ def wall(path):
         d = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    r = d.get("resources") or d.get("diagnostics", {}).get("resources") or {}
-    return r.get("wall_seconds")
+    # full wall time sits in diagnostics.resources (v004 and v005); the v005 top-level "resources" has no wall_seconds
+    for r in (d.get("diagnostics", {}).get("resources") or {}, d.get("resources") or {}):
+        if r.get("wall_seconds") is not None:
+            return r["wall_seconds"]
+    return None
 
 
 root = run_root()

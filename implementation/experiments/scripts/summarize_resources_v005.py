@@ -5,7 +5,10 @@
 - the projected worker-hours of a grid plan (default configs/pipeline/v005.yaml: its
   budgets x search spaces x seeds), interpolating t(b) = t(350) (b / 350)^k per space.
 
-  python scripts/summarize_resources_v005.py RUN_ROOT [--plan configs/pipeline/v005.yaml]
+Several run roots: the first one wins where a point exists in more than one; later roots only fill the gaps
+(e.g. a point re-run alone after an out-of-memory kill in the main root).
+
+  python scripts/summarize_resources_v005.py RUN_ROOT [MORE_RUN_ROOTS ...] [--plan configs/pipeline/v005.yaml]
       [--workers 6] [--out RUN_ROOT/resources_summary.md]
 """
 
@@ -46,12 +49,15 @@ def plan_points(plan_path: Path) -> list[tuple[str, str, int, int]]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("run_root", type=Path)
+    ap.add_argument("run_roots", type=Path, nargs="+")
     ap.add_argument("--plan", type=Path, default=ROOT / "configs" / "pipeline" / "v005.yaml")
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--out", type=Path, default=None)
     a = ap.parse_args()
-    runs = load(a.run_root)
+    runs = {}
+    for root in a.run_roots:
+        for key, r in load(root).items():
+            runs.setdefault(key, r)
     by_method = defaultdict(dict)
     for (m, s, b), r in runs.items():
         by_method[m][(s, b)] = r
@@ -92,7 +98,7 @@ def main() -> None:
     if missing:
         lines.append(f"Not projected (missing measurements): {sorted(missing)[:20]}")
     text = "\n".join(lines)
-    out = a.out or a.run_root / "resources_summary.md"
+    out = a.out or a.run_roots[0] / "resources_summary.md"
     out.write_text(text, encoding="utf-8")
     print(text)
 

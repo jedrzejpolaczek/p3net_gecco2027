@@ -1,0 +1,36 @@
+# A8, the rest of the OSS Vizier stage of v005-resources.yaml (notes/plans/v005-a8-runbook.md).
+#
+# In run root e6734ccd Vizier finished NB201 and NAS-HPO-II at budgets 100 and 350, then JAHS C10 at
+# budget 350 was killed for lack of memory again and again (30 GB RAM + 8 GB swap; ~30 GB already at
+# b=100 on NB201) until the worker restarts ran out. That out-of-memory is the A8 result for Vizier at
+# b=350 on JAHS; colorectal and fashion at b=350 are left out for the same reason.
+# This plan runs the remaining points: JAHS (3 datasets) at b=100 and FCNet (4 datasets) at b=100 and 350.
+# Run alone: --workers 1.
+
+name: v005-resources-vizier-rest
+
+parallel:
+  workers: 1
+  jahs_max_datasets: 1
+
+stages:
+  - name: vizier_jahs_b100
+    kind: grid
+    methods: [v005_vizier]
+    search_spaces:
+      - jahs_bench_201_v005
+      - jahs_bench_201_colorectal_v005
+      - jahs_bench_201_fashion_v005
+    budgets: [100]
+    seeds: [61]
+
+  - name: vizier_fcnet
+    kind: grid
+    methods: [v005_vizier]
+    search_spaces:
+      - fcnet_protein_structure_v005
+      - fcnet_naval_propulsion_v005
+      - fcnet_parkinsons_telemonitoring_v005
+      - fcnet_slice_localization_v005
+    budgets: [100, 350]
+    seeds: [61]
