@@ -24,7 +24,7 @@ Zasady:
 | 7 | Kontrola po przebiegu i analizy z prerejestracji | wyniki do etapu B | Claude | dni pracy | nie (odczyt wyników) | po 6 |
 
 Czekamy (nie blokuje 1–5): **Nina Bartnik** — N-0–N-4 i bramka MO-DSA. Brak odpowiedzi przed prerejestracją →
-założenia Z-B zostają i idą do artykułu.
+założenia Z-B zostają i idą do artykułu. **2026-10-31: autor nie spodziewa się odpowiedzi** → obowiązują założenia Z-B; Limitations (etap C) je opisuje.
 
 ## Zrobione (etap A)
 

@@ -175,10 +175,10 @@ n i siatki dyskretyzacji per przestrzeń, κ per przestrzeń, hiperparametry wsz
 
 ### Zakończenie etapu A
 
-- [ ] Protokół A0 przyjęty; karty źródeł i tabela „zdanie ↔ test” kompletne.
-- [ ] Rejestr decyzji (A2) zatwierdzony.
-- [ ] Wszystkie testy (źródło, integracja, asercje) przechodzą; etap `checks` zielony.
-- [ ] Odtworzenie wyników Bartnik (A6) i zgodność baseline'ów z referencjami (A4) udokumentowane.
+- [x] Protokół A0 przyjęty (2026-10-16, `v005-verification-protocol.md`); karty źródeł i tabela „zdanie ↔ test” kompletne (`v005-claims.md`, 43/45).
+- [x] Rejestr decyzji (A2) zatwierdzony (2026-10-16, `v005-decisions.md`; #28 zastąpione decyzją P1 a 2026-10-31).
+- [ ] Wszystkie testy (źródło, integracja, asercje) przechodzą; etap `checks` zielony. Lokalnie zielone 2026-10-31 (level 1: 310 passed, experiments: 377 passed); `checks` uruchamia się sam na serwerze na starcie przebiegu (poz. 6) — tam się odhacza.
+- [x] Odtworzenie wyników Bartnik (A6) i zgodność baseline'ów z referencjami (A4) udokumentowane (`v005-level2-criteria.md`; Bartnik bez cache energii → tylko poziom 1 + porównanie z SAGOMEA, karta `bartnik-mo-sa-p3-gomea.md` §7).
 - [x] **Odpowiedź M. Przewoźniczka otrzymana (2026-10-21)** (mail 2026-10-20: mieszanie na ścieżce `opt_at_init 5` w OLyMPuS, `v005-level2-criteria.md`).
 - [ ] **Czekamy na odpowiedź Niny Bartnik** (mail 2026-10-16, niejasności N-0–N-4 z `v005-sources/bartnik-mo-sa-p3-gomea.md`). **Dopytanie 2026-10-22:** bramka — percentyl (Alg. 8) czy próg względem elitist jak w kodzie SAGOMEA (poziom 2: −7.5 % vs SAGOMEA).
       Przed prerejestracją: odpowiedź zastępuje założenia Z-B#, brak odpowiedzi — założenia zostają i idą do artykułu.
@@ -186,7 +186,7 @@ n i siatki dyskretyzacji per przestrzeń, κ per przestrzeń, hiperparametry wsz
       stanie go wykonać; pilotaż 5 z 1 000 wejść niezaliczony). Decyzja P1 a (2026-10-31): HW-NAS-Bench, edge GPU;
       tablica zbudowana 2026-10-31 (testy W-BM2, W-BM3 — runda 8).
 - [x] A8 — pomiar czasu i pamięci metod (2026-10-24…29), `v005-a8-analysis.md`.
-- [ ] Prerejestracja v005 zamrożona (seedy 61–90, metryka JAHS, retrening, lista analiz → skrypty → pliki).
+- [ ] Prerejestracja v005 zamrożona (treść zatwierdzona 2026-10-31; zamrożenie = commit, z którego startuje przebieg; seedy 62–91 (R3 b), metryka JAHS, retrening, lista analiz → skrypty → pliki).
 - [ ] Przebieg v005 zakończony; kontrola po przebiegu bez alarmów.
 - [ ] Analizy z prerejestracji v005 policzone.
 
