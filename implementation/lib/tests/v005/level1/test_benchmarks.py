@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import importlib
 import itertools
+import math
 import random
 import re
 import sys
@@ -154,58 +155,120 @@ def test_WBM1_nb201_f1_is_validation_error_mean_over_seeds():
             assert abs(f1 - (100.0 - m["test_acc"])) > 1e-9
 
 
+HWNAS_SHA256_CARD = "57f92c2d7b88814fa337d00f4597c8ca30d507c5a855c18d6fac57e5ad872700"
+HWNAS_PICKLE = EXP / "data" / "cache" / "hw_nas_bench" / "HW-NAS-Bench-v1_0.pickle"
+
+
 @pytest.mark.benchmark_data
 def test_WBM2_nb201_f2_from_complete_energy_table():
-    """W-BM2 (BM-2, #28; interfaces §7 Q-32): f2 = value from the energy
-    table; the table covers all 15 625 architectures and records the
-    hardware and measurement settings (power limit, clock locking, energy
-    method, batch size, temperature log)."""
+    """W-BM2 (BM-2, decision P1 a of 2026-10-31; interfaces supplement round
+    8): f2 = value from the energy table built from HW-NAS-Bench
+    `edgegpu_energy` (Jetson TX2, batch 1, CIFAR-10, mJ per image); the table
+    covers all 15 625 cells and records its source."""
     from p3net.v005 import benchmarks
 
     table = benchmarks.NB201Energy()
     assert len(table) == 15625
     meta = table.metadata()
-    for key in ("gpu_model", "driver", "cuda", "torch"):
-        assert meta.get(key), f"missing hardware metadata {key}"
-    for key in ("power_limit_w", "clocks_locked", "energy_method", "batch_size", "temperature_log"):
-        assert key in meta and meta[key] is not None, f"missing measurement metadata {key}"
-    assert meta["energy_method"] in ("counter", "power_integral")
-    assert isinstance(meta["clocks_locked"], bool)
-    assert float(meta["power_limit_w"]) > 0
-    assert int(meta["batch_size"]) > 0
-    assert len(meta["temperature_log"]) > 0
+    for key in (
+        "source",
+        "source_file",
+        "source_sha256",
+        "metric",
+        "dataset",
+        "device",
+        "runtime",
+        "batch_size",
+        "input_resolution",
+        "unit",
+        "network",
+        "index_mismatches_vs_nats",
+        "n_cells",
+    ):
+        assert key in meta and meta[key] is not None, f"missing source metadata {key}"
+    assert meta["source_file"] == "HW-NAS-Bench-v1_0.pickle"
+    assert meta["metric"] == "edgegpu_energy"
+    assert meta["dataset"] == "cifar10"
+    assert meta["batch_size"] == 1
+    assert meta["input_resolution"] == 32
+    assert meta["unit"] == "mJ per image"
+    assert meta["n_cells"] == 15625
+    assert {"name", "C", "N", "num_classes"} <= set(meta["network"])
     sub = _substrate("NASBench201Substrate", "substrates.nas_bench_201")
     g = _cell_space("NB201").sample_uniform(random.Random(1))
     assert sub.objectives(g)[1] == table.energy(g)
 
 
+def _arch_to_genotype(arch_str):
+    """'|op~0|+|op~0|op~1|+|...|' -> Genotype of op names in arch-string
+    order (the NB201 coordinate order, checked by round trip)."""
+    ops = tuple(
+        tok.split("~")[0] for seg in arch_str.split("+") for tok in seg.strip("|").split("|")
+    )
+    mod = _exp("search_spaces.nas_bench_201_genotype")
+    assert mod.genotype_to_arch_str(ops) == arch_str
+    return Genotype(values=ops)
+
+
 @pytest.mark.benchmark_data
-def test_WBM3_energy_measurement_protocol_and_quality():
-    """W-BM3 (BM-2; Bartnik Tab. 6.2-6.3, final settings after pilot 4,
-    2026-10-17: 3 warm-up + 5 measured passes, median; Q-47): N_warmup = 3,
-    N_samples = 5, median; clocks locked at 1200 MHz, drift correction by the
-    reference cell (3, 2, 1, 4, 3, 2) every 5 architectures, re-measure at
-    spread > 8 % at most twice; quality control: Spearman >= 0.95 and median
-    relative difference <= 3 % on 50 re-measured architectures."""
+def test_WBM3_energy_table_matches_hwnasbench_source():
+    """W-BM3 (decision P1 a of 2026-10-31; replaces the laptop protocol):
+    source file sha256 = 57f92c2d...ad872700 (= HWNASBENCH_SHA256 and the
+    table's `source_sha256`); 0 index mismatches with NATS; for a sample of
+    cells the table value = `["nasbench201"]["cifar10"]["edgegpu_energy"][i]`
+    of the file, keyed by `config[i]["arch_str"]`."""
+    import hashlib
+    import pickle
+
     from p3net.v005 import benchmarks
 
-    meta = benchmarks.NB201Energy().metadata()
-    assert meta["n_warmup"] == 3 and meta["n_samples"] == 5 and meta["aggregate"] == "median"
-    qc = meta["quality_control"]
-    assert qc["n_remeasured"] >= 50
-    assert qc["spearman"] >= 0.95
-    assert qc["median_rel_diff"] <= 0.03
-    # settings fixed after the pilots (card BM-2, interfaces supplement 2026-10-21, Q-47)
-    assert meta["clocks_locked"] is True
-    assert meta["clock_lock_mhz"] == 1200
-    mod = _exp("search_spaces.nas_bench_201_genotype")
-    ops = list(mod.nas_bench_201_search_space().domains[0].values)
-    assert meta["reference_arch"] == mod.genotype_to_arch_str(
-        tuple(ops[i] for i in (3, 2, 1, 4, 3, 2))
-    )
-    assert meta["ref_every"] == 5
-    assert meta["max_spread"] == 0.08
-    assert meta["max_retries"] == 2
+    assert benchmarks.HWNASBENCH_SHA256 == HWNAS_SHA256_CARD
+    table = benchmarks.NB201Energy()
+    meta = table.metadata()
+    assert meta["source_sha256"] == benchmarks.HWNASBENCH_SHA256
+    assert meta["index_mismatches_vs_nats"] == 0
+    if not HWNAS_PICKLE.is_file():
+        pytest.skip(f"{HWNAS_PICKLE} not present")
+    raw = HWNAS_PICKLE.read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == HWNAS_SHA256_CARD
+    data = pickle.loads(raw)["nasbench201"]["cifar10"]  # noqa: S301 -- sha256 verified above
+    configs, energy = data["config"], data["edgegpu_energy"]
+    assert len(configs) == 15625
+    rng = random.Random(0)
+    for i in rng.sample(range(len(configs)), 300):
+        g = _arch_to_genotype(configs[i]["arch_str"])
+        assert math.isclose(table.energy(g), float(energy[i]), rel_tol=1e-9, abs_tol=1e-12), i
+
+
+_PICKLE_LOADED = []
+
+
+def _mark_loaded():
+    """Called only if a test pickle is actually unpickled."""
+    _PICKLE_LOADED.append(True)
+    return None
+
+
+class _Trap:
+    def __reduce__(self):
+        return (_mark_loaded, ())
+
+
+def test_WBM3_wrong_sha256_rejected_before_unpickling(tmp_path):
+    """W-BM3 (BM-2, interfaces round 8): a file whose sha256 is not
+    HWNASBENCH_SHA256 raises ValueError and is never unpickled (the file is a
+    pickle whose loading would record itself)."""
+    import pickle
+
+    from p3net.v005 import benchmarks
+
+    bad = tmp_path / "HW-NAS-Bench-v1_0.pickle"
+    bad.write_bytes(pickle.dumps({"nasbench201": _Trap()}))
+    _PICKLE_LOADED.clear()
+    with pytest.raises(ValueError):
+        benchmarks.build_energy_table_hwnasbench(bad, out_path=tmp_path / "out.json")
+    assert not _PICKLE_LOADED, "the file was unpickled before the sha256 check"
+    assert not (tmp_path / "out.json").exists()
 
 
 @pytest.mark.benchmark_data
@@ -274,7 +337,10 @@ def test_WBM7_resource_fields_present_in_every_run_record():
     and `surrogate_load_seconds` (#29: the JAHS bridge's memory and load time
     must be recorded; 0.0 is valid -- bridge already loaded by another run,
     round 7); `peak_memory_gpu_mb` may be None (no GPU on the target server).
-    Space from `rec["search_space"]`; JAHS iff it starts with "jahs" (Q-50)."""
+    Space from `rec["search_space"]`; JAHS iff it starts with "jahs" (Q-50).
+    Round 8 (P3 (2a)): `peak_memory_process_scope` in {"run", "process"};
+    `peak_memory_server_method` in {"pss_sum", "rss_sum"} on JAHS, None
+    elsewhere."""
     import json
 
     runs = list((EXP / "results" / "runs").glob("*/raw/v005_*.json"))
@@ -286,9 +352,13 @@ def test_WBM7_resource_fields_present_in_every_run_record():
         for f in ("method_wall_seconds", "peak_memory_process_mb"):
             assert not _empty(res.get(f)), f"{p.name}: empty resource field {f}"
         assert "peak_memory_gpu_mb" in res, f"{p.name}: peak_memory_gpu_mb not recorded"
+        assert res.get("peak_memory_process_scope") in ("run", "process"), p.name
         if str(rec["search_space"]).lower().startswith("jahs"):
             for f in ("peak_memory_server_mb", "surrogate_load_seconds"):
                 assert not _empty(res.get(f)), f"{p.name}: empty JAHS resource field {f}"
+            assert res.get("peak_memory_server_method") in ("pss_sum", "rss_sum"), p.name
+        else:
+            assert res.get("peak_memory_server_method") is None, p.name
 
 
 def _empty(v) -> bool:
@@ -301,3 +371,35 @@ def test_WBM7_zero_is_not_an_empty_resource_field():
     JAHS bridge was loaded by an earlier run) counts as recorded."""
     assert not _empty(0.0) and not _empty(0)
     assert _empty(None) and _empty("") and _empty([])
+
+
+class _FakeSubstrate:
+    def objectives(self, genotype):
+        return (1.0, 1.0)
+
+
+def _touch(n_mb):
+    buf = bytearray(n_mb * 2**20)
+    for i in range(0, len(buf), 4096):
+        buf[i] = 1
+    return buf
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="per-run peak reset is Linux-only")
+def test_WBM7_run_peak_excludes_earlier_run_in_same_process():
+    """W-BM7 (BM-5 supplement 2026-10-31, P3 (2a)): on Linux the process peak
+    of a run is reset at its start (scope "run"), so a run that allocates
+    ~10 MB after a run that allocated ~400 MB in the same process reports a
+    clearly smaller peak."""
+    resources = _exp("measurement.resources")
+
+    def measure(n_mb):
+        with resources.ResourceMeter(resources.TimedSubstrate(_FakeSubstrate())) as m:
+            buf = _touch(n_mb)
+            del buf
+        return m.as_dict()
+
+    big = measure(400)
+    small = measure(10)
+    assert big["process_peak_scope"] == "run" and small["process_peak_scope"] == "run"
+    assert small["process_peak_rss_mb"] < big["process_peak_rss_mb"] - 200, (big, small)

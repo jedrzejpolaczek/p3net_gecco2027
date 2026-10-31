@@ -5,7 +5,7 @@ Każda własność z tabel „Własności do sprawdzenia testami” w `notes/pla
 
 Uwagi: `Q-xx` — test oznaczony `needs_clarification` (pytanie w `QUESTIONS.md`); `dane` — `benchmark_data`
 (pomijany bez danych benchmarków); `lib` — pomijany, gdy biblioteki nie ma w środowisku (`importorskip`; uruchamiać w
-środowisku `implementation/experiments/.venv`).
+środowisku `implementation/experiments/.venv`); `Linux` — uruchamiany tylko na Linuksie.
 
 | ID własności | karta | test(y) | uwagi |
 |---|---|---|---|
@@ -122,10 +122,10 @@ Uwagi: `Q-xx` — test oznaczony `needs_clarification` (pytanie w `QUESTIONS.md`
 | W-MF7 | `mf-track.md` | `test_mf_track.py::test_WMF7_hyperband_asha_ladders`<br>`test_mf_track.py::test_WMF7_bob_ladders_keep_source_ratio` |  |
 | W-BM1 | `benchmarks.md` | `test_benchmarks.py::test_WBM1_no_method_code_reads_the_test_split`<br>`test_benchmarks.py::test_WBM1_nb201_f1_is_validation_error_mean_over_seeds` | dane |
 | W-BM2 | `benchmarks.md` | `test_benchmarks.py::test_WBM2_nb201_f2_from_complete_energy_table` | dane |
-| W-BM3 | `benchmarks.md` | `test_benchmarks.py::test_WBM3_energy_measurement_protocol_and_quality` | dane |
+| W-BM3 | `benchmarks.md` | `test_benchmarks.py::test_WBM3_energy_table_matches_hwnasbench_source`<br>`test_benchmarks.py::test_WBM3_wrong_sha256_rejected_before_unpickling` | dane |
 | W-BM4 | `benchmarks.md` | `test_benchmarks.py::test_WBM4_jahs_f2_follows_bm3_check` | dane |
 | W-BM5 | `benchmarks.md` | `test_benchmarks.py::test_WBM5_f1_validation_and_f2_low_fidelity`<br>`test_benchmarks.py::test_WBM5_fcnet_f2_scaled_by_epochs` | dane |
 | W-BM6 | `benchmarks.md` | `test_benchmarks.py::test_WBM6_validity_rejects_cells_without_path`<br>`test_benchmarks.py::test_WBM6_validity_same_rule_on_all_cell_spaces` |  |
-| W-BM7 | `benchmarks.md` | `test_benchmarks.py::test_WBM7_resource_fields_present_in_every_run_record`<br>`test_benchmarks.py::test_WBM7_zero_is_not_an_empty_resource_field` | dane |
+| W-BM7 | `benchmarks.md` | `test_benchmarks.py::test_WBM7_resource_fields_present_in_every_run_record`<br>`test_benchmarks.py::test_WBM7_zero_is_not_an_empty_resource_field`<br>`test_benchmarks.py::test_WBM7_run_peak_excludes_earlier_run_in_same_process` | Linux, dane |
 
 Razem: 118 własności z 14 kart (117 W-* + E-4); każda ma ≥ 1 test.

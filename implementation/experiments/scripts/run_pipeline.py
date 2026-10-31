@@ -853,6 +853,8 @@ def run_checks(
     results: dict[str, Any] = {"git": fingerprint, "suites": {}, "determinism": {}, "level4": {}}
     lib_root = EXPERIMENTS_ROOT.parent / "lib"
     env = dict(os.environ, PYTHONPATH=str(lib_root / "src"))
+    # level-1 `benchmark_data` tests skip silently without this (data live in data/cache)
+    env.setdefault("P3NET_BENCHMARK_DATA", str(EXPERIMENTS_ROOT / "data" / "cache"))
     for name, cwd in (("lib", lib_root), ("experiments", EXPERIMENTS_ROOT)):
         pipeline.log(f"CHECKS running {name} test suite")
         proc = subprocess.run(

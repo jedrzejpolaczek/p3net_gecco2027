@@ -276,6 +276,22 @@ class JAHSBench201Substrate(Substrate):
             )
         return json.loads(line)
 
+    def bridge_pid(self) -> int | None:
+        """PID of the bridge answering this instance's queries, for memory measurement
+        (BM-5): the shared bridge's (second line of its port file) or this instance's own
+        process; None before the first query."""
+        server_dir = os.environ.get(SERVER_DIR_ENV)
+        if server_dir:
+            if self._stream is None:
+                return None
+            try:
+                return int(self._server_files(Path(server_dir))[0].read_text(encoding="utf-8").splitlines()[1])
+            except (OSError, ValueError, IndexError):
+                return None
+        if self._process is None or self._process.poll() is not None:
+            return None
+        return self._process.pid
+
     def _close_stream(self) -> None:
         for handle in (self._stream, self._socket):
             if handle is not None:

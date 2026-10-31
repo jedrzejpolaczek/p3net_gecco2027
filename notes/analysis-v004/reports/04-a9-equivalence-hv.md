@@ -1,5 +1,8 @@
 # A9 — równoważność, S4′ vs S5, dekompozycja HV, duplikaty (dane v004, 2026-10-24)
 
+**Wybory metody w tym raporcie są Claude'a, do akceptacji autora** (`v005-todo.md`): marginesy TOST 0.147 / 0.33,
+bootstrap 90 % CI, podział HV w medianie f2 frontu. Wnioski dla planu (B4, raport 02 §2.1) = PROPOZYCJE P6, P7.
+
 Skrypty: `notes/analysis-v004/equivalence.py`, `notes/analysis-v004/hvdecomp.py` (wejście: `analyze.py` → `per_run.csv`,
 `runs.pkl`). Liczby eksploracyjne, jak w raporcie 02. 16 komórek głównych = 4 przestrzenie (JAHS C10, CRC, FMN, NHB) × 4 budżety.
 

@@ -35,11 +35,13 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Skip benchmark_data tests unless the data directory exists (or
-    P3NET_BENCHMARK_DATA points to one)."""
+    """Skip benchmark_data tests unless benchmark files are present: in
+    P3NET_BENCHMARK_DATA if set, else in implementation/experiments/data
+    (downloads live in data/cache, Q-51). Tests whose own file is missing skip
+    themselves."""
     root = os.environ.get("P3NET_BENCHMARK_DATA")
     data_dir = Path(root) if root else REPO / "implementation" / "experiments" / "data"
-    has_data = data_dir.is_dir() and any(p for p in data_dir.iterdir() if p.name != "cache")
+    has_data = data_dir.is_dir() and any(p.is_file() for p in data_dir.rglob("*"))
     if has_data:
         return
     skip = pytest.mark.skip(reason=f"benchmark data not found in {data_dir}")

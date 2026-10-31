@@ -1,6 +1,7 @@
 # Benchmarki i cele (f1, f2) — karta źródła
 
-Status: **ZATWIERDZONA** (2026-10-16, autor projektu): BM-1 a, BM-2 (energia inferencji, wszystkie 15 625, kontrola jakości), BM-3, BM-4, BM-5, W-BM1–W-BM7. **Otwarte: wskazanie GPU do pomiaru energii.**
+Status: **ZATWIERDZONA** (2026-10-16, autor projektu): BM-1 a, BM-2 (energia inferencji, wszystkie 15 625, kontrola jakości), BM-3, BM-4, BM-5, W-BM1–W-BM7.
+**Zmiana 2026-10-31 (P1 a, `v005-todo.md`):** BM-2 — źródło energii = HW-NAS-Bench, edge GPU (zamiast własnego pomiaru); W-BM2, W-BM3 przeformułowane (§3).
 Decyzje wcześniejsze: #26 (JAHS: sprawdzić, czy `size_MB` zależy od HP), #27 (NB201: f1 = błąd walidacyjny), #28
 (NB201: **własny pomiar energii GPU** wg metodyki Bartnik), #29 (logowanie zasobów), #31 (dyskretyzacja JAHS), #33
 (Validity), #6 (f2 tylko z prawdziwej ewaluacji), MF-1 (f2 przy niższej wierności).
@@ -12,7 +13,7 @@ Decyzje wcześniejsze: #26 (JAHS: sprawdzić, czy `size_MB` zależy od HP), #27 
 | JAHS-Bench-201 (×3) | 100 − `valid_acc` (surogat JAHS, 200 epok) | `size_MB` (surogat JAHS) | #26 do sprawdzenia |
 | NAS-HPO-Bench-II | 100 − dokładność walidacyjna po 12 epokach | `total_trainval_time` (12 epok) | MF: odczyt z tego samego biegu po e epokach |
 | FCNet (×4) | walidacyjne MSE po 100 epokach, średnia z 4 seedów | czas treningu, średnia z 4 seedów | MF: czas·e/100 (zgodne z MF-1) |
-| NAS-Bench-201 | **błąd testowy** | **FLOPs** | #27 i #28 — do zmiany |
+| NAS-Bench-201 | **błąd testowy** | **FLOPs** | #27 i #28 — do zmiany (v005: f1 walidacyjne BM-1 a; f2 = energia z HW-NAS-Bench, BM-2) |
 
 ## 2. Decyzje
 
@@ -76,9 +77,32 @@ Metodyka Bartnik (§6.2, Tab. 6.2–6.3): pyNVML, N_warmup = 3, N_samples = 3, m
 - **Decyzja autora (2026-10-18): pełny pomiar odłożony na koniec etapu A** (przed przebiegami NB201 v005). Wtedy najpierw
   pilotaż z krótszym przejściem (1 000 wejść zamiast 10 000, ~10× szybciej, < 1 doba na całość); jeśli kryterium
   przejdzie — pełna tablica w tej wersji; jeśli nie — wersja 10 000 wejść albo HW-NAS-Bench.
-- **Kontrola jakości pomiaru:** powtórzenie pomiaru 50 losowych architektur na końcu → zgodność rang (Spearman ≥ 0.95)
+- **Pilotaż 5 (2026-10-29, 1 000 wejść, 1200 MHz, te same 100 architektur): NIEZALICZONY** — Spearman 0.34, mediana
+  różnicy 18.2 %. Przejście 0.20 s (vs 1.94 s przy 10 000) za krótkie dla licznika NVML: rozrzut próbek w architekturze
+  52–55 % (pilotaż 4: 5–13 %), zmienność komórki odniesienia 13–17 % (0.6–2.7 %), 99 % architektur mierzonych ponownie;
+  czas ~7 s/architekturę (zysk ~2.5×, nie 10×). Pełne przejście (pilotaż 4) zaliczone tylko na granicy, pełna tablica
+  4–10 dni laptopa.
+- **Autor (2026-10-29): pomiaru na laptopie nie jest w stanie wykonać.** Kierunek: HW-NAS-Bench („brzmi
+  najrozsądniej”) — uwaga: 2026-10-16 autor odrzucił HW-NAS-Bench na rzecz laptopa; zmiana z powodu pilotaży 1–5.
+- **DECYZJA AUTORA 2026-10-31 (P1 a) — obowiązuje w v005:** f2 = `edgegpu_energy` z HW-NAS-Bench v1.0 (Jetson TX2,
+  TensorRT, batch 1, CIFAR-10, mJ/obraz; Li et al., ICLR 2021; MIT), zbiór `cifar10` tablicy HW-NAS-Bench (sieć
+  `infer.tiny`, C = 16, N = 5 — ta sama co NATS `tss`). Sprawdzenie: `notes/plans/v005-hwnasbench-check.md` (indeksy
+  zgodne z NATS 15 625/15 625; Spearman z FLOPs 0.55; szum w klasach izomorficznych CV 4.2 %). Wartości opublikowane,
+  nie mierzone przez nas. Pozostałe punkty BM-2 powyżej (sprzęt, warunki, bramka, pilotaże) i kontrola jakości poniżej
+  dotyczą zarzuconego pomiaru na laptopie — zostają jako zapis decyzji.
+  - **Wykonanie:** `scripts/download_data.py --only hw_nas_bench` (pobranie, sha256
+    `57f92c2d7b88814fa337d00f4597c8ca30d507c5a855c18d6fac57e5ad872700`) → `scripts/build_nb201_energy_table.py`
+    (`p3net.v005.benchmarks.build_energy_table_hwnasbench`, wczytanie pickle z białą listą klas numpy) →
+    `results/benchmark_tables/nb201_energy.json` (15 625 komórek po `arch_str`, metadane: źródło, sha256, urządzenie,
+    batch, jednostka, liczba rozbieżności indeksów z NATS = 0). Zbudowane 2026-10-31.
+  - **Limitations (zastępuje akapit poniżej):** brak własnego pomiaru energii (pilotaże 1–5); energia specyficzna dla
+    urządzenia i batcha (nasz laptop, batch 256, vs TX2: Spearman 0.74); szum tablicy w klasach izomorficznych
+    (mediana CV 4.2 %, 90. percentyl 10.3 %) — metoda może wybierać tańszy izomorf; wyniki NB201 v005 nieporównywalne
+    z v004 (f2 = FLOPs, Spearman z energią 0.55); porównanie z Bartnik (Tab. 7.1) na FLOPs, bo jej f2 to energia
+    innego GPU.
+- **Kontrola jakości pomiaru (laptop, nieaktualne od 2026-10-31):** powtórzenie pomiaru 50 losowych architektur na końcu → zgodność rang (Spearman ≥ 0.95)
   i mediana różnicy względnej ≤ 3 % (Tab. 6.3 u Bartnik: 2.4 % dla (3, 3)); inaczej pomiar powtarzany.
-- **Limitations (do artykułu, obowiązkowo):** energia zmierzona na jednym laptopowym GPU klasy konsumenckiej; wartości
+- **Limitations (laptop — nieaktualne od 2026-10-31, zastąpione akapitem przy decyzji P1 a):** energia zmierzona na jednym laptopowym GPU klasy konsumenckiej; wartości
   bezwzględne specyficzne dla urządzenia i nieprzenoszalne; laptop podlega zmiennym limitom mocy i dławieniu termicznemu
   (ograniczone przez blokadę zegarów i kontrolę powtarzalności, nie wyeliminowane); NVML mierzy tylko pobór GPU (bez CPU,
   DRAM, strat zasilacza — jak u Bartnik); pomiar na sieciach z losowymi wagami (energia inferencji nie zależy od wartości
@@ -116,19 +140,29 @@ Sprawdzić testem, że f1 pochodzi ze zbioru walidacyjnego (nie testowego) i że
 Pamięć serwera JAHS i GPU, czas ładowania surogatu, czas ścianowy metody (bez czasu odczytu benchmarku) — rejestrowane;
 asercja niepustych pól.
 
+**Uzupełnienie 2026-10-31 (decyzja P3 (2a), `v005-todo.md`; przyczyna: A8, `v005-a8-analysis.md` „Pamięć”):**
+- `peak_memory_process_mb` = szczyt pamięci procesu **w tym przebiegu**, nie od startu procesu workera. Na Linuksie szczyt
+  jądra (VmHWM) zerowany na starcie przebiegu (`/proc/self/clear_refs` = 5) → `peak_memory_process_scope = "run"`;
+  gdzie się nie da (Windows) → `"process"` (szczyt od startu procesu; dokładny tylko przy świeżym procesie na przebieg).
+- `peak_memory_server_mb` (JAHS) = szczyt pamięci mostu JAHS (proces + procesy potomne) próbkowany na starcie i końcu
+  przebiegu i po zapytaniach do benchmarku; także przy **wspólnym** moście (PID z pliku portu). Na Linuksie suma PSS
+  (strony współdzielone copy-on-write liczone raz), inaczej suma RSS → `peak_memory_server_method` = `"pss_sum"` /
+  `"rss_sum"`. Wspólny most obsługuje wszystkie workery naraz — wartość to koszt maszyny, nie jednego przebiegu (opisać
+  w podpisie tabeli kosztów).
+
 ## 3. Własności do sprawdzenia testami (poziom 1)
 
 | ID | Własność |
 |---|---|
 | W-BM1 | NB201: f1 z `cifar10-valid` (walidacja), średnia po seedach; żaden kod metody nie widzi błędu testowego |
-| W-BM2 | NB201: f2 = wartość z tablicy energii; tablica kompletna (15 625), metadane sprzętu obecne |
-| W-BM3 | Pomiar energii: N_warmup = 3, N_samples = 5 (ustawienia końcowe po pilotażu 4; źródło Bartnik: 3), mediana, ponowny pomiar przy rozrzucie > 8 % (≤ 2 razy), korekta dryfu komórką odniesienia co 5 architektur, zegar 1200 MHz; kontrola jakości BM-2 spełniona |
+| W-BM2 | NB201: f2 = wartość z tablicy energii; tablica kompletna (15 625), metadane źródła obecne (zmiana 2026-10-31, P1 a: źródło HW-NAS-Bench, `metric = edgegpu_energy`, urządzenie Jetson TX2, batch 1, jednostka mJ/obraz, zbiór `cifar10`) |
+| W-BM3 | (zmiana 2026-10-31, P1 a; dawniej: protokół pomiaru na laptopie — nieaktualny) Zgodność ze źródłem: sha256 pliku HW-NAS-Bench = `57f92c2d…ad872700`; 0 rozbieżności indeksów HW-NAS-Bench z `nats_bench.query_index_by_arch`; wartości w tablicy = `edgegpu_energy[i]` z pliku dla `arch_str` z `config[i]`; plik o innym sha256 odrzucony przed wczytaniem |
 | W-BM4 | JAHS: f2 wg wyniku BM-3 (test zapisany w `results/checks/`) |
 | W-BM5 | NAS-HPO-II, FCNet: f1 walidacyjne; f2 przy e < E wg MF-1 |
 | W-BM6 | Validity (#33) jednakowa na JAHS, NAS-HPO-II, NB201 |
-| W-BM7 | Pola zasobów (BM-5) niepuste w każdym przebiegu |
+| W-BM7 | Pola zasobów (BM-5) niepuste w każdym przebiegu; (2026-10-31, P3 (2a)) na Linuksie `peak_memory_process_scope = "run"` i szczyt przebiegu nie zawiera szczytu wcześniejszego przebiegu w tym samym procesie; na JAHS `peak_memory_server_method` ∈ {`pss_sum`, `rss_sum`} |
 
 ## 4. Do zatwierdzenia
 
 BM-1 a; BM-2 (energia inferencji, pomiar wszystkich 15 625 przed przebiegiem, kontrola jakości) + **wskazanie GPU**;
-BM-3 (test i reguła); BM-4; BM-5; W-BM1–W-BM7.
+BM-3 (test i reguła); BM-4; BM-5; W-BM1–W-BM7. — Zatwierdzone 2026-10-16; BM-2 zmienione 2026-10-31 (P1 a).

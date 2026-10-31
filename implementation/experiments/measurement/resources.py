@@ -13,13 +13,22 @@ Recorded for every run (diagnostics["resources"], scripts/run_experiment.py):
     the part of the cost a real deployment would add on top of training;
   * bridge_cpu_seconds -- CPU time of the JAHS-Bench-201 query process
     during the run, where that benchmark is used;
-  * process_peak_rss_mb -- peak resident memory of this process since it
-    started. With several runs in one process it is an upper bound for the
-    run; the sequential timing stage runs each point in a fresh process,
-    where it is exact;
-  * bridge_peak_rss_mb -- peak resident memory of the JAHS-Bench-201 query
-    process and its children since they started (they hold the benchmark's
-    surrogate models); the sum of per-process peaks, an upper bound;
+  * process_peak_rss_mb -- peak resident memory of this process during the
+    run. On Linux the kernel's peak (VmHWM) is reset when the run starts
+    (/proc/self/clear_refs = 5), so a worker that runs many points in turn
+    reports each run's own peak (memory still held from earlier runs
+    included); `process_peak_scope` = "run". Elsewhere it is the peak since
+    the process started ("process"), exact only for a fresh process per run
+    (A8, v005-a8-analysis.md: the per-worker peak made ~20 methods identical);
+  * bridge_peak_rss_mb -- peak memory of the JAHS-Bench-201 query process and
+    its children (they hold the surrogate models), sampled at the run's start
+    and end and after benchmark queries (at most every SAMPLE_SECONDS). The
+    bridge is either the run's own process or the machine's shared bridge
+    (substrate.bridge_pid()); the shared one serves all workers at once, so
+    its value is a machine-level cost, not one run's. On Linux each sample is
+    the sum of PSS (shared copy-on-write pages of the forked handlers split
+    between them, not counted once per handler); elsewhere the sum of RSS.
+    `bridge_memory_method` names which;
   * gpu_peak_memory_mb -- peak PyTorch CUDA memory during the run, only
     when the run used CUDA.
 
@@ -37,6 +46,10 @@ from typing import Any
 import psutil
 
 
+#: Minimum seconds between two bridge-memory samples taken after queries.
+SAMPLE_SECONDS = 5.0
+
+
 @dataclass
 class _Clock:
     seconds: float = 0.0
@@ -50,6 +63,8 @@ class TimedSubstrate:
         self._substrate = substrate
         self.benchmark = _Clock()
         self.analytic = _Clock()
+        #: called after each benchmark query (ResourceMeter samples the bridge's memory)
+        self.after_query = None
 
     def _timed(self, clock: _Clock, fn, *args):
         started = time.perf_counter()
@@ -58,6 +73,8 @@ class TimedSubstrate:
         finally:
             clock.seconds += time.perf_counter() - started
             clock.calls += 1
+            if clock is self.benchmark and self.after_query is not None:
+                self.after_query()
 
     def objectives(self, genotype):
         return self._timed(self.benchmark, self._substrate.objectives, genotype)
@@ -73,8 +90,11 @@ class TimedSubstrate:
 
 
 def _bridge_process(substrate: Any) -> psutil.Process | None:
-    process = getattr(substrate, "_process", None)
-    pid = getattr(process, "pid", None)
+    bridge_pid = getattr(substrate, "bridge_pid", None)
+    if callable(bridge_pid):
+        pid = bridge_pid()
+    else:
+        pid = getattr(getattr(substrate, "_process", None), "pid", None)
     if pid is None:
         return None
     try:
@@ -106,9 +126,36 @@ def _cpu_seconds(process: psutil.Process | None, *, tree: bool = False) -> float
     return total
 
 
-def _peak_rss_mb(process: psutil.Process) -> float:
-    """Peak resident memory (Windows). Elsewhere: this process's ru_maxrss,
-    or the current resident memory of another process."""
+def _proc_kb(path: str, key: str) -> float | None:
+    """The `key:` line of a /proc file in kB, None if unreadable."""
+    try:
+        with open(path, encoding="ascii") as handle:
+            for line in handle:
+                if line.startswith(key + ":"):
+                    return float(line.split()[1])
+    except (OSError, ValueError, IndexError):
+        return None
+    return None
+
+
+def _reset_peak(pid: int) -> bool:
+    """Reset the kernel's peak resident memory (VmHWM) of `pid` (Linux >= 4.0)."""
+    try:
+        with open(f"/proc/{pid}/clear_refs", "w", encoding="ascii") as handle:
+            handle.write("5")
+        return True
+    except OSError:
+        return False
+
+
+def _peak_rss_mb(process: psutil.Process, *, since_reset: bool = False) -> float:
+    """Peak resident memory: VmHWM if the peak was reset at the run start (Linux);
+    otherwise the process-lifetime peak (Windows: peak working set; else ru_maxrss of
+    this process, or the current RSS of another one)."""
+    if since_reset:
+        hwm = _proc_kb(f"/proc/{process.pid}/status", "VmHWM")
+        if hwm is not None:
+            return hwm / 1024.0
     info = process.memory_info()
     peak = getattr(info, "peak_wset", None)
     if peak is not None:
@@ -118,6 +165,23 @@ def _peak_rss_mb(process: psutil.Process) -> float:
 
         return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
     return info.rss / 2**20
+
+
+def _tree_memory_mb(process: psutil.Process) -> tuple[float | None, str]:
+    """Current memory of the process tree: sum of PSS on Linux, of RSS elsewhere."""
+    members = _tree(process)
+    if not members:
+        return None, "none"
+    pss = [_proc_kb(f"/proc/{m.pid}/smaps_rollup", "Pss") for m in members]
+    if all(v is not None for v in pss):
+        return sum(pss) / 1024.0, "pss_sum"
+    total = 0.0
+    for member in members:
+        try:
+            total += member.memory_info().rss / 2**20
+        except psutil.Error:
+            continue
+    return total, "rss_sum"
 
 
 def _cuda():
@@ -134,11 +198,34 @@ class ResourceMeter:
     _wall: float = field(default=0.0, init=False)
     _cpu: float = field(default=0.0, init=False)
     _bridge_cpu: float | None = field(default=None, init=False)
+    _peak_reset: bool = field(default=False, init=False)
+    _bridge_peak: float | None = field(default=None, init=False)
+    _bridge_method: str | None = field(default=None, init=False)
+    _last_sample: float = field(default=float("-inf"), init=False)
+
+    def _sample_bridge(self, *, force: bool = False) -> None:
+        now = time.perf_counter()
+        if not force and now - self._last_sample < SAMPLE_SECONDS:
+            return
+        self._last_sample = now
+        bridge = _bridge_process(self.substrate)
+        if bridge is None:
+            return
+        try:
+            mb, method = _tree_memory_mb(bridge)
+        except psutil.Error:
+            return
+        if mb is not None and (self._bridge_peak is None or mb > self._bridge_peak):
+            self._bridge_peak, self._bridge_method = mb, method
 
     def __enter__(self) -> ResourceMeter:
         cuda = _cuda()
         if cuda is not None:
             cuda.reset_peak_memory_stats()
+        self._peak_reset = sys.platform.startswith("linux") and _reset_peak(self._process.pid)
+        self._sample_bridge(force=True)
+        if hasattr(self.substrate, "after_query"):
+            self.substrate.after_query = self._sample_bridge
         self._bridge_cpu = _cpu_seconds(_bridge_process(self.substrate), tree=True)
         self._cpu = _cpu_seconds(self._process) or 0.0
         self._wall = time.perf_counter()
@@ -160,14 +247,13 @@ class ResourceMeter:
         self.bridge_cpu_seconds = (
             None if bridge_now is None else bridge_now - (self._bridge_cpu or 0.0)
         )
-        self.peak_rss_mb = _peak_rss_mb(self._process)
-        bridge = _bridge_process(self.substrate)
-        try:
-            self.bridge_peak_rss_mb = (
-                None if bridge is None else sum(_peak_rss_mb(p) for p in _tree(bridge))
-            )
-        except psutil.Error:
-            self.bridge_peak_rss_mb = None
+        self.peak_rss_mb = _peak_rss_mb(self._process, since_reset=self._peak_reset)
+        self.process_peak_scope = "run" if self._peak_reset else "process"
+        self._sample_bridge(force=True)
+        if hasattr(self.substrate, "after_query"):
+            self.substrate.after_query = None
+        self.bridge_peak_rss_mb = self._bridge_peak
+        self.bridge_memory_method = self._bridge_method
         cuda = _cuda()
         self.gpu_peak_memory_mb = None if cuda is None else cuda.max_memory_allocated() / 2**20
 
@@ -182,7 +268,9 @@ class ResourceMeter:
             "optimizer_seconds": self.wall_seconds - self.substrate.benchmark.seconds,
             "bridge_cpu_seconds": self.bridge_cpu_seconds,
             "process_peak_rss_mb": self.peak_rss_mb,
+            "process_peak_scope": self.process_peak_scope,
             "bridge_peak_rss_mb": self.bridge_peak_rss_mb,
+            "bridge_memory_method": self.bridge_memory_method,
             "gpu_peak_memory_mb": self.gpu_peak_memory_mb,
             "surrogate_load_seconds": getattr(self, "surrogate_load_seconds", None),
         }

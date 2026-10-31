@@ -1,16 +1,19 @@
 """NB201 inference-energy table (card `benchmarks.md`, BM-2; interfaces §7, Q-32).
 
-The table is built once from the measurement log of
-`implementation/experiments/scripts/measure_nb201_energy.py` (`build_energy_table`) and
-read by the NB201 substrate as f2. Values are drift-corrected: the energy of a cell
-divided by the energy of the reference cell interpolated at its position in the
-measurement order (pilot 2026-10-17/18), i.e. dimensionless; dominance and ranks do
-not depend on the scale.
+v005 (decision P1 a, 2026-10-31): the table is built once from HW-NAS-Bench
+(Li et al., ICLR 2021; MIT) by `build_energy_table_hwnasbench` -- `edgegpu_energy`,
+Jetson TX2, TensorRT, batch 1, CIFAR-10, mJ per image -- and read by the NB201
+substrate as f2.
+
+`build_energy_table` (own laptop measurement, pilots 1-5, 2026-10-17...29) is kept
+as the record of the abandoned measurement: drift-corrected, dimensionless values.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import pickle
 import statistics
 from pathlib import Path
 
@@ -64,6 +67,80 @@ def build_energy_table(log_path: str | Path, out_path: str | Path = DEFAULT_TABL
     temps = [t for r in mine if not r.get("reference") for t in r.get("temperature_c", [])]
     meta = {**meta, "quality_control": qc, "temperature_log": temps, "value": "energy / reference energy",
             "n_cells": len(table)}
+    payload = {"metadata": meta, "energy": table}
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(out_path).write_text(json.dumps(payload), encoding="utf-8")
+    return payload
+
+
+#: HW-NAS-Bench-v1_0.pickle from github.com/GATECH-EIC/HW-NAS-Bench (checked 2026-10-30,
+#: notes/plans/v005-hwnasbench-check.md).
+HWNASBENCH_SHA256 = "57f92c2d7b88814fa337d00f4597c8ca30d507c5a855c18d6fac57e5ad872700"
+HWNASBENCH_METRIC = "edgegpu_energy"
+
+
+class _NumpyOnlyUnpickler(pickle.Unpickler):
+    """The pickle holds only dicts, lists, str, floats and numpy arrays; anything else
+    is refused, so loading cannot run foreign code."""
+
+    _ALLOWED = {("numpy.core.multiarray", "_reconstruct"), ("numpy._core.multiarray", "_reconstruct"),
+                ("numpy", "ndarray"), ("numpy", "dtype")}
+
+    def find_class(self, module, name):
+        if (module, name) not in self._ALLOWED:
+            raise pickle.UnpicklingError(f"HW-NAS-Bench pickle: class {module}.{name} not allowed")
+        if module == "numpy.core.multiarray":
+            import numpy
+
+            if int(numpy.__version__.split(".")[0]) >= 2:
+                module = "numpy._core.multiarray"
+        return super().find_class(module, name)
+
+
+def build_energy_table_hwnasbench(pickle_path: str | Path, out_path: str | Path = DEFAULT_TABLE, *,
+                                  dataset: str = "cifar10", nats_index=None) -> dict:
+    """f2 table from HW-NAS-Bench (BM-2, decision P1 a): `edgegpu_energy` [mJ/image] keyed
+    by the NB201 arch string of each entry's `config`. `nats_index` (optional, e.g.
+    `api.query_index_by_arch` of nats_bench) is used to check that the HW-NAS-Bench index
+    of every entry is the NATS-Bench index of its arch string; the count of mismatches
+    goes to the metadata."""
+    raw = Path(pickle_path).read_bytes()
+    sha = hashlib.sha256(raw).hexdigest()
+    if sha != HWNASBENCH_SHA256:
+        raise ValueError(f"HW-NAS-Bench pickle sha256 {sha} != expected {HWNASBENCH_SHA256}")
+    import io
+
+    data = _NumpyOnlyUnpickler(io.BytesIO(raw)).load()["nasbench201"][dataset]
+    configs, values = data["config"], data[HWNASBENCH_METRIC]
+    net_keys = ("name", "C", "N", "num_classes")
+    if len({tuple(c[k] for k in net_keys) for c in configs}) != 1:
+        raise ValueError("HW-NAS-Bench entries describe different macro networks")
+    table = {}
+    for cfg, v in zip(configs, values, strict=True):
+        a = cfg["arch_str"]
+        if a in table:
+            raise ValueError(f"duplicate arch_str in HW-NAS-Bench: {a}")
+        table[a] = float(v)
+    mismatches = None
+    if nats_index is not None:
+        mismatches = sum(int(nats_index(cfg["arch_str"])) != i for i, cfg in enumerate(configs))
+    meta = {
+        "source": "HW-NAS-Bench v1.0 (Li et al., ICLR 2021), github.com/GATECH-EIC/HW-NAS-Bench, MIT",
+        "source_file": "HW-NAS-Bench-v1_0.pickle",
+        "source_sha256": sha,
+        "metric": HWNASBENCH_METRIC,
+        "dataset": dataset,
+        "device": "NVIDIA Jetson TX2 (edge GPU)",
+        "runtime": "TensorRT",
+        "batch_size": 1,
+        "input_resolution": 32,
+        "unit": "mJ per image",
+        "value": "energy as published (not measured by us)",
+        "network": {k: configs[0][k] for k in net_keys},
+        "index_mismatches_vs_nats": mismatches,
+        "decision": "benchmarks.md BM-2, v005-todo.md P1 a (2026-10-31)",
+        "n_cells": len(table),
+    }
     payload = {"metadata": meta, "energy": table}
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     Path(out_path).write_text(json.dumps(payload), encoding="utf-8")

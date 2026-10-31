@@ -175,3 +175,42 @@ Odpowiedzi: `notes/plans/v005-test-answers.md`, sekcja „Runda 6”.
 3. `NB201Energy.energy(g)` przyjmuje wartości albo indeksy (`v005-interfaces.md`) — W-BM2 z wartościami jest poprawny.
 
 Zasady jak wcześniej. Na koniec krótko po polsku: co zmieniłeś.
+
+---
+
+# Runda 8 — f2 NB201 z HW-NAS-Bench i pomiar pamięci per przebieg (wklej do **tej samej** sesji autora testów)
+
+Autor projektu zdecydował 2026-10-31 (`notes/plans/v005-todo.md`, decyzje P1 a i P3 (2a)):
+- **f2 NB201 = `edgegpu_energy` z HW-NAS-Bench** (Jetson TX2, batch 1, mJ/obraz), nie własny pomiar na laptopie (zarzucony).
+- **Pamięć w rekordzie przebiegu = szczyt tego przebiegu**, nie procesu workera; pamięć mostu JAHS zapisywana także przy
+  wspólnym moście.
+
+Przeczytaj zmienione miejsca: karta `v005-sources/benchmarks.md` — BM-2 (akapit „DECYZJA AUTORA 2026-10-31”), BM-5
+(„Uzupełnienie 2026-10-31”), tabela §3 (W-BM2, W-BM3, W-BM7); `v005-interfaces.md` — „Uzupełnienie (2026-10-31, runda 8)”
+(zastępuje klucze metadanych `NB201Energy` z Q-32 i Q-47).
+
+Stan teraz (z `P3NET_BENCHMARK_DATA=implementation/experiments/data/cache`): `test_benchmarks.py` 10 passed, 3 failed —
+W-BM2 i W-BM3 (sprawdzają protokół laptopa), W-BM7 (rekordy A8 sprzed poprawki mają puste `peak_memory_server_mb`).
+
+Zadania (zasady jak wcześniej — nie czytasz `p3net/v005` ani `experiments/measurement` poza sygnaturami z interfejsu):
+1. **W-BM2:** wymagaj nowych kluczy metadanych (interfejs, runda 8); `unit == "mJ per image"`, `batch_size == 1`,
+   `dataset == "cifar10"`, `metric == "edgegpu_energy"`; kompletność 15 625 i f2 substratu = `table.energy(g)` bez zmian.
+2. **W-BM3:** zastąp test protokołu laptopa testem zgodności ze źródłem: `metadata()["source_sha256"] ==
+   HWNASBENCH_SHA256`; `index_mismatches_vs_nats == 0`; dla próbki komórek wartość w tablicy = `edgegpu_energy[i]` z pliku
+   (`implementation/experiments/data/cache/hw_nas_bench/HW-NAS-Bench-v1_0.pickle`, struktura
+   `["nasbench201"]["cifar10"][metric | "config"][i]`, `config[i]["arch_str"]`) — `benchmark_data`; oraz bez danych:
+   `build_energy_table_hwnasbench` na pliku o innym sha256 → `ValueError`.
+3. **W-BM7:** nowe pola `peak_memory_process_scope`, `peak_memory_server_method` (interfejs). Dopisz test tylko na Linuksie
+   (`skipif(not sys.platform.startswith("linux"))`): dwa kolejne `ResourceMeter` w jednym procesie — pierwszy alokuje
+   ~400 MB, drugi ~10 MB; drugi `process_peak_rss_mb` wyraźnie mniejszy i `process_peak_scope == "run"`. Ten test
+   pójdzie na serwerze (kod linuksowy nie był jeszcze uruchomiony na Linuksie).
+4. **Pytanie Q-51 (od implementującego):** `conftest.py` uznaje dane za obecne tylko, gdy w `experiments/data` jest coś
+   poza `cache`, a wszystkie dane leżą w `data/cache` → bez `P3NET_BENCHMARK_DATA` testy `benchmark_data` są zawsze
+   pomijane (bramka `checks` ustawia już zmienną od 2026-10-31, ale zwykłe `pytest` — nie). Popraw warunek albo
+   uzasadnij w `QUESTIONS.md`.
+
+Do wiadomości (nie Twoje): kontrola poziomu 4 `surrogate_share` daje teraz „n/a”, gdy kroków mieszania nie ma więcej
+niż poziomów (P3 (2b)).
+
+Zaktualizuj `QUESTIONS.md` i `COVERAGE.md`; `--collect-only` bez błędów, `ruff` czysty. Na koniec krótko po polsku: co
+zmieniłeś, czy są nowe pytania.

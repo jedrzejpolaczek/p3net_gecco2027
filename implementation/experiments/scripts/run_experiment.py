@@ -405,7 +405,49 @@ def run_single(
                                       cost_used=getattr(method, "cost_used", None),
                                       multi_fidelity=getattr(method, "multi_fidelity", False),
                                       info=method.v005_info, resources=resources)
+    if hasattr(method, "v005_info"):
+        method.evaluation_metrics = _evaluation_metrics(substrate, state, method)
     return RunResult(state=state, cache=cache, method=method, resources=resources)
+
+
+def _evaluation_metrics(substrate: Any, state: RunState, method: Any) -> dict[str, Any]:
+    """v005 (preregistration §5.2, §5.9): per evaluation, the benchmark's training time and
+    its full-fidelity metrics (incl. the test split, never seen by the method), read after
+    the run and outside the resource meter. The substrate serves them from the answers it
+    already holds (JAHS: the bridge response of the evaluation itself), so on the surrogate
+    benchmark this costs no extra bridge query for the main track.
+
+    `history[i]` <-> `history[i]`; MF arms also get `fidelity[i]` = training seconds added by
+    `fidelity_queries[i]` (checkpoint resumption, as measurement/training_cost.py)."""
+    out: dict[str, Any] = {}
+    full = substrate.max_epochs()
+    rows = []
+    for observation in state.history:
+        row: dict[str, Any] = {}
+        try:
+            row["training_seconds"] = substrate.training_seconds(observation.genotype, full)
+        except Exception as exc:  # noqa: BLE001 -- recorded, not fatal: the run itself is complete
+            row["training_seconds_error"] = repr(exc)[:200]
+        try:
+            row.update(substrate.full_fidelity_metrics(observation.genotype))
+        except Exception as exc:  # noqa: BLE001
+            row["full_fidelity_error"] = repr(exc)[:200]
+        rows.append(row)
+    out["history"] = rows
+    queries = getattr(method, "fidelity_queries", None)
+    if queries is not None:
+        trained: dict[Any, float] = {}
+        added = []
+        for query in queries:
+            try:
+                seconds = float(substrate.training_seconds(query.genotype, query.epochs))
+            except Exception:  # noqa: BLE001
+                added.append(None)
+                continue
+            added.append(seconds - trained.get(query.genotype, 0.0))
+            trained[query.genotype] = seconds
+        out["fidelity"] = added
+    return out
 
 
 def result_path(*, method_name: str, search_space_name: str, budget: int, seed: int) -> Path:
@@ -525,6 +567,8 @@ def persist_run(
         "history": [_observation_to_dict(obs) for obs in result.state.history],
         "diagnostics": _diagnostics(result),
     }
+    if getattr(result.method, "evaluation_metrics", None) is not None:
+        payload["evaluation_metrics"] = result.method.evaluation_metrics
     if getattr(result.method, "v005_info", None) is not None:
         # v005 record layout (v005-interfaces.md §7, Benchmarki): resource fields at the top level.
         # None = not applicable on this run (no JAHS server, no GPU) or not measured (load time).
@@ -535,6 +579,10 @@ def persist_run(
             "surrogate_load_seconds": res.get("surrogate_load_seconds"),
             "method_wall_seconds": res.get("optimizer_seconds"),
             "peak_memory_process_mb": res.get("process_peak_rss_mb"),
+            # A8 / P3 (2a): "run" = peak of this run (Linux, reset at its start); "process" = since process start
+            "peak_memory_process_scope": res.get("process_peak_scope"),
+            # "pss_sum" (Linux) or "rss_sum"; the shared JAHS bridge serves all workers (machine-level cost)
+            "peak_memory_server_method": res.get("bridge_memory_method"),
         }
     tmp_path = out_path.with_name(out_path.name + ".tmp")
     with open(tmp_path, "w", encoding="utf-8") as handle:

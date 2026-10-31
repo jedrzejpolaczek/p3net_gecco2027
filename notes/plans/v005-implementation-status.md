@@ -162,3 +162,14 @@ Testy raportowania 72/72.
   przez OOM przez ~24 h (worker restartowany od zera, bez wpisu w `failures.jsonl`, więc `--max-retries` nie działa)
   aż do wyczerpania restartów → wynik A8: Vizier b=350 na JAHS nie mieści się w 30 GB. Reszta (JAHS ×3 b=100, FCNet ×4
   b=100/350, 11 punktów) w osobnym planie `configs/pipeline/v005-resources-vizier-rest.yaml`; CRC/FMN b=350 pominięte.
+- **2026-10-29/30:** analiza A8 → `v005-a8-analysis.md`. Posthoc JAHS na danych v004 (serwer) przerwany decyzją autora
+  2026-10-30 na 2 776 / 28 080 plikach (tempo 3 pliki/min ≈ 5.5 dnia); kopia częściowa w `results/runs/b4d25cac/posthoc/`;
+  brak posthocu JAHS = odchylenie v004.
+- **2026-10-29:** pilotaż energii 5 niezaliczony, pomiar na laptopie zarzucony (`benchmarks.md` BM-2); sprawdzenie
+  HW-NAS-Bench → `v005-hwnasbench-check.md`; decyzja = P1 w `v005-todo.md`.
+- **2026-10-31:** P1 = a. `benchmarks.py::build_energy_table_hwnasbench`, `scripts/build_nb201_energy_table.py`,
+  pobieranie w `scripts/download_data.py --only hw_nas_bench` (sha256) → `results/benchmark_tables/nb201_energy.json`
+  (15 625, mJ/obraz, Jetson TX2, 0 rozbieżności indeksów z NATS). Testy z `P3NET_BENCHMARK_DATA`: 10 passed, 3 failed
+  (W-BM2, W-BM3 — stary protokół laptopa, runda 8; W-BM7 — poprawka P3 (2a)).
+- **2026-10-31:** runda 8 autora testów: `test_benchmarks.py` z danymi 13 passed, 1 skipped (test pamięci przebiegu — tylko
+  Linux); W-BM7 padał na rekordach A8 sprzed poprawki → rekordy A8 przeniesione do `results/a8/` (decyzja autora).

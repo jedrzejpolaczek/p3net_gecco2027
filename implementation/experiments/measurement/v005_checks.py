@@ -10,7 +10,8 @@ in the run's diagnostics under "level4" (`run_experiment.run_single`). Each chec
 - f2_source (#6): the method saw f2 only through real evaluations -- no call of the
   substrate's analytic f2 during the run (`analytic_cost_queries == 0`).
 - surrogate_share (P3Net, S-6): mixing steps answered by the surrogate are < 100 % and
-  > 0 % of all mixing steps (one real evaluation per level, D-3 b).
+  > 0 % of all mixing steps (one real evaluation per level, D-3 b); n/a when there are no
+  more mixing steps than levels (P3 (2b), 2026-10-31).
 - resources (A8): the resource fields of the run are present.
 """
 
@@ -55,8 +56,10 @@ def level4_checks(*, kind: str, budget: int, evaluations_used: int, cost_used: f
     if kind in P3NET_SURROGATE:
         ev = info.get("events", {})
         steps, levels = ev.get("cluster_step_changed", 0), ev.get("level_mix", 0)
-        share = None if steps == 0 else 1.0 - min(levels, steps) / steps
-        # no mixing step at all (e.g. FIHC of the first solution used the whole budget): n/a
+        # n/a when no mixing step goes beyond the mandatory real one per level (D-3 b): no step
+        # at all (FIHC of the first solution used the whole budget), or as few steps as levels
+        # (A8, b = 100: one step, real by definition -> share 0 is not a failure)
+        share = None if steps <= levels else 1.0 - levels / steps
         out["surrogate_share"] = {"ok": None if share is None else 0.0 < share < 1.0,
                                   "detail": {"mixing_steps": steps, "real_per_level": levels, "surrogate_share": share}}
     else:

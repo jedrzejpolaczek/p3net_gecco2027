@@ -1,5 +1,10 @@
 # Experiment plan for paper v0.0.5 -- DRAFT until the v005 preregistration freezes it
-# (notes/plans/v005-plan.md, A1/A12; seeds 61-90 = confirmation seeds).
+# (notes/plans/v005-plan.md, A1/A12; notes/plans/v005-preregistration.md).
+# Seeds 62-91 = confirmation seeds (seed 61 was used by the A8 resource measurement; replaced by 91,
+# author's decision R3 b, 2026-10-31).
+# GP arms only at budgets 50 and 100 (plan A8; decision P2 b / P9, 2026-10-31): qNEHVI and qParEGO in
+# stage `gp` here; OSS Vizier (~30 GB resident) alone in configs/pipeline/v005-vizier.yaml, run after this
+# plan from the same commit with --workers 1 --run-root results/runs/<commit>-vizier.
 #
 # Consumed by scripts/run_pipeline.py like v004.yaml (one run root = one plan = one code
 # version). Methods are the v005 implementations (configs/methods/v005_*.yaml, run
@@ -46,11 +51,11 @@ method_groups:
     - v005_motpe
     - v005_nsga3
     - v005_smac3_parego
-    - v005_vizier
-    - v005_qnehvi
-    - v005_qparego
     - v005_moead
     - v005_random_search
+  gp: &gp  # budgets 50, 100 only (plan A8)
+    - v005_qnehvi
+    - v005_qparego
   elympus: &elympus  # separate track, supplement (A7)
     - v005_p3_elympus
   mf: &mf
@@ -82,18 +87,25 @@ stages:
     methods: [*main]
     search_spaces: *spaces
     budgets: *budgets
-    seeds: {from: 61, to: 90}
+    seeds: {from: 62, to: 91}
+
+  - name: gp
+    kind: grid
+    methods: [*gp]
+    search_spaces: *spaces
+    budgets: [50, 100]
+    seeds: {from: 62, to: 91}
 
   - name: elympus
     kind: grid
     methods: [*elympus]
     search_spaces: *spaces
     budgets: *budgets
-    seeds: {from: 61, to: 90}
+    seeds: {from: 62, to: 91}
 
   - name: mf
     kind: grid
     methods: [*mf]
     search_spaces: *mf_spaces
     budgets: *budgets
-    seeds: {from: 61, to: 90}
+    seeds: {from: 62, to: 91}

@@ -226,3 +226,18 @@ Numery Q odnoszą się do `implementation/lib/tests/v005/level1/QUESTIONS.md`; s
 - `NB201Energy.energy(g)`: genotyp z wartościami (nazwy operacji) albo indeksami do `OPS`.
 - `NB201Energy.metadata()` (Q-47) dodatkowo: `n_samples` = 5, `clock_lock_mhz` (1200), `reference_arch`, `ref_every` (5),
   `max_spread` (0.08), `max_retries` (2).
+
+**Uzupełnienie (2026-10-31, runda 8; decyzje P1 a i P3 (2a) z `v005-todo.md`; zastępuje klucze metadanych `NB201Energy`
+z Q-32 i Q-47, które dotyczyły zarzuconego pomiaru na laptopie):**
+- `NB201Energy.metadata()`: `source`, `source_file` (`"HW-NAS-Bench-v1_0.pickle"`), `source_sha256`, `metric`
+  (`"edgegpu_energy"`), `dataset` (`"cifar10"`), `device`, `runtime`, `batch_size` (1), `input_resolution` (32), `unit`
+  (`"mJ per image"`), `network` (`{"name", "C", "N", "num_classes"}`), `index_mismatches_vs_nats` (int), `n_cells`.
+- `p3net.v005.benchmarks.HWNASBENCH_SHA256: str`; `build_energy_table_hwnasbench(pickle_path, out_path=DEFAULT_TABLE, *,
+  dataset="cifar10", nats_index=None) -> dict` (`{"metadata", "energy"}`; `nats_index(arch_str) -> int` opcjonalnie;
+  `ValueError` przy złym sha256 — sprawdzany przed wczytaniem pickle).
+- Rekord przebiegu v005, `resources` dodatkowo: `peak_memory_process_scope` (`"run"` | `"process"`),
+  `peak_memory_server_method` (`"pss_sum"` | `"rss_sum"` | `None` bez mostu JAHS).
+- Pomiar zasobów (moduł `implementation/experiments/measurement/resources.py`, import z katalogu `experiments`):
+  `TimedSubstrate(substrate)` (deleguje wszystko do `substrate`, mierzy `objectives`); `with ResourceMeter(timed) as m:`
+  … ; `m.as_dict()` z kluczami m.in. `process_peak_rss_mb`, `process_peak_scope` (`"run"` | `"process"`),
+  `bridge_peak_rss_mb`, `bridge_memory_method`. Most: `substrate.bridge_pid() -> int | None` (jeśli metoda istnieje).

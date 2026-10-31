@@ -1,6 +1,6 @@
 # P3Net v0.0.5 — plan poprawek i nowego przebiegu
 
-Stan: 2026-10-16. Zastępuje `notes/archive/v004-plan.md` i `notes/archive/v004-audit-checklist.md`
+Stan: 2026-10-16; aktualizacja 2026-10-31 (A8, energia NB201). Lista zadań: `v005-todo.md` (jedyna). Zastępuje `notes/archive/v004-plan.md` i `notes/archive/v004-audit-checklist.md`
 (punkty, które pozostały aktualne, są przeniesione tutaj).
 
 Podstawa: raporty analizy v004 — `notes/analysis-v004/reports/01-implementation-audit.md` (R1),
@@ -134,6 +134,9 @@ porównanie z Tabelą 7.1 (na FLOPs, bo energii nie mamy; różnica opisana).
 - Osobna tabela GP dla b = 50/100, z adnotacją: „najlepszy w jakości przy b ≤ 100; koszt X h i Y GB na przebieg”.
 - s9: rejestrować pamięć mostu JAHS, pamięć GPU, czas ładowania mostu; asercja niepustych pól.
 - Test zasobów każdej metody przy największym budżecie na docelowej maszynie przed zamrożeniem planu.
+- **Zrobione 2026-10-24…29** (pomiar na serwerze, ~5.5 dnia; wyniki nie wchodzą do artykułu): `v005-a8-analysis.md`.
+  Wyszło: Vizier ~30 GB (b=350 na JAHS nie mieści się w 30 GB), qNEHVI/qParEGO b=350 + 6 workerów → OOM; pomiar pamięci
+  per przebieg niewiarygodny (P3 w `v005-todo.md`).
 
 ### A9. Analizy na danych v004 — decyzja: teraz
 
@@ -157,6 +160,8 @@ NB201 i NAS-HPO-II (publiczne skrypty treningowe). Właściciel, termin i skrypt
 
 ### A12. Metryka JAHS — decyzja: zmienić w prerejestracji v005
 
+**Zmiana 2026-10-31 (P4, `v005-todo.md`):** punkt odniesienia z granic przestrzeni, bez pilotażu — poniższy opis nieaktualny.
+
 Punkt odniesienia HV wybrany na pilotażu (np. RS vs jedna silna metoda) przed zamrożeniem; „domknięcie luki” jako miara
 opisowa. Wybór uzasadniony w prerejestracji.
 
@@ -177,8 +182,10 @@ n i siatki dyskretyzacji per przestrzeń, κ per przestrzeń, hiperparametry wsz
 - [x] **Odpowiedź M. Przewoźniczka otrzymana (2026-10-21)** (mail 2026-10-20: mieszanie na ścieżce `opt_at_init 5` w OLyMPuS, `v005-level2-criteria.md`).
 - [ ] **Czekamy na odpowiedź Niny Bartnik** (mail 2026-10-16, niejasności N-0–N-4 z `v005-sources/bartnik-mo-sa-p3-gomea.md`). **Dopytanie 2026-10-22:** bramka — percentyl (Alg. 8) czy próg względem elitist jak w kodzie SAGOMEA (poziom 2: −7.5 % vs SAGOMEA).
       Przed prerejestracją: odpowiedź zastępuje założenia Z-B#, brak odpowiedzi — założenia zostają i idą do artykułu.
-- [ ] Tablica energii NB201 (`v005-sources/benchmarks.md` BM-2): pilotaż 1 000 wejść → pełny pomiar na laptopie
-      (odłożone na koniec etapu A, decyzja 2026-10-18; blokada zegarów wymaga konsoli administratora).
+- [x] f2 dla NB201 (`v005-sources/benchmarks.md` BM-2). **Pomiar na laptopie zarzucony 2026-10-29** (autor nie jest w
+      stanie go wykonać; pilotaż 5 z 1 000 wejść niezaliczony). Decyzja P1 a (2026-10-31): HW-NAS-Bench, edge GPU;
+      tablica zbudowana 2026-10-31 (testy W-BM2, W-BM3 — runda 8).
+- [x] A8 — pomiar czasu i pamięci metod (2026-10-24…29), `v005-a8-analysis.md`.
 - [ ] Prerejestracja v005 zamrożona (seedy 61–90, metryka JAHS, retrening, lista analiz → skrypty → pliki).
 - [ ] Przebieg v005 zakończony; kontrola po przebiegu bez alarmów.
 - [ ] Analizy z prerejestracji v005 policzone.
@@ -192,7 +199,7 @@ n i siatki dyskretyzacji per przestrzeń, κ per przestrzeń, hiperparametry wsz
 | B1 | Narracja łączy: (a) prezentację algorytmu z porównaniem wielometrycznym, (b) rozbiór drogi projektowej, (c) zależność od benchmarku, (d) koszt praktyczny |
 | B2 | NAS-Bench-201: krótka uwaga (benchmark słabo rozróżnia metody; FLOPs prawie jednokryterialne — R1 §4.2); jako materiał na dalsze kroki we wnioskach |
 | B3 | eLyMPuS: po poprawkach zapisać jako kierunek potencjalnych ulepszeń; po ewaluacji v005 rozważyć testy na bogatszych danych |
-| B4 | S4′: opisać jako alternatywę równoważną S5, na podstawie bezpośredniego porównania (A9) |
+| B4 | S4′: opisać jako alternatywę **o innym profilu niż S5** (zmiana 2026-10-31, P6; A9, raport 04 §2: S4′ lepszy na NHB we wszystkich budżetach, S5 lepszy na CRC przy b ≥ 200 i FMN przy b = 350, na C10 bez różnicy) |
 | B5 | Testy hipotez interpretacyjnych (log(f1), akceptacja po obu celach w wariantach RF, kanoniczne P3 ze świeżym f2, większe przestrzenie) — uruchamiane po v005, zależnie od wyników |
 | B6 | JAHS f2 w v004 (`size_MB`) zawierało szum surogatu zależny od HP (BM-3: rozrzut przy stałej komórce do 34 %) — przy interpretacji v004 zaznaczyć, że część „poprawy f2” na JAHS mogła wynikać ze zmiany HP, nie architektury; v005 używa liczby parametrów |
 
@@ -217,8 +224,8 @@ Nowe:
   `notes/ga_landscape_2026.md` (ENCAS, kategoria 1 vs 2) i potem ją zarchiwizować.
 - Poprawić wszystkie zdania z R3 §2.8 zgodnie z tabelą „zdanie ↔ test”.
 - **Limitations — zebrać z kart** (`v005-sources/*.md`): każde odstępstwo kategorii O i każde założenie Z-# z
-  „opisać w artykule”. Obowiązkowo m.in.: pomiar energii NB201 na laptopowym GPU (`benchmarks.md` BM-2, akapit
-  „Limitations”), BULK & CUT nieuruchamialny na benchmarkach, założenia Z-B0–Z-B4 (brak kodu Bartnik), NSGA-Net bez BOA
+  „opisać w artykule”. Obowiązkowo m.in.: energia NB201 z HW-NAS-Bench, nie własny pomiar (`benchmarks.md` BM-2, akapit
+  „Limitations” przy decyzji P1 a), BULK & CUT nieuruchamialny na benchmarkach, założenia Z-B0–Z-B4 (brak kodu Bartnik), NSGA-Net bez BOA
   (kod autorów), RegEvo jako jedyna własna adaptacja MO, JAHS niższe wierności z surogatu (#25), GP tylko b ≤ 100 (#30).
 
 Nieaktualne punkty dawnej sekcji C (nie przenoszone): „showing → finding no evidence” w kontrybucji 3 (kontrybucja upada),

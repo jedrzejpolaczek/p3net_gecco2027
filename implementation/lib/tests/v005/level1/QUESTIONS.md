@@ -398,3 +398,29 @@ i `[]` (guard `test_WBM7_zero_is_not_an_empty_resource_field`). Przestrzeń z `r
 zaczyna się od `jahs` (fallback na nazwę pliku usunięty). `NB201Energy.energy(g)` przyjmuje wartości albo indeksy —
 W-BM2 bez zmian.
 
+## Runda 8 (2026-10-31) — f2 NB201 z HW-NAS-Bench (P1 a), pamięć przebiegu (P3 (2a))
+
+### W-BM2, W-BM3 — zmiana źródła energii NB201
+**Rozstrzygnięte:** W-BM2 sprawdza klucze metadanych z uzupełnienia interfejsu (runda 8; zastępują klucze z Q-32 i Q-47)
+oraz `metric == "edgegpu_energy"`, `dataset == "cifar10"`, `batch_size == 1`, `input_resolution == 32`,
+`unit == "mJ per image"`, `n_cells == 15625`; kompletność i f2 substratu = `table.energy(g)` bez zmian. W-BM3 (stary test
+protokołu laptopa usunięty) sprawdza zgodność ze źródłem: `HWNASBENCH_SHA256` = sha256 z karty = `source_sha256`,
+`index_mismatches_vs_nats == 0`, sha256 pliku w `data/cache/hw_nas_bench/`, wartości tablicy = `edgegpu_energy[i]` dla 300
+losowych `config[i]["arch_str"]` (arch_str → genotyp z wartościami, sprawdzone `genotype_to_arch_str`). Bez danych:
+plik o innym sha256 → `ValueError`, a test sprawdza też, że plik **nie został odpakowany** (pickle z pułapką `__reduce__`)
+i że nic nie zapisano. Plik w teście jest odpakowywany zwykłym `pickle` dopiero po zgodności sha256.
+
+### W-BM7 — szczyt pamięci przebiegu
+**Rozstrzygnięte:** rekord ma `peak_memory_process_scope` ∈ {`run`, `process`}; na JAHS `peak_memory_server_method` ∈
+{`pss_sum`, `rss_sum`}, poza JAHS `None`. Nowy test tylko na Linuksie: dwa kolejne `ResourceMeter` w jednym procesie
+(~400 MB, potem ~10 MB, strony dotknięte co 4 KB) — oba `process_peak_scope == "run"`, drugi szczyt mniejszy o > 200 MB.
+Na Windows pominięty (kod linuksowy do uruchomienia na serwerze). Rekordy A8 sprzed poprawki (puste
+`peak_memory_server_mb`) dalej nie przechodzą — test ma rację wg karty (BM-5: pamięć mostu także przy wspólnym moście);
+rekordy trzeba wygenerować ponownie albo przenieść poza `results/runs/*/raw/`.
+
+### Q-51 — warunek obecności danych w `conftest.py`
+Implementujący ma rację: warunek wykluczał `data/cache`, bo w chwili pisania katalog `data` zawierał tylko pusty `cache`.
+**Rozstrzygnięte:** dane są obecne, gdy pod `P3NET_BENCHMARK_DATA` (albo `implementation/experiments/data`) jest
+jakikolwiek plik, także w `cache`. Testy, którym brakuje własnego pliku, pomijają się same (np. W-BM3 bez pickla
+HW-NAS-Bench) albo przy nieudanej konstrukcji substratu (`_substrate` → `pytest.skip`).
+

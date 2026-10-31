@@ -15,6 +15,7 @@ the NB201 arch string), appended, so an interrupted run resumes.
         --out results/energy/nb201_energy.jsonl --sample 100 --seed 0      # pilot
     vendor/energy-env/.venv/Scripts/python.exe scripts/measure_nb201_energy.py \
         --out results/energy/nb201_energy.jsonl --all                       # full table
+    (--n-inputs 1000: short pass, BM-2 decision 2026-10-18; recorded in the metadata)
 """
 
 from __future__ import annotations
@@ -204,6 +205,7 @@ def metadata(handle, args) -> dict:
 
 
 def main() -> None:
+    global N_INPUTS
     p = argparse.ArgumentParser()
     p.add_argument("--out", required=True)
     g = p.add_mutually_exclusive_group(required=True)
@@ -211,6 +213,8 @@ def main() -> None:
     g.add_argument("--sample", type=int, help="number of random architectures (pilot)")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--batch-size", type=int, default=256)
+    p.add_argument("--n-inputs", type=int, default=N_INPUTS,
+                   help="inputs per pass (BM-2 decision 2026-10-18: short-pass pilot with 1000)")
     p.add_argument("--n-warmup", type=int, default=3)
     p.add_argument("--n-samples", type=int, default=5)
     p.add_argument("--max-spread", type=float, default=0.08, help="repeat an attempt whose samples spread more (relative)")
@@ -221,6 +225,7 @@ def main() -> None:
     p.add_argument("--ref-every", type=int, default=5,
                    help="measure the reference cell before the first and after every N cells (drift correction)")
     args = p.parse_args()
+    N_INPUTS = args.n_inputs  # read by one_pass() and written to the metadata
 
     archs = all_archs()
     if args.sample:

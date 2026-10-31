@@ -198,7 +198,9 @@ Wnioski Q1 (z siłą dowodu):
 - S5 **nie jest najlepszy**: przegrywa istotnie z TPE (C10/100–350), SH-EMOA (C10/350, NHB/200–350), BANANAS (FMN/200–350,
   NHB/350), Vizier (CRC/100, NHB/100), NSGA-III i NSGA-Net (NHB/350). Siła (2) dla kierunku, (3) dla „kto jest najlepszy” (rangi
   opisowe).
-- Z kanonicznymi P3 (bartnik, M9, M10) S5 przeważnie remisuje na przestrzeniach głównych (3–2 wygrane, 0–1 porażka). Siła (2).
+- Z kanonicznymi P3 (bartnik, M9, M10) ~~S5 przeważnie remisuje na przestrzeniach głównych (3–2 wygrane, 0–1 porażka). Siła (2).~~
+  **Sprostowanie 2026-10-31 (A9, raport 04 §1):** to nie remis — wynik zależy od przestrzeni: na C10/FMN przy b ≥ 100 S5 lepszy
+  (δ do +0.80), na NHB przy b ≤ 200 gorszy od M9/M10 (δ −0.33…−0.47) i od bartnik przy b = 50. Bez korekty Holma — opis.
 
 ### 2.2 Q2 — droga projektowa S1 → S2 → S3 → S4 → S5 (+ S4′), seedy 1–30
 

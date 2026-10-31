@@ -1,0 +1,42 @@
+# OSS Vizier part of the v005 run (decision P2 b / P9, 2026-10-31; notes/plans/v005-preregistration.md).
+#
+# Vizier holds ~30 GB resident already at budget 100 (A8, notes/plans/v005-a8-analysis.md), so it runs
+# alone on the machine, after configs/pipeline/v005.yaml, FROM THE SAME COMMIT, into its own run root
+# (a second plan cannot resume into the main run root -- the manifest checks the plan file):
+#
+#   bash scripts/run_pipeline.sh --plan configs/pipeline/v005-vizier.yaml --workers 1 \
+#       --run-root results/runs/<commit>-vizier
+#
+# Budgets 50 and 100 only (plan A8: no GP arm at b >= 200; JAHS at b = 350 does not fit in 30 GB).
+# Seeds as in v005.yaml (62-91, decision R3 b).
+
+name: v005-vizier
+
+parallel:
+  workers: 1
+  jahs_max_datasets: 1
+
+stages:
+  - name: checks
+    kind: checks
+    cards: true
+    determinism:
+      search_space: nas_hpo_bench_ii_v005
+      budget: 20
+      seed: 1
+
+  - name: vizier
+    kind: grid
+    methods: [v005_vizier]
+    search_spaces:
+      - nas_bench_201_v005
+      - nas_hpo_bench_ii_v005
+      - jahs_bench_201_v005
+      - jahs_bench_201_colorectal_v005
+      - jahs_bench_201_fashion_v005
+      - fcnet_protein_structure_v005
+      - fcnet_naval_propulsion_v005
+      - fcnet_parkinsons_telemonitoring_v005
+      - fcnet_slice_localization_v005
+    budgets: [50, 100]
+    seeds: {from: 62, to: 91}
