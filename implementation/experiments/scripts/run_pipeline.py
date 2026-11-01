@@ -89,6 +89,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -858,10 +859,17 @@ def run_checks(
     for name, cwd in (("lib", lib_root), ("experiments", EXPERIMENTS_ROOT)):
         pipeline.log(f"CHECKS running {name} test suite")
         proc = subprocess.run(
-            [sys.executable, "-m", "pytest", "-q"], cwd=cwd, env=env, capture_output=True, text=True
+            [sys.executable, "-m", "pytest", "-q", "-rfE"], cwd=cwd, env=env, capture_output=True,
+            text=True,
         )
-        tail = proc.stdout.strip().splitlines()[-1:] if proc.stdout else []
-        results["suites"][name] = {"returncode": proc.returncode, "summary": tail}
+        lines = proc.stdout.strip().splitlines() if proc.stdout else []
+        # the pytest summary line, not the last stdout line (native libraries may print after it)
+        summary = [ln for ln in lines if re.search(r"\d+ (passed|failed|error)", ln) and " in " in ln]
+        tail = summary[-1:] or lines[-1:]
+        failed = [ln for ln in lines if ln.startswith(("FAILED ", "ERROR "))]
+        results["suites"][name] = {"returncode": proc.returncode, "summary": tail, "failed": failed}
+        for ln in failed:
+            pipeline.log(f"CHECKS {name}: {ln[:300]}")
         pipeline.log(f"CHECKS {name}: {'passed' if proc.returncode == 0 else 'FAILED'} {tail}")
 
     spec = stage["determinism"]
