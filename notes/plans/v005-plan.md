@@ -197,7 +197,7 @@ n i siatki dyskretyzacji per przestrzeń, κ per przestrzeń, hiperparametry wsz
 | # | Decyzja |
 |---|---|
 | B1 | Narracja łączy: (a) prezentację algorytmu z porównaniem wielometrycznym, (b) rozbiór drogi projektowej, (c) zależność od benchmarku, (d) koszt praktyczny |
-| B2 | NAS-Bench-201: krótka uwaga (benchmark słabo rozróżnia metody; FLOPs prawie jednokryterialne — R1 §4.2); jako materiał na dalsze kroki we wnioskach |
+| B2 | NAS-Bench-201: opisowo (R2 a). **Zmiana 2026-11-16:** w v005 (f2 = energia z HW-NAS-Bench) benchmark rozróżnia metody — mediany IGD+ przy b = 350 od 0.0096 do 0.0375, kolejność stabilna między b = 200 i 350 (Spearman 0.95); P3Net w środku stawki (12/19), między kanonicznym P3 a random search. Dawne „słabo rozróżnia; FLOPs prawie jednokryterialne” (R1 §4.2) dotyczy tylko v004 |
 | B3 | eLyMPuS: po poprawkach zapisać jako kierunek potencjalnych ulepszeń; po ewaluacji v005 rozważyć testy na bogatszych danych |
 | B4 | S4′: opisać jako alternatywę **o innym profilu niż S5** (zmiana 2026-10-31, P6; A9, raport 04 §2: S4′ lepszy na NHB we wszystkich budżetach, S5 lepszy na CRC przy b ≥ 200 i FMN przy b = 350, na C10 bez różnicy) |
 | B5 | Testy hipotez interpretacyjnych (log(f1), akceptacja po obu celach w wariantach RF, kanoniczne P3 ze świeżym f2, większe przestrzenie) — uruchamiane po v005, zależnie od wyników |

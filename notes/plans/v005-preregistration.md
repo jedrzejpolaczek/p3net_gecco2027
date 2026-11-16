@@ -141,9 +141,59 @@ NB201 200 epochs — median 61 min per cell (p10 40, p90 81 min; 300 random cell
 GPU-h. Total ≈ 25 GPU-h on a GPU of the same class, plus environment set-up. GPU: Hetzner dedicated GPU server (decision 2026-10-31); offer and
 price to be checked before ordering.
 
+## 7a. Exploratory addendum E1 — the surrogate at a larger budget (written 2026-11-16, before any E1 run)
+
+**Status: exploratory.** Planned after the v005 results were seen (`notes/analysis-v005/reports/02`, `03`); reported in
+its own section, never as confirmatory; reported whatever its outcome (author's decision 2026-11-16, B5 a).
+
+- **Why:** at b ≤ 350 P3Net takes few mixing steps (median per run on the primary spaces: 0, 0, 1, 8 at b = 50, 100,
+  200, 350), and with no mixing step it is canonical P3 (report 03: same engine, shifted random stream). Q2/Q3 therefore
+  cannot show what the surrogate contributes.
+- **Question:** when the surrogate has room to act, does P3Net (or P3Net-gate, P3Net-nolink) differ from canonical P3?
+- **Arms:** `v005_p3net`, `v005_p3net_gate`, `v005_p3net_nolink`, `v005_p3_canonical`, and `v005_random_search` as a
+  reference point only. No other comparison arm: **E1 supports no claim about P3Net vs. the other methods.**
+- **Grid:** the four primary spaces (JAHS C10, CRC, FMN; NAS-HPO-Bench-II) × b = 1 000 × seeds **92–121** (never used
+  before) = 600 runs; same code as v005 (commit `c674c91e`; the working tree differs only in new analysis scripts and
+  the E1 plan file, recorded in the run manifest); plan `configs/pipeline/v005-e1.yaml`, run root
+  `results/runs/c674c91e-e1`.
+- **Analysis (fixed now):** per space, the Q2 family (P3Net vs canonical P3, P3Net-gate, P3Net-nolink): two-sided
+  Mann–Whitney U, Holm within the space, α = 0.05, Cliff's δ positive = P3Net better; TOST as in §4 (m = 0.33 and 0.147);
+  descriptively: median mixing steps and surrogate share per arm, share of runs identical to P3Net, P3Net and canonical
+  P3 vs random search (δ only). Metrics as §3.
+- **Before the grid:** a timing pilot on seed 200 (outside 92–121; its results are not analysed); the grid runs only if
+  the measured cost is acceptable to the author.
+
 ## 8. Deviations
 
 Any change to this plan after the run starts is recorded here with the date and the reason, and the affected results
 are marked in the paper.
 
-(none yet)
+1. **JAHS-Bench-201 CIFAR-10 points rerun with 2 workers (2026-11-03 decision, rerun 2026-11-09…11).** The
+   out-of-memory killer stopped the shared JAHS bridge (13–15 GB) during the 6-worker run (`dmesg` 2026-11-02 and
+   2026-11-06 02:27); every point queued for that bridge then failed its 3 attempts with "shared jahs-bench bridge
+   closed the connection" — 3 000 points, all on `jahs_bench_201_v005`: main 2 160, MF 600, GP 120, eLyMPuS 120. The
+   author decided (a): run unchanged, then rerun the failed points with `--retry-failed` and 2 workers, same commit and
+   run root (`c674c91e`). All 3 000 completed; no other point failed. Effect: quality metrics are unaffected (the
+   benchmark is deterministic and the methods do not depend on the worker count), but the wall-clock times of these
+   3 000 points were measured with 2 workers instead of 6 sharing 16 vCPUs (§5.3). Q6 times on JAHS C10 are therefore
+   reported separately from the other spaces and marked. Besides the bridge, the 6-worker run had 41 worker restarts
+   after the out-of-memory killer (restart from scratch, §4); the 2-worker rerun had none.
+2. **OSS Vizier worker restarts (2026-11-06…15).** The Vizier worker's memory grows to about 25 GB over a few points
+   until the out-of-memory killer stops it; it is restarted and the interrupted point starts again from scratch (§4).
+   118 restarts in total: 20 in the first attempt (2026-11-06, which then stopped at the default limit of 20 restarts
+   per worker, 79 of 540 points done) and 98 in the second (2026-11-12…15, `--max-worker-restarts 1000`, same commit,
+   run root `c674c91e-vizier`). All 540 points completed. Vizier wall-clock times include no time from interrupted
+   attempts (each record is written by the attempt that finished).
+3. **§5.4 surrogate decision quality not performed (decision 2026-11-16, K8).** The v005 methods (`p3net/v005/`) do not
+   log surrogate decisions (`decision_log`; only the v004 class `p3net.methods.p3net` does), so no run record has
+   `diagnostics.surrogate_decisions` and the posthoc files (`scripts/posthoc_metrics.py`) have `decisions = None`.
+   Found after the run; rerunning the six surrogate arms with logging would change method code after the freeze. Instead
+   the paper reports the surrogate share and the number of mixing steps per cell (§5.5, `budget_use.csv`). The posthoc
+   queries were still run (JAHS seeds 62–71, R8 b; tabular spaces all seeds) and give `history_metrics` only.
+4. **§5.8 retraining — details the plan left open (decision 2026-11-16).** The budget of the knee point was not stated:
+   it is the arm's largest budget (350; GP arms 100). The median run of 30 is the one at index (n − 1) // 2 after sorting
+   by IGD+ then seed; a front of two points takes the point with lower f1. Arms whose knee is the same configuration share
+   one training (40 trainings for 49 knee points: NB201 16 of 22, NAS-HPO-II 24 of 27). One seed per training (NB201 777,
+   NAS-HPO-II 222 — the first seed of each benchmark). The NAS-HPO-II network is built with xautodl's TinyNetwork (same
+   skeleton and op set as the authors' `nasbench201like`), not the authors' module. Script and sources:
+   `scripts/retrain_v005.py`, `scripts/retraining_knees_v005.py`.

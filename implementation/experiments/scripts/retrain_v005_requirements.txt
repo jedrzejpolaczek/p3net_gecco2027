@@ -1,0 +1,9 @@
+# Environment of scripts/retrain_v005.py (GPU server, Linux; PyPI torch wheels for Linux include CUDA).
+# xautodl 1.0.0 pins an old numpy and pulls fvcore; only its network code is used, so install it separately:
+#     pip install -r scripts/retrain_v005_requirements.txt
+#     pip install --no-deps xautodl==1.0.0
+# Checked with torch 2.15.0, torchvision 0.29.2 (CPU, 1-epoch smoke test, 2026-11-16).
+torch>=2.15
+torchvision>=0.29
+numpy
+pyyaml
