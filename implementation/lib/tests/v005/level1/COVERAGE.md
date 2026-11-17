@@ -25,11 +25,14 @@ Uwagi: `Q-xx` — test oznaczony `needs_clarification` (pytanie w `QUESTIONS.md`
 | W14 | `p3net.md` | `test_p3net.py::test_W14_p3net_real_evaluations_per_iteration` |  |
 | W15 | `p3net.md` | `test_p3net.py::test_W15_every_real_evaluation_in_history_and_no_duplicates`<br>`test_p3net.py::test_W15_eval_cache_is_the_history` |  |
 | W16 | `p3net.md` | `test_p3net.py::test_W16_p3_finds_trap_optimum_in_8_of_10_runs` |  |
+| W17 | `p3net.md` | `test_p3_canonical.py::test_W17_a_gate_rejecting_everything_spends_nothing_in_mixing`<br>`test_p3_canonical.py::test_W17_b_gate_accepting_everything_equals_canonical_after_one_draw`<br>`test_p3_canonical.py::test_W17_c_acceptance_decided_by_true_values` | D-3 a, claim C-48 (dopisane 2026-11-17); bramka podmieniona na stałą predykcję, reguła bramki Z-G1 osobno (wiersz niżej) |
+| Z-G1 | `p3net.md` (pod D-3) | `test_p3_canonical.py::test_ZG1_gate_passes_iff_predicted_objectives_satisfy_D1` | odpowiedź na Q-53 (runda 10b); predykcja z tabeli testu, przypadki: dominuje / równa / tylko niezdominowana przez archiwum / zdominowana; kandydat z H_t przez bramkę |
 | W-K1 | `p3-canonical.md` | `test_p3_canonical.py::test_WK1_no_surrogate_object_and_no_surrogate_calls` |  |
 | W-K2 | `p3-canonical.md` | `test_p3_canonical.py::test_WK2_each_changing_mixing_step_costs_one_real_evaluation` |  |
 | W-K3 | `p3-canonical.md` | `test_p3_canonical.py::test_WK3_oracle_surrogate_reproduces_canonical_trajectory` |  |
 | W-K4 | `p3-canonical.md` | `test_p3_canonical.py::test_WK4_budget_never_exceeded_and_stops_mid_iteration`<br>`test_p3_canonical.py::test_WK4_budget_object_rule` |  |
 | W-K5 | `p3-canonical.md` | `test_p3_canonical.py::test_WK5_single_objective_mode_is_well_defined` | warunek wstępny; właściwy test zgodności z kodem autorów to poziom 2 (inna rola) |
+| W-K6 | `p3-canonical.md` | `test_p3_canonical.py::test_WK6_history_equals_canonical_after_one_draw`<br>`test_p3_canonical.py::test_WK6_without_the_draw_histories_differ`<br>`test_p3_canonical.py::test_WK6_init_takes_exactly_one_getrandbits64`<br>`test_p3_canonical.py::test_WK6_no_draw_without_surrogate` | claim C-46 (dopisane 2026-11-17) |
 | W-S1 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS1_predictions_never_consume_budget` |  |
 | W-S2 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS2_predicts_both_objectives_f2_from_model`<br>`test_p3net_surrogate.py::test_WS2_p3net_has_no_access_to_f2_of_unevaluated` |  |
 | W-S3 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS3_interaction_features_only_within_clusters`<br>`test_p3net_surrogate.py::test_WS3_nolink_variant_has_no_interactions` |  |
@@ -40,6 +43,8 @@ Uwagi: `Q-xx` — test oznaczony `needs_clarification` (pytanie w `QUESTIONS.md`
 | W-S8 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS8_no_surrogate_before_first_completed_fihc` |  |
 | W-S9 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS9_model_is_antisymmetric` |  |
 | W-S10 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS10_same_surrogate_in_p3net_and_gate_variant` |  |
+| W-S11 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS11_all_ordered_pairs_up_to_max`<br>`test_p3net_surrogate.py::test_WS11_exactly_max_distinct_pairs_above`<br>`test_p3net_surrogate.py::test_WS11_random_forest_with_library_defaults` | audyt F4 (dopisane 2026-11-17); pary identyfikowane po wierszach `features` |
+| W-S12 | `p3net-surrogate.md` | `test_p3net_surrogate.py::test_WS12_chain_prediction_is_telescoped_sum_of_deltas` | S-1 a, claim C-52 (dopisane 2026-11-17); łańcuchy długości 0, 1, 3, z powiązaniami i bez |
 | W-B1 | `bartnik-mo-sa-p3-gomea.md` | `test_bartnik.py::test_WB1_no_hill_climber_new_solution_goes_to_level_0` |  |
 | W-B2 | `bartnik-mo-sa-p3-gomea.md` | `test_bartnik.py::test_WB2_warmup_is_20_percent_all_real_before_first_training` |  |
 | W-B3 | `bartnik-mo-sa-p3-gomea.md` | `test_bartnik.py::test_WB3_climbs_all_levels_promotes_only_when_compare_prefers` |  |
@@ -96,6 +101,7 @@ Uwagi: `Q-xx` — test oznaczony `needs_clarification` (pytanie w `QUESTIONS.md`
 | W-R6 | `reinforce.md` | `test_reinforce.py::test_WR6_cosine_temperature_with_restarts` |  |
 | W-R7 | `reinforce.md` | `test_reinforce.py::test_WR7_duplicates_free_and_budget`<br>`test_reinforce.py::test_WR7_policy_updated_on_duplicates` |  |
 | W-R8 | `reinforce.md` | `test_reinforce.py::test_WR8_budget_never_exceeded` |  |
+| W-R9 | `reinforce.md` | `test_reinforce.py::test_WR9_default_configuration_is_monas_alpha_075` | audyt F10 (dopisane 2026-11-17) |
 | W-RE1 | `regevo.md` | `test_regevo.py::test_WRE1_start_is_20_random_valid_evaluated` |  |
 | W-RE2 | `regevo.md` | `test_regevo.py::test_WRE2_sample_of_five_with_replacement` |  |
 | W-RE3 | `regevo.md` | `test_regevo.py::test_WRE3_rank_is_computed_on_the_population_not_the_sample`<br>`test_regevo.py::test_WRE3_crowding_tie_break_on_population_front` |  |
@@ -128,4 +134,4 @@ Uwagi: `Q-xx` — test oznaczony `needs_clarification` (pytanie w `QUESTIONS.md`
 | W-BM6 | `benchmarks.md` | `test_benchmarks.py::test_WBM6_validity_rejects_cells_without_path`<br>`test_benchmarks.py::test_WBM6_validity_same_rule_on_all_cell_spaces` |  |
 | W-BM7 | `benchmarks.md` | `test_benchmarks.py::test_WBM7_resource_fields_present_in_every_run_record`<br>`test_benchmarks.py::test_WBM7_zero_is_not_an_empty_resource_field`<br>`test_benchmarks.py::test_WBM7_run_peak_excludes_earlier_run_in_same_process` | Linux, dane |
 
-Razem: 118 własności z 14 kart (117 W-* + E-4); każda ma ≥ 1 test.
+Razem: 124 własności z 14 kart (122 W-* + E-4 + Z-G1); każda ma ≥ 1 test.

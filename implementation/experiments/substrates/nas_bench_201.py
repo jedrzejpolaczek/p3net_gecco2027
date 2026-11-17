@@ -29,7 +29,7 @@ f2 = FLOPs, not Bartnik's own measured GPU energy consumption
 FLOPs, params, and latency (nats_bench.api_utils.ArchResults.
 get_compute_costs, key "flops"), but not energy -- Bartnik measured
 energy herself, on her own hardware, so it is not a queryable field of
-this benchmark at all (chapters/v003/related_work/main.tex documents
+this benchmark at all (chapters/archive/v003/related_work/main.tex documents
 this). FLOPs is used instead as a deterministic, architecture-only,
 hardware-independent cost proxy -- a documented deviation, not a silent
 substitution.

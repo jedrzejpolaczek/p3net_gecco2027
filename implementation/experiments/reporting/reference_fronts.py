@@ -23,7 +23,7 @@ front is computable, and IGD+ against it is a genuine absolute metric
 rather than a relative one. `build_oracle_front` enumerates it by direct
 substrate query; `scripts/build_oracle_front.py` is the entry point.
 
-Reference: chapters/v003/results/main.tex ("Metrics").
+Reference: chapters/archive/v003/results/main.tex ("Metrics").
 """
 
 from __future__ import annotations

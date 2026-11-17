@@ -1,4 +1,4 @@
-"""v005 analysis code: everything notes/plans/v005-preregistration.md promises, one module per part.
+"""v005 analysis code: everything notes/archive/v005/plans/v005-preregistration.md promises, one module per part.
 
 spec       -- arms, families, spaces and metric of each space, exactly as pre-registered
 fronts     -- K1 oracle fronts of the v005 objectives, K2 JAHS bounds (built once, before the run)

@@ -1,0 +1,75 @@
+% ARCHIVE COPY of nas_compare_v0.0.5.tex, frozen 2026-11-17 at the close of v005 (before v006).
+% Inputs and figures point to chapters/archive/v005/ and figures/archive/v005/; compile from the repo root.
+% nas_compare_v0.0.5 -- v005 draft, assembled 2026-11-17 for a first compilation check (stage C, item 6).
+% Same class and preamble as nas_compare_v0.0.3.tex. State of the parts:
+%   All parts are v005 drafts (2026-11-17): title (proposal), abstract, introduction, Related Work, problem
+%   formulation, P3 and P3Net, Experimental setup, Results (incl. K10), Limitations, Reproducibility, conclusions,
+%   appendix (deviations, secondary analyses). No v003 chapter is included any more.
+% Main text / supplement split: for now the supplement is an appendix of this file so that every cross-reference
+% resolves; it moves to a separate file at stage D. All result tables are in the main text for now.
+\documentclass[sigconf,authordraft]{acmart}
+
+\usepackage[T1]{fontenc}
+% amsmath/amssymb/amsfonts are already loaded by acmart (newtxmath); loading them again breaks \Bbbk.
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage[table]{xcolor}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+
+% Placeholders: anonymous repository link (stage D) and open items in the draft.
+\newcommand{\anonrepo}{\textit{[anonymous repository link]}}
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+
+\acmConference[GECCO '27]{Genetic and Evolutionary Computation Conference}{2027}{TBD}
+\acmYear{2027}
+\copyrightyear{2027}
+\setcopyright{none}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\settopmatter{printacmref=false}
+\setlength{\headheight}{15.5pt}
+
+\begin{document}
+
+% --- v005 ----------------------------------------------------------------------------------------------------------
+\input{chapters/archive/v005/title/main}
+\input{chapters/archive/v005/abstract/main}
+\maketitle
+
+\input{chapters/archive/v005/introduction/main}
+
+% --- v005 ----------------------------------------------------------------------------------------------------------
+\input{chapters/archive/v005/related_work/main}
+
+\input{chapters/archive/v005/problem_formulation/main}
+\input{chapters/archive/v005/proposed_optimizer/main}
+
+% --- v005 ----------------------------------------------------------------------------------------------------------
+\input{chapters/archive/v005/setup/main}
+\input{chapters/archive/v005/results/main}
+\input{chapters/archive/v005/results/_generated_figures}
+\input{chapters/archive/v005/results/_generated_q1_heatmaps}
+\input{chapters/archive/v005/results/_generated_q2_q3}
+\input{chapters/archive/v005/results/_generated_q4_mf}
+\input{chapters/archive/v005/results/_generated_q5_fcnet}
+\input{chapters/archive/v005/results/_generated_q6_costs}
+\input{chapters/archive/v005/results/_generated_e1}
+\input{chapters/archive/v005/limitations/main}
+\input{chapters/archive/v005/reproducibility/main}
+
+\input{chapters/archive/v005/conclusions/main}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{chapters/archive/v005/refs_v005}
+
+% --- supplement (separate file at stage D) ----------------------------------------------------------------------
+\appendix
+\section{Deviations and assumptions}
+\label{sec:supp-deviations}
+\input{chapters/archive/v005/limitations/supplement_deviations}
+\input{chapters/archive/v005/supplement/secondary}
+
+\end{document}

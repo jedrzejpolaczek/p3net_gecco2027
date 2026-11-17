@@ -1,4 +1,4 @@
-"""What the v005 pre-registration fixes (notes/plans/v005-preregistration.md §1-§6). Nothing here is
+"""What the v005 pre-registration fixes (notes/archive/v005/plans/v005-preregistration.md §1-§6). Nothing here is
 read from the results."""
 
 from __future__ import annotations

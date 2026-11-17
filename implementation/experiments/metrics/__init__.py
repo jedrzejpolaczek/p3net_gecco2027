@@ -4,7 +4,7 @@ question: surrogate quality tracking and genotype duplication rate. Generic
 MOO indicators (hypervolume, IGD+) live in the library (p3net.metrics)
 instead.
 
-Reference: chapters/v003/results/main.tex ("Metrics", "Diagnostics").
+Reference: chapters/archive/v003/results/main.tex ("Metrics", "Diagnostics").
 """
 
 from metrics.diagnostics import ArchiveTurnoverPoint, archive_turnover, duplication_rate

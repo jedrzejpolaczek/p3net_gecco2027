@@ -1,0 +1,46 @@
+% v005 stage C draft (2026-11-17): Limitations, main text. Collected from notes/archive/v005/plans/v005-sources/*.md (category O
+% deviations and Z-# assumptions marked "opisać w artykule"), v005-decisions.md (#25, #30-#37), the pre-registration
+% §8 (deviations) and §7a (E1), and notes/archive/v005/analysis-v005/reports/01-04. Full list: supplement_deviations.tex.
+% Narrative decision (author, 2026-11-16): empirical study; P3Net's surrogate is tested, not proposed as a win.
+
+\section{Limitations}
+\label{sec:limitations}
+
+\paragraph{Benchmarks and objectives.} All results come from tabular or surrogate benchmarks. JAHS-Bench-201 answers
+accuracy queries through a learned surrogate, so its errors enter every JAHS result; its second objective is
+therefore not its surrogate's model size, which varies with the hyperparameters, but the parameter count computed
+from the cell. Its lower fidelities in the multi-fidelity track are surrogate predictions at fewer epochs, not
+checkpoints of one training run. On JAHS the continuous hyperparameters are
+discretised (8 learning rates, 6 weight decays) and width, depth and resolution are fixed at their maximum, for every
+method alike; we run no continuous-space arm. The energy objective on NAS-Bench-201 is the published HW-NAS-Bench
+value for one edge device and batch size~\citep{li2021hwnasbench}, not our own measurement; it differs from
+consumer-GPU energy (Spearman 0.74 in our check), is noisy across isomorphic cells (median coefficient of variation
+4.2\,\%), and makes NAS-Bench-201 results incomparable with work that uses FLOPs. Retraining from scratch covers only
+the knee point of each arm's median run on NAS-Bench-201 and NAS-HPO-Bench-II, with one seed per training.
+
+\paragraph{Baselines.} Every baseline runs with default or published hyperparameters, untuned, whereas P3Net's design
+used seeds 1--60 of the same spaces in earlier rounds; all reported tests use seeds 62--91, never run before, and the
+FCNet tasks serve as spaces outside the design loop. Where code was available we follow it rather than the paper: NSGA-Net without the BOA exploitation stage, and
+NSGANetV2 with the code's selection rule. Regularised evolution is our own multi-objective adaptation, as no
+published version exists. MO-DSA and MO-PSA are our implementation from the description in Bartnik's thesis, with
+stated assumptions where it is ambiguous, because the code is not available. BULK~\&~CUT is excluded: it needs
+network morphisms and distillation that a benchmark cannot provide. Gaussian-process methods run only at budgets of
+50 and 100 evaluations, for lack of compute; OSS Vizier needed 118 restarts after out-of-memory failures. Several arms
+stop before the budget is spent because they propose only duplicates: REINFORCE in 909 runs (median 54
+evaluations), MO-DSA in 206 and MO-PSA in 130; their results reflect convergence, not the budget.
+
+\paragraph{Protocol and analysis.} The budget counts full evaluations, which favours methods with cheap internal
+steps; we therefore report optimiser time separately. Optimiser times on JAHS CIFAR-10 were measured with two
+workers instead of six. Holm correction is applied within each (space, budget) cell; counts across cells are
+descriptive. On JAHS the 90 and 95\,\% cost-to-target levels saturate, as hypervolume differences between arms are small
+and nearly every run reaches them within a few evaluations; only the 99\,\% level separates arms. The surrogate decision-quality analysis planned in the pre-registration could not be run because the
+records do not log surrogate decisions; we report the number of surrogate-screened mixing steps instead.
+
+\paragraph{What the surrogate results cover.} Up to 350 evaluations P3Net takes few mixing steps, and with none it
+equals canonical P3 apart from its random stream; equivalence verdicts in that range are largely mechanical. The
+budget-1000 experiment (E1) was added after the main results were seen; it is exploratory, uses new seeds 92--121,
+covers four spaces and one budget, and with 30 seeds cannot establish equivalence at the narrow margin of 0.147. It
+tests one surrogate design---a pairwise regressor of fitness differences---and says nothing about others. The
+pre-registration described the gate of P3Net-gate as a quantile threshold; the gate that was run applies the mixing
+acceptance rule to the predicted objectives (supplement, Table~\ref{tab:deviations}), and the P3Net-gate results
+describe that gate.

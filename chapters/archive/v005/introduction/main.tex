@@ -1,0 +1,51 @@
+% v005 (2026-11-17): introduction for the "empirical study" narrative. First paragraph kept from v003 (citations
+% unchanged); positioning follows chapters/related_work/positioning.tex; numbers from the Results section.
+\section{Introduction}
+\label{sec:introduction}
+
+Evaluating a candidate network against the true objective -- by training it, through weight sharing, or by
+querying a benchmark -- dominates the cost of neural architecture search~\citep{white2023insights,liu2023survey}.
+Architecture and training hyperparameters are commonly searched in sequence, yet Zela et al.\ show that they
+interact, so the best architecture under one hyperparameter setting need not be the best under
+another~\citep{zela2018towards}. Searching both jointly avoids that risk at the price of a larger space, in which
+some variables matter only together.
+
+A family of evolutionary algorithms is built around exactly that structure. GOMEA and the Parameter-less Population
+Pyramid (P3) learn a linkage tree of dependent variables from the population and keep those groups together during
+crossover~\citep{thierens2011optimal,goldman2014parameterless}; on combinatorial benchmarks their advantage over
+structure-blind search grows with problem size~\citep{goldman2015fast,qiao2024gomearuntime}. Members of the family
+have been applied to architecture search~\citep{denottelander2021localsearch,chebykin2022encas,dahi2026tightening},
+and surrogate-assisted variants exist~\citep{dushatskiy2021novelsurrogateassistedevolutionaryalgorithm,przewozniczek2026lympus}.
+What is missing is a measurement: how P3 compares, on the joint multi-objective task, with the optimisers that are
+actually used for it, at what budget, and at what cost.
+
+\paragraph{This study.} We compare P3 in five forms---canonical P3; P3Net, which replaces the evaluation of mixing steps
+by a pairwise surrogate of fitness differences; two variants of P3Net that isolate how the surrogate is used and what
+the linkage tree adds to it; and P3 with the eLyMPuS surrogate~\citep{przewozniczek2026lympus}---with 22 optimisers
+from NAS, evolutionary computation, Bayesian optimisation and multi-fidelity optimisation. The benchmarks are
+JAHS-Bench-201~\citep{bansal2022jahsbench} on three tasks and NAS-HPO-Bench-II~\citep{hirose2021nashpobenchii}, with
+four FCNet tasks~\citep{klein2019tabular} that played no part in designing P3Net and NAS-Bench-201 with an energy
+objective~\citep{dong2020nasbench201,li2021hwnasbench}. Methods, metrics, tests and seeds were fixed in a
+pre-registration before the confirmatory runs, and every sentence about a method's behaviour is tied to a test of the
+implementation.
+
+\paragraph{Findings.} P3's standing is set by the budget. With 50 or 100 evaluations it is worse than most arms on
+JAHS-Bench-201, random search included, because it spends them on hill-climbing single solutions before any linkage
+is used. With 200 or 350 it is worse than no arm on two of the three JAHS-Bench-201 tasks and returns fronts that are
+strongest at the accurate end, while population-based methods stay ahead on NAS-HPO-Bench-II. The surrogate changes
+nothing that our tests can detect, also at 1\,000 evaluations where it screens most mixing steps, and it raises the
+optimiser's own time by an order of magnitude. On the four FCNet tasks P3Net wins more comparisons than it loses.
+
+\paragraph{Contributions.}
+\begin{itemize}
+    \item A pre-registered comparison of a linkage-learning optimiser with 22 optimisers for joint multi-objective
+    NAS and hyperparameter optimisation, on nine search spaces, four budgets and 30 seeds per cell, with
+    Holm--Bonferroni-corrected tests, effect sizes, equivalence tests and the optimiser's own time and memory.
+    \item A controlled account of what a pairwise surrogate adds to P3: ablations that isolate replacement versus
+    gating and the role of the linkage tree, a check that the surrogate-free P3Net is exactly canonical P3, and an
+    exploratory budget at which the surrogate acts on most mixing steps.
+    \item Evidence on the benchmarks themselves: retraining the selected architectures from scratch, and secondary
+    analyses (anytime quality, cost to target, regret, generalisation gaps, sensitivity of the metric).
+    \item Code, run records, analysis scripts and the pre-registration, with every table regenerated from the
+    records.
+\end{itemize}

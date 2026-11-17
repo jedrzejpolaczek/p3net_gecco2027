@@ -1,4 +1,4 @@
-"""A8 analysis (notes/plans/v005-a8-runbook.md): projected wall time of the v005 grid under grid variants, and
+"""A8 analysis (notes/archive/v005/plans/v005-a8-runbook.md): projected wall time of the v005 grid under grid variants, and
 per-method memory above the benchmark's own footprint.
 
 Time model per (method, space): measured wall times at b=100 and b=350 (one seed), t(b) = t(b0) (b / b0)^k with

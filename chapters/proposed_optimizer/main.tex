@@ -1,0 +1,40 @@
+% v005 (2026-11-17): P3 and P3Net as implemented in v005 (p3net/v005, cards p3net.md, p3-canonical.md,
+% p3net-surrogate.md). Every sentence about behaviour maps to a row of notes/archive/v005/plans/v005-claims.md:
+% engine C-01..C-07; canonical C-08, C-11; P3Net C-10, C-12, C-13, C-49, C-51, C-52; variants C-14, C-48 (Z-G1).
+% The v003 description (ridge surrogate with cross-validation, kappa, geometric levels with HV-based growth) is
+% obsolete and not reused.
+\section{P3 and P3Net}
+\label{sec:proposed-optimizer}
+
+\paragraph{The P3 engine.} P3 keeps a pyramid of populations without target sizes~\citep{goldman2014parameterless}.
+Each iteration adds one new random solution, improves it with a first-improvement hill climber and inserts it into the
+lowest level if it is not yet in the pyramid. The solution is then mixed with every level of the pyramid, whether or not
+it improved, and it is promoted to the next level only if it dominates its value before mixing and is not yet in the
+pyramid. Mixing with a level uses that level's linkage clusters, built with P3's entropy-based distance: all
+singletons are used, the root is not, and children of a zero-distance merge are dropped. Clusters are applied smallest
+first, ties in random order, each with a donor from the level that differs from the solution on the cluster. With two
+objectives, a hill-climbing move and a promotion require Pareto dominance, and a mixing step is kept under the
+MO-GOMEA acceptance rule~\citep{luong2014mogomea}: the new solution dominates the current one, has the same
+objectives, or is not dominated by the elitist archive of all evaluated solutions. Canonical P3 evaluates every mixing
+step that changes the solution and uses no surrogate. P3 has no other parameters.
+
+\paragraph{P3Net.} P3Net keeps this engine and the hill climber on real evaluations, and replaces the evaluations
+of mixing steps by a surrogate: mixing with a level runs on predictions, and the solution is evaluated for real once,
+after the level. The predicted objectives of a solution reached by a chain of surrogate-accepted steps are, in log
+scale, the real objectives of the last really evaluated solution on the chain plus the predicted changes of all steps
+since. The surrogate is first
+used after the first hill climb has finished; until then mixing uses real evaluations. With the surrogate replaced by
+an exact oracle, P3Net reproduces the trajectory of canonical P3, so the surrogate is the only difference between them.
+
+\paragraph{The pairwise surrogate.} The surrogate predicts the difference of both objectives between two solutions,
+in log scale, from features of the pair: which variables differ and between which values, and products of such
+features for pairs of variables in the same cluster of the current linkage tree, so that the tree decides which
+interactions the model can represent. It is antisymmetric by construction. One random forest per objective, with the
+library's default hyperparameters and nothing tuned, is trained on all ordered pairs of evaluated solutions, or on
+3\,000 of them drawn at random when there are more. Because the cost $f_2$ is predicted like $f_1$, P3Net never sees
+the cost of a solution it has not evaluated.
+
+\paragraph{Variants.} Two variants isolate how the surrogate is used and what the linkage tree adds. P3Net-gate uses
+the surrogate as a gate instead of a replacement: a mixing step is evaluated for real only when its predicted
+objectives would be accepted, and acceptance is then decided on the real values. P3Net-nolink uses the same pairwise
+model without the interaction features of the linkage tree.

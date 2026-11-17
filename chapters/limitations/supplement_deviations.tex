@@ -1,0 +1,58 @@
+% v005 stage C draft (2026-11-17): supplement table of every deviation and assumption the source cards mark for the
+% paper. Source of each row in the last column (cards: notes/archive/v005/plans/v005-sources/; decisions: v005-decisions.md;
+% pre-registration: v005-preregistration.md). Needs booktabs and tabularx.
+
+\begin{table*}[t]
+\centering\small
+\caption{Deviations from the source methods and benchmarks, and assumptions where a source is ambiguous. All were
+fixed before the confirmatory runs, except the pre-registration deviations (rows marked~$\S$8), which are recorded
+with their date and reason.}
+\label{tab:deviations}
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+Item & Deviation or assumption & Source \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Benchmarks and protocol}} \\
+NB201 $f_2$ & Edge-GPU energy from HW-NAS-Bench (Jetson TX2, batch 1), not measured by us; own measurement
+  abandoned after five pilots; Spearman 0.74 with consumer-GPU energy; isomorphic-cell CV median 4.2\,\% & BM-2 \\
+JAHS $f_2$ & Parameter count from the cell, because the surrogate's model size varies with hyperparameters (200/200 cells) & BM-3 \\
+JAHS space & Learning rate (8 values) and weight decay (6) discretised; N, W, resolution fixed at maximum; no continuous arm & \#31 \\
+JAHS MF & Lower fidelities are surrogate predictions at fewer epochs, not checkpoints of one run & \#25 \\
+Budget & Main track counts full evaluations; MF track counts cost in full-evaluation equivalents & \#32 \\
+Validity & Cells with no input--output path rejected, for every method & \#33 \\
+Duplicates & Deduplication by the method; a duplicate costs no budget; stop after a run of duplicates & \#35, \#36 \\
+Hyperparameters & Populations of 20; baselines untuned, with defaults or published values & \#37 \\
+\midrule
+P3Net surrogate & Trained on all ordered pairs of evaluated solutions, at most 3\,000 drawn at random;
+  library-default random-forest hyperparameters, none tuned & p3net-surrogate S-4 \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Baselines}} \\
+NSGA-Net & Authors' public code, which lacks the BOA exploitation stage of the paper & nsga-net N-1 \\
+NSGANetV2 & Code's selection rule (spacing along $f_2$), not the paper's best-predicted-accuracy step; no continuous variant & nsganetv2 V-2, V-3 \\
+RegEvo & Own multi-objective adaptation (no published version) & regevo \\
+REINFORCE & Kept faithful to code; the policy converges to one architecture, stopping after 38--88 of 350 evaluations & reinforce \\
+MO-DSA, MO-PSA & Own implementation from the thesis description (no code); own grid-search grids, fixed before running; DSA
+  gate per Alg.~8 per objective (Z-B1$'$); one shared threshold and history (Z-B2); ``generation'' = one outer
+  iteration (Z-B3); linkage tree as in SAGOMEA (Z-B4) & bartnik Z-B0--Z-B4 \\
+BoB methods & Problem-specific constants replaced: SH-EMOA tournament ordering by non-dominated sorting and HV
+  contribution, computed on objectives min--max normalised over the points evaluated so far, reference $(1.1, 1.1)$; mutation fractions kept; MO-BANANAS targets standardised & bag-of-baselines BB-3 \\
+EHVI & Main track uses qNEHVI in BoTorch; MOTPE uses Optuna's TPESampler & library-adapters A-1, A-2 \\
+BULK \& CUT & Excluded: needs network morphisms, pruning and distillation & bag-of-baselines BB-1 \\
+GP methods & Run only at $b \le 100$ (compute); separate table & \#30 \\
+P3-eLyMPuS & Goldman's FIHC loop instead of full OLyMPuS passes; own generalisation of the stored context to $k$-ary
+  variables (Z-E1); eLyMPuS not used in mixing (Z-E4) & elympus \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Pre-registration deviations}} \\
+JAHS CIFAR-10 & 3000 points rerun with 2 workers after out-of-memory failures of the JAHS server; its optimiser times
+  reported separately & $\S$8.1 \\
+OSS Vizier & 118 restarts after out-of-memory failures & $\S$8.2 \\
+K8 & Surrogate decision quality not computable (decisions not logged) & $\S$8.3 \\
+Retraining & Largest budget per arm; median run at index $(n-1)/\!/2$; lower-$f_1$ point of a two-point front;
+  shared trainings for identical knees; one seed per training; xautodl network for NAS-HPO-Bench-II; DataLoader
+  setting changed after three trainings (augmentation stream only) & $\S$8.4 \\
+P3Net-gate & Gate = the mixing acceptance rule applied to the predicted objectives, not a quantile threshold as the
+  pre-registration states; surrogate refitted per level, not after every real evaluation & $\S$8.5 \\
+E1 & Exploratory addendum at $b = 1000$, written after the main results, seeds 92--121 & $\S$7a \\
+\bottomrule
+\end{tabularx}
+\end{table*}

@@ -1,4 +1,4 @@
-"""A8 resource test, summary (notes/plans/v005-a8-runbook.md): reads the raw files of a
+"""A8 resource test, summary (notes/archive/v005/plans/v005-a8-runbook.md): reads the raw files of a
 `configs/pipeline/v005-resources.yaml` run root and writes, per method,
 - wall time and peak memory at budgets 100 and 350 (median and max over search spaces),
 - the growth exponent k of wall time in the budget (t ~ b^k, from 100 -> 350, median),

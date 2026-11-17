@@ -18,13 +18,13 @@ plain `git subtree`/history-preserving extraction, not a rewrite.
   reproduces the GECCO 2027 paper's main experiment (the 11-arm comparison
   grid, plus the P3Net-vs-`random_search` architecture-only isolation
   experiment and the $\kappa$/threshold sensitivity sweep) on top of `lib/`.
-- **[`experiments-bartnik/`](experiments-bartnik/README.md)** —
+- **[`archive/experiments-bartnik/`](archive/experiments-bartnik/README.md)** —
   `p3net-experiments-bartnik`: a full fork of `experiments/`, isolation
   experiment testing the reconstructed algorithm class Bartnik
   (`bartnik2026evolutionary`) showed separating from baselines on
   architecture-only NAS-Bench-201, run against the same baseline set P3Net
   itself is compared against.
-- **[`experiments-przewozniczek/`](experiments-przewozniczek/README.md)** —
+- **[`archive/experiments-przewozniczek/`](archive/experiments-przewozniczek/README.md)** —
   `p3net-experiments-przewozniczek`: a full fork of `experiments/`,
   isolation experiment testing P3-eLyMPuS (`przewozniczek2026lympus`,
   generalised in this project from binary to $k$-ary categorical domains —
@@ -85,7 +85,7 @@ cd implementation/experiments
 uv run python scripts/build_oracle_front.py         # once; exact NAS-HPO-Bench-II front for IGD+
 uv run python scripts/generate_report.py            # tables + figures (frozen fronts reused)
 uv run python scripts/generate_variants_report.py   # design variants, split by pre/post pyramid fix
-uv run python scripts/render_results_tex.py         # heatmaps, supplement tables, narrative -> chapters/v003/results/_generated_*.tex
+uv run python scripts/render_results_tex.py         # heatmaps, supplement tables, narrative -> chapters/archive/v003/results/_generated_*.tex
 uv run python scripts/check_paper_numbers.py --strict
 ```
 
@@ -133,7 +133,7 @@ repeated for `jahs_bench_201`, `jahs_bench_201_colorectal`,
 (16 invocations total for the full grid the paper reports). Each writes its
 own per-cell/seed raw JSON under `results/raw/` (`--no-persist` to skip).
 
-### 4. Bartnik-algorithm-class isolation — `experiments-bartnik/`
+### 4. Bartnik-algorithm-class isolation — `archive/experiments-bartnik/`
 
 ```
 cd implementation/experiments-bartnik
@@ -145,7 +145,7 @@ uv run python scripts/run_bartnik_isolation.py
 $R=30$ seeds × budgets $\{100, 350\}$ on `nas_bench_201` — 600 real
 NATS-Bench queries. Writes `results/bartnik_isolation_result.md`.
 
-### 5. P3-eLyMPuS isolation — `experiments-przewozniczek/`
+### 5. P3-eLyMPuS isolation — `archive/experiments-przewozniczek/`
 
 ```
 cd implementation/experiments-przewozniczek

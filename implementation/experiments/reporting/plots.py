@@ -5,7 +5,7 @@ than writing a file directly -- saving to results/figures/ is
 scripts/generate_report.py's job, keeping these functions cheaply testable
 (assert on the returned Figure's axes/lines) without touching disk.
 
-Reference: chapters/v003/results/main.tex ("Findings" TODO block,
+Reference: chapters/archive/v003/results/main.tex ("Findings" TODO block,
 "Diagnostics", "Surrogate error accumulation (kappa and acceptance
 threshold)").
 """

@@ -360,3 +360,129 @@ def _spearman(a, b):
     ra = np.argsort(np.argsort(a))
     rb = np.argsort(np.argsort(b))
     return float(np.corrcoef(ra, rb)[0, 1])
+
+
+# ---------------------------------------------------------------------------
+# W-S11: training pairs (S-4 supplement, audit F4)
+# ---------------------------------------------------------------------------
+
+
+def _fit_rows(monkeypatch, n, seed=0):
+    """Fit a surrogate on n solutions, recording the training matrix of
+    every RandomForestRegressor.fit call (interfaces round 10b)."""
+    from sklearn.ensemble import RandomForestRegressor
+
+    seen = []
+    orig = RandomForestRegressor.fit
+
+    def spy(self, X, y, *a, **k):
+        seen.append(np.asarray(X, dtype=float).copy())
+        return orig(self, X, y, *a, **k)
+
+    monkeypatch.setattr(RandomForestRegressor, "fit", spy)
+    s = _surrogate(seed=seed)
+    hist = _history(n, seed)
+    s.fit(hist, _all_clusters(BLOCKS))
+    return s, hist, seen
+
+
+def _pair_rows(s, hist):
+    """Feature row of every ordered pair (a, b), a != b; the test needs the
+    rows to identify pairs, so it checks they are pairwise distinct."""
+    rows = {}
+    for i, a in enumerate(hist):
+        for j, b in enumerate(hist):
+            if i != j:
+                r = tuple(np.asarray(s.features(a.genotype, b.genotype), dtype=float).ravel())
+                rows[r] = (i, j)
+    assert len(rows) == len(hist) * (len(hist) - 1), (
+        "pair features not unique -- test cannot map rows"
+    )
+    return rows
+
+
+@pytest.mark.parametrize("n", [20, 55])  # 380 and 2970 ordered pairs (<= 3000)
+def test_WS11_all_ordered_pairs_up_to_max(monkeypatch, n):
+    """W-S11: with n(n-1) <= 3000 every model is trained on all n(n-1)
+    ordered pairs (a, b), a != b, each exactly once."""
+    from p3net.v005.surrogates.pairwise import MAX_PAIRS
+
+    assert MAX_PAIRS == 3000
+    s, hist, seen = _fit_rows(monkeypatch, n)
+    assert len(seen) == 2, "expected one RandomForestRegressor per objective (S-5 a)"
+    rows = _pair_rows(s, hist)
+    for X in seen:
+        assert X.shape[0] == n * (n - 1)
+        assert {tuple(r) for r in X} == set(rows)
+
+
+@pytest.mark.parametrize("n", [56, 80])  # 3080 and 6320 ordered pairs (> 3000)
+def test_WS11_exactly_max_distinct_pairs_above(monkeypatch, n):
+    """W-S11: with n(n-1) > 3000 every model is trained on exactly 3000
+    distinct ordered pairs drawn from them; the draw comes from the method's
+    generator (same seed -> same pairs)."""
+    s, hist, seen = _fit_rows(monkeypatch, n)
+    rows = _pair_rows(s, hist)
+    for X in seen:
+        assert X.shape[0] == 3000
+        got = {tuple(r) for r in X}
+        assert len(got) == 3000, "a pair was used twice"
+        assert got <= set(rows), "a training row is not an ordered pair of distinct solutions"
+    monkeypatch.undo()
+    _, _, again = _fit_rows(monkeypatch, n)
+    assert all(np.array_equal(a, b) for a, b in zip(seen, again))
+
+
+def test_WS11_random_forest_with_library_defaults():
+    """W-S11: the forests use the library's default hyperparameters (only
+    random_state, n_jobs and verbose -- not model hyperparameters -- may
+    differ)."""
+    from sklearn.ensemble import RandomForestRegressor
+
+    s = _surrogate()
+    s.fit(_history(30, 0), _all_clusters(BLOCKS))
+    models = list(s._models)
+    assert len(models) == 2
+    free = {"random_state", "n_jobs", "verbose"}
+    default = {k: v for k, v in RandomForestRegressor().get_params().items() if k not in free}
+    for m in models:
+        assert isinstance(m, RandomForestRegressor)
+        got = {k: v for k, v in m.get_params().items() if k not in free}
+        assert got == default
+
+
+# ---------------------------------------------------------------------------
+# W-S12: telescoping of a chain prediction (S-1 a, claim C-52)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("use_linkage", [True, False])
+@pytest.mark.parametrize("length", [0, 1, 3])
+def test_WS12_chain_prediction_is_telescoped_sum_of_deltas(length, use_linkage):
+    """W-S12 (S-1 a): predict_chain(anchor, [x1..xm]) = log objectives of the
+    anchor minus sum_i predict_delta(x_{i-1}, x_i), x0 = anchor genotype,
+    for both objectives (to 1e-9); an empty chain gives the anchor's log
+    objectives. Chains are random walks of single-variable changes from
+    anchors taken from the history."""
+    s = _surrogate(use_linkage=use_linkage, seed=4)
+    hist = _history(40, 4)
+    s.fit(hist, _all_clusters(BLOCKS))
+    rng = random.Random(11)
+    for anchor in rng.sample(hist, 5):
+        chain, x = [], list(anchor.genotype.values)
+        for _ in range(length):
+            v = rng.randrange(N)
+            x[v] = (x[v] + 1 + rng.randrange(K - 1)) % K
+            chain.append(G(*x))
+        expected = [math.log(anchor.objectives[0]), math.log(anchor.objectives[1])]
+        prev = anchor.genotype
+        for g in chain:
+            d = s.predict_delta(prev, g)
+            expected = [expected[0] - d[0], expected[1] - d[1]]
+            prev = g
+        got = s.predict_chain(anchor, list(chain))
+        assert len(got) == 2
+        for j in range(2):
+            assert math.isclose(got[j], expected[j], rel_tol=0, abs_tol=1e-9), (
+                f"objective {j}: predict_chain {got[j]} != telescoped {expected[j]}"
+            )

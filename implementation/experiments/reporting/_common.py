@@ -6,7 +6,7 @@ re-exported directly -- reporting/__init__.py re-exports the public names
 from wherever they logically belong (best_known_front is credited to
 plots.py, even though tables.py also consumes it from here).
 
-Reference: chapters/v003/results/main.tex ("Metrics" paragraph -- the
+Reference: chapters/archive/v003/results/main.tex ("Metrics" paragraph -- the
 best-known-front TODO).
 """
 
@@ -70,7 +70,7 @@ def load_raw_runs(results_dir: Path) -> list[RawRun]:
 
 
 def construct_best_known_front(runs: Sequence[RawRun]) -> list[Objectives]:
-    """The candidate best-known front (chapters/v003/results/main.tex's
+    """The candidate best-known front (chapters/archive/v003/results/main.tex's
     own suggested definition): the Pareto front of the union of every
     point evaluated by any of the given runs, across every
     method/budget/seed passed in. Callers decide

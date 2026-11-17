@@ -1,7 +1,7 @@
 # Audyt v0.0.3 → lista kontrolna dla v0.0.4
 
 Stan na 2026-10-07. Źródło: audyt tekstu `chapters/v003/` (v0.0.3) zestawiony z planem v004
-(`configs/pipeline/v004.yaml`, `notes/plans/v004-preregistration.md`, `notes/plans/v004-plan.md`).
+(`configs/pipeline/v004.yaml`, `notes/archive/v004-preregistration.md`, `notes/plans/v004-plan.md`).
 Wszystkie liczby v0.0.3 w tekście zgadzały się z wygenerowanymi tabelami — problemy dotyczą
 interpretacji, uczciwości porównania i spójności opisu, nie arytmetyki.
 

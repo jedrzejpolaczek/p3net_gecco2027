@@ -10,7 +10,7 @@ figure per (search_space, budget) present, one Pareto-progression figure
 per (search_space, budget, method) present, and one duplication-rate
 figure overall.
 
-Follows the reporting order chapters/v003/results/main.tex promises:
+Follows the reporting order chapters/archive/v003/results/main.tex promises:
 surrogate quality first -- reporting.surrogate_quality_figure, built from
 p3net.methods.p3net.P3Net's own live surrogate_quality_log (predicted vs.
 true delta at the |H_t| the surrogate actually scored it at, persisted per
@@ -23,7 +23,7 @@ hypervolume); then the kappa/acceptance-threshold sensitivity analysis
 (skipped -- scripts/run_kappa_sensitivity.py is not implemented yet) and
 the duplication-rate diagnostic.
 
-Reference: chapters/v003/results/main.tex ("Findings" TODO block, which
+Reference: chapters/archive/v003/results/main.tex ("Findings" TODO block, which
 fixes this exact ordering).
 
 The CLI entry point (not the importable generate_report() function itself,

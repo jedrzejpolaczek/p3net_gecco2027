@@ -1,0 +1,78 @@
+% v005 stage C draft (2026-11-17): Experimental setup. Sources: notes/archive/v005/plans/v005-preregistration.md (§1-§4, §7a),
+% notes/archive/v005/plans/v005-sources/benchmarks.md, v005-decisions.md (#25, #30-#37), configs/search_spaces/*_v005.yaml,
+% search_spaces/*_genotype.py, configs/pipeline/v005*.yaml (run counts). Methods are cited in Related Work
+% (compared_methods.tex); P3Net and its variants are defined in the method section. Hardware: Reproducibility.
+
+\section{Experimental setup}
+\label{sec:setup}
+
+\paragraph{Search spaces and objectives.} Table~\ref{tab:v005-spaces} lists the nine search spaces. Every space is a
+product of categorical variables, and every method searches the same encoding. The four \emph{primary} spaces carry
+the confirmatory tests: JAHS-Bench-201~\citep{bansal2022jahsbench} on its three tasks, CIFAR-10 (C10), Colorectal
+Histology (CRC) and Fashion-MNIST (FMN), and NAS-HPO-Bench-II~\citep{hirose2021nashpobenchii} (NHB). On JAHS-Bench-201
+the six cell edges are searched together with learning rate (8 log-spaced values in $[10^{-3}, 1]$), weight decay
+(6 in $[10^{-5}, 10^{-2}]$), activation and data augmentation; width, depth and resolution are fixed at their
+maximum. NHB searches its cell together with learning rate (8 values) and batch size (6). We use NAS-HPO-Bench-II
+rather than its successor NAS-HPO-Bench-II-Plus~\citep{hirose2026nashpobenchiiplus}, which answers through learned
+surrogates: the tabular original gives the exact Pareto front against which IGD+ is computed. The four FCNet
+tasks~\citep{klein2019tabular} form a separate block of spaces that played no part in designing P3Net, and
+NAS-Bench-201~\citep{dong2020nasbench201} with edge-GPU energy from HW-NAS-Bench~\citep{li2021hwnasbench} is reported
+descriptively. All problems are bi-objective and minimised: $f_1$ is validation error (FCNet: validation MSE) after
+full training, and $f_2$ a cost of the model---parameter count on JAHS-Bench-201, computed from the cell because the
+benchmark's own model-size output varies with the hyperparameters; training time on NHB and FCNet; inference energy on
+NAS-Bench-201. Cells without a path from input to output are rejected for every method.
+
+\begin{table}[t]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \caption{Search spaces. Variables: number of categorical variables (cell edges + hyperparameters). Front: number
+    of points of the exact oracle Pareto front (enumerated once before the runs); JAHS-Bench-201 has none, being a
+    surrogate benchmark. Role: P = primary (Q1--Q4 tests), F = FCNet block (Q5 tests), D = descriptive.}
+    \label{tab:v005-spaces}
+    \begin{tabular}{@{}llrlll@{}}
+        \toprule
+        \textbf{Space} & \textbf{$f_2$} & \textbf{Var.} & \textbf{Front} & \textbf{Metric} & \textbf{Role} \\
+        \midrule
+        JAHS-Bench-201 C10, CRC, FMN & parameters & 6\,+\,4 & -- & HV & P \\
+        NAS-HPO-Bench-II & training time & 6\,+\,2 & 25 & IGD+ & P \\
+        FCNet (Naval, Parkinsons, Protein, Slice) & training time & 0\,+\,9 & 15--28 & IGD+ & F \\
+        NAS-Bench-201 & edge-GPU energy & 6\,+\,0 & 30 & IGD+ & D \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Quality metrics.} A run's result is the set of configurations it evaluated at full fidelity, and its
+quality is that of the non-dominated subset. Where the oracle front is known we report IGD+~\citep{ishibuchi2015igdplus}
+against it, with both objectives normalised to the front's range. On JAHS-Bench-201 we report hypervolume with
+objectives normalised by fixed bounds of the space---$f_1$ by $[0, 100]$, $f_2$ by the smallest and largest parameter
+count of the task---and reference point $(1.1, 1.1)$, divided by $1.21$ so that it lies in $[0, 1]$. The bounds are
+fixed before the runs and no reference depends on the results of any arm.
+
+\paragraph{Arms and tracks.} The \emph{main track} counts the budget in full evaluations and holds P3Net, its three
+variants for Q2 (canonical P3 with real evaluations only, P3Net-gate, which uses the surrogate as a gate instead of
+a replacement: a mixing step is evaluated for real only when its predicted objectives would be accepted, and
+acceptance is then decided on the real values, and P3Net-nolink, whose pair model has no linkage-tree features), P3 with
+eLyMPuS, and the 17 comparison arms of Related Work. The three Gaussian-process arms run only at budgets 50 and 100,
+for lack of compute. The \emph{multi-fidelity track} (Hyperband, ASHA, and the multi-fidelity SH-EMOA, MOSH-BANANAS and
+MO-BOHB) runs on the primary and FCNet spaces with the budget counted as cost in full-evaluation equivalents: training
+a configuration to $e$ of $E$ epochs costs $e/E$, and continuing it from $e$ to $e'$ costs $(e'-e)/E$. Lower
+fidelities are the benchmarks' values at fewer epochs (on JAHS-Bench-201, surrogate predictions at fewer epochs). In
+every arm a configuration proposed again is answered from a cache and costs no budget. Population-based methods use a
+population of 20; every baseline runs with its default or published hyperparameters, without tuning.
+
+\paragraph{Budgets and seeds.} Each arm runs at budgets of 50, 100, 200 and 350 with 30 seeds per (space, budget)
+cell, in total 26\,400 runs in the main and multi-fidelity tracks and 540 runs of OSS Vizier. The seeds, 62--91, were
+never run before the confirmatory runs. An exploratory addendum (E1) runs P3Net, its three Q2 variants and random
+search at budget 1000 on the primary spaces with new seeds 92--121; it was planned after the main results were known.
+
+\paragraph{Statistics.} All tests and margins were fixed in the pre-registration. The unit is a (space, budget) cell.
+Each comparison of P3Net with another arm is a two-sided Mann--Whitney $U$ test on the 30 per-seed values of the
+primary metric---runs with the same seed number are not paired---with Holm--Bonferroni correction over the cell's
+comparisons in that question, $\alpha = 0.05$, and Cliff's $\delta$, oriented so that positive favours P3Net. The Q1
+family has 17 arms at budgets 50 and 100 and 14 at 200 and 350; Q2 and Q4 have three and five. For the Q2 pairs,
+equivalence (Q3) is a two-one-sided test through the 90\,\% percentile bootstrap interval of $\delta$ (4\,000
+resamples): \emph{equivalent} if it lies within $(-m, m)$, \emph{different} if it excludes zero, and
+\emph{inconclusive} otherwise, with $m = 0.33$ (``small''~\citep{romano2006appropriate}) and, alongside, $m = 0.147$
+(``negligible''). Counts of significant comparisons across cells are descriptive; no $p$-values are combined across
+cells. No run was excluded.

@@ -1,0 +1,12 @@
+% v005 stage C draft (2026-11-17): the v003 "LLM-based search" paragraph shortened to 4 sentences (v005-plan.md,
+% stage C: "Akapit o LLM w Related Work skrócić do 3-4 zdań"). Keys as in v003; the v003 reason "why a
+% linkage-learning engine fails to separate from random search" no longer holds and is dropped.
+
+\paragraph{LLM-based search.} Large language models now act as the optimiser~\citep{zheng2023genius,nasir2024llmatic},
+as a surrogate~\citep{hao2024llmsurrogate,jawahar2024llmpp}, or as a prior that warm-starts Bayesian
+optimisation~\citep{liu2024llambo,zhang2024llmhpo}. Their documented gains concentrate in the early, sparse-data phase
+and on small spaces, and several studies trace them to prior knowledge rather than to feedback from
+evaluations~\citep{kristiadi2024sober,gupta2025llmbo,ferreira2026centaur}. Linkage learning is the opposite case: it
+uses no prior and learns structure only from evaluations. We include no LLM-based arm, because it would draw on
+information outside the evaluation budget that binds every other arm, and because NAS-Bench-201 is public and may be
+part of the models' training data~\citep{zheng2023genius}.

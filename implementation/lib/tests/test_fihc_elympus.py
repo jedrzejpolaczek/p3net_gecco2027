@@ -1,5 +1,5 @@
 """Tests for p3net.search_engines.p3.fihc_elympus: P3-eLyMPuS's local-
-search step (notes/plans/experiments-przewozniczek-plan.md, Faza 3) and its
+search step (notes/archive/experiments-przewozniczek-plan.md, Faza 3) and its
 plug-in point inside canonical_pyramid.climb."""
 
 from __future__ import annotations

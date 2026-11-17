@@ -1,0 +1,49 @@
+% v005 stage C draft (2026-11-17): positioning of P3Net in the P3/GOMEA line. Replaces the v003 paragraphs
+% "Linkage learning and P3", "Surrogate-assisted linkage learning" and "Closest prior work"
+% (chapters/archive/v003/related_work/main.tex); the v003 pyramid figure (fig:p3-pyramid) can be reused unchanged.
+% Sources: notes/ga_landscape_2026.md §16-§16d (literature search 2026-11-16/17). Dahi et al. 2026 is described
+% from its supplementary material only (main text not accessible). The sentence on the surrogate result follows the
+% current v005 + E1 results and is to be revised if the surrogate study continues.
+
+\paragraph{Linkage learning and P3.} GOMEA and P3 build a linkage tree from statistical dependencies in the
+population and use it to guide crossover, so that groups of dependent variables are not
+disrupted~\citep{thierens2011optimal,goldman2014parameterless}. P3 replaces a single fixed-size population with a
+pyramid of populations (Figure~\ref{fig:p3-pyramid}), adding a level only once existing levels stop improving, so that no population size is
+chosen in advance; its evaluation complexity grows more slowly with problem size than that of five
+competitors~\citep{goldman2015fast}. Multi-objective variants exist for both: MO-GOMEA~\citep{luong2014mogomea}
+and MO-P3, applied to industrial process planning~\citep{przewozniczek2021mop3} and later extended with a Pareto-front
+improvement phase~\citep{niemczyk2025pareto}. Unlike the gray-box setting that this line often
+exploits~\citep{whitley2016graybox,bouter2023library}, NAS and HPO objectives are not decomposable into cheaply
+recomputable subfunctions, so every variation step must be verified by a full evaluation or screened by a surrogate.
+
+\paragraph{Linkage learning in NAS.} Members of this family have been applied to NAS before. den Ottelander et al.\
+find MO-GOMEA, NSGA-II, local search and random search indistinguishable on NAS-Bench-101, with MO-GOMEA ahead of
+random search on their larger MacroNAS spaces~\citep{denottelander2021localsearch}. ENCAS uses MO-GOMEA to search
+cascades of networks drawn from supernetworks~\citep{chebykin2022encas}; Tran et al.\ apply GOMEA to NAS with a
+training-free metric in place of training~\citep{tran2023gomeanas}; and Dahi et al., after applying linkage-learning
+EAs to architecture search for quantum-circuit transpilation~\citep{dahi2024evolutionary}, use P3 to choose the depth
+and layer widths of a small multilayer perceptron within a quantum-optimisation pipeline, a single-objective
+architecture search~\citep{dahi2026tightening}. Bartnik adapts the surrogate-assisted P3-GOMEA
+of~\citet{dushatskiy2021novelsurrogateassistedevolutionaryalgorithm} to multi-objective NAS on NAS-Bench-201
+(accuracy against GPU energy), with an absolute regressor over the genotype as surrogate, an architecture-only
+genotype, and MO-LS and surrogate-free MO-P3-GOMEA as baselines~\citep{bartnik2026evolutionary}; we include its two
+variants, MO-DSA and MO-PSA, among our comparison arms.
+
+\paragraph{Surrogates and linkage.} CS-GOMEA pairs GOMEA with a convolutional surrogate and names as open the
+surrogate's failure to use linkage information in its own construction~\citep{dushatskiy2019csgomea}. LyMPuS builds
+the surrogate from the discovered linkage itself and validates it with P3 on NK landscapes, Ising spin glasses and
+Max3Sat; its empirical variant, eLyMPuS, discovers the dependency structure incrementally rather than assuming it
+known~\citep{przewozniczek2026lympus}, and related work constructs monotonic surrogates from recursive linkage
+discovery~\citep{przewozniczek2026monotonical}. P3Net's surrogate follows eLyMPuS in being relative and
+linkage-aware over an incompletely discovered structure, but regresses a continuous fitness difference between
+two solutions instead of making a discrete better/worse/ambiguous comparison, which places it closer to CS-GOMEA's
+learned model and gives up eLyMPuS's guarantee of recovering the comparison under monotonicity.
+
+\paragraph{Position of this study.} Against this background, P3Net is not the first use of linkage learning, or of
+P3, in architecture search. What we have not found is P3 applied to the \emph{joint} multi-objective search over
+architecture and training hyperparameters, nor a comparison of a linkage-learning optimiser with the main
+Bayesian-optimisation, multi-fidelity and evolutionary methods of multi-objective NAS and HPO under one
+pre-registered protocol that also reports the optimiser's own cost. This study supplies that comparison, with P3
+in three forms (canonical, with a pairwise surrogate, and with eLyMPuS), on four primary spaces and five further
+ones, and it reports where the surrogate does and does not change the outcome. All benchmarks are tabular or
+surrogate-based (Section~\ref{sec:setup}).

@@ -1,7 +1,7 @@
 """K10 step 1 (pre-registration §5.8): pick the knee point to retrain for every arm on NAS-Bench-201 and
 NAS-HPO-Bench-II, from the finished v005 run roots. Reads records only; no benchmark queries, no GPU.
 
-Rules (§5.8, decision 2026-11-16 in notes/plans/v005-todo.md):
+Rules (§5.8, decision 2026-11-16 in notes/archive/v005/plans/v005-todo.md):
   * budget: the arm's largest budget -- 350; GP arms (Vizier, qNEHVI, qParEGO) 100;
   * median run: the arm's 30 runs in the cell sorted by the primary metric (IGD+, then seed); the run at
     index (n - 1) // 2 (for n = 30 the better of the two middle runs);

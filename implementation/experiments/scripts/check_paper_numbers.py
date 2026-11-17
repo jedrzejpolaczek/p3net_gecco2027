@@ -37,9 +37,9 @@ EXPERIMENTS_ROOT = Path(__file__).resolve().parent.parent
 #: only cite the literature (related work, introduction) are excluded --
 #: their numbers come from other people's papers, not from results/.
 DATA_BEARING_CHAPTERS = (
-    "chapters/v003/results/main.tex",
-    "chapters/v003/conclusions/main.tex",
-    "chapters/v003/abstract/main.tex",
+    "chapters/archive/v003/results/main.tex",
+    "chapters/archive/v003/conclusions/main.tex",
+    "chapters/archive/v003/abstract/main.tex",
 )
 
 TABLE_DIRS = (

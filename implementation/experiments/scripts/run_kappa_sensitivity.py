@@ -75,8 +75,8 @@ results/raw/ keeps every cell's raw H_t separately identifiable) is
 optional (`persist=False` skips it) purely for cheap testing -- the real
 CLI entry point always persists.
 
-Reference: chapters/v003/proposed_optimizer/main.tex ("Chain depth
-(kappa)"); chapters/v003/results/main.tex ("Surrogate error accumulation
+Reference: chapters/archive/v003/proposed_optimizer/main.tex ("Chain depth
+(kappa)"); chapters/archive/v003/results/main.tex ("Surrogate error accumulation
 (kappa and acceptance threshold)").
 """
 

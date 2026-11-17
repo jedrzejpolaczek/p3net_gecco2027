@@ -1,0 +1,100 @@
+{
+ "train_key": "nhb__2-32-200__lr0.4__bs256",
+ "search_space": "nas_hpo_bench_ii_v005",
+ "arch_str": "|skip_connect~0|+|none~0|skip_connect~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|",
+ "protocol": {
+  "epochs": 12,
+  "lr": 0.4,
+  "batch_size": 256,
+  "schedule": "cosine_per_epoch",
+  "seed": 222,
+  "augment_valid": true
+ },
+ "valid_acc": 81.6,
+ "test_acc": 82.53,
+ "params": 559386,
+ "wall_seconds": 624.4,
+ "epochs_log": [
+  {
+   "epoch": 1,
+   "train_loss": 1.6397759914398193,
+   "seconds": 28.1,
+   "valid_acc": 29.796
+  },
+  {
+   "epoch": 2,
+   "train_loss": 1.4946091175079346,
+   "seconds": 78.6,
+   "valid_acc": 39.852
+  },
+  {
+   "epoch": 3,
+   "train_loss": 1.1718705892562866,
+   "seconds": 130.0,
+   "valid_acc": 52.044
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.9699450135231018,
+   "seconds": 180.5,
+   "valid_acc": 52.264
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.8570426106452942,
+   "seconds": 231.5,
+   "valid_acc": 62.236
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.8135003447532654,
+   "seconds": 282.2,
+   "valid_acc": 63.108
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.7098376154899597,
+   "seconds": 332.8,
+   "valid_acc": 64.732
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.4816655218601227,
+   "seconds": 383.0,
+   "valid_acc": 75.436
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.5734221339225769,
+   "seconds": 433.5,
+   "valid_acc": 74.192
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.5479899048805237,
+   "seconds": 484.0,
+   "valid_acc": 72.728
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.45152682065963745,
+   "seconds": 534.2,
+   "valid_acc": 80.344
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.42523157596588135,
+   "seconds": 584.0,
+   "valid_acc": 81.6,
+   "test_acc": 82.53
+  }
+ ],
+ "split_sha256": "ea50dd54c7a9355d4bf7d3f7d969db880c07ed558e5c5bbf891635becb14a3ac",
+ "device": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+ "versions": {
+  "torch": "2.14.1+cu126",
+  "torchvision": "0.29.1+cu126",
+  "xautodl": "?",
+  "python": "3.12.10"
+ }
+}

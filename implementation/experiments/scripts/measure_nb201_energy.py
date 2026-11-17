@@ -1,4 +1,4 @@
-"""BM-2 (notes/plans/v005-sources/benchmarks.md): inference energy of NAS-Bench-201
+"""BM-2 (notes/archive/v005/plans/v005-sources/benchmarks.md): inference energy of NAS-Bench-201
 cells on this machine's GPU, Bartnik's protocol (N_warmup = 3; N_samples = 5 since pilot 2, Bartnik used 3;
 median of the NVML energy-counter deltas).
 
@@ -40,7 +40,7 @@ OPS = ("none", "skip_connect", "nor_conv_1x1", "nor_conv_3x3", "avg_pool_3x3")
 N_INPUTS = 10_000
 #: Fixed mid-cost cell measured every --ref-every cells. compare_energy_runs.py divides
 #: each energy by the reference energy interpolated at its position, which cancels slow
-#: drift of the laptop's power state (pilot 2026-10-17: two runs differed by a
+#: drift of the GPU's power state (pilot 2026-10-17: two runs differed by a
 #: near-constant 11 %).
 REFERENCE = (3, 2, 1, 4, 3, 2)
 

@@ -1,4 +1,4 @@
-"""FIHC-eLyMPuS (Faza 3, notes/plans/experiments-przewozniczek-plan.md):
+"""FIHC-eLyMPuS (Faza 3, notes/archive/experiments-przewozniczek-plan.md):
 First-Improvement Hill Climber (same Algorithm 4 shape as
 `canonical_pyramid.first_improvement_hill_climber`) driven by the k-ary
 generalised eLyMPuS surrogate (`p3net.surrogates.elympus.ELyMPuS`) instead

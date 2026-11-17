@@ -1,6 +1,6 @@
 # Wstępne ustalenia (eksploracyjne, jedna sesja, 2026-10-09…16)
 
-Liczone skryptami z `notes/analysis-v004/` (nie kodem raportującym z repo). Referencja = S5 (`p3net_cascade`).
+Liczone skryptami z `notes/archive/analysis-v004/` (nie kodem raportującym z repo). Referencja = S5 (`p3net_cascade`).
 Traktuj jako hipotezy do weryfikacji, nie jako fakty.
 
 - S5 bije random search w 10/16 komórek (seedy 31–60, primary), 8/16 (seedy 1–30), 11/16 (FCNet), nigdy gorszy; S4 (`p3net`, v0.0.3) 0/16.

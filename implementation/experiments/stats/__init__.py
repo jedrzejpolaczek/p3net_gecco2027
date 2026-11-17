@@ -1,7 +1,7 @@
 """
 experiments.stats -- the statistical comparison plan for this paper.
 
-Reference: chapters/v003/results/main.tex ("Statistical plan").
+Reference: chapters/archive/v003/results/main.tex ("Statistical plan").
 """
 
 from stats.significance import (

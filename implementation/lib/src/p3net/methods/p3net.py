@@ -239,7 +239,7 @@ class P3Net:
     #: (|H_t| at proposal time, predicted delta, true delta) for every
     #: proposal that was actually scored by a fitted surrogate and later
     #: really evaluated -- the live-search surrogate-quality signal
-    #: chapters/v003/results/main.tex's "Surrogate quality" paragraph asks
+    #: chapters/archive/v003/results/main.tex's "Surrogate quality" paragraph asks
     #: for, since a post-hoc refit on the persisted final H_t alone cannot
     #: reproduce what delta_hat_F predicted *at the time* (Results,
     #: Findings). Bootstrap-phase and stall/diversity-injection proposals

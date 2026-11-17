@@ -10,12 +10,12 @@ of significant comparisons.
 
 Rather than fix those sentences once by hand and reintroduce the same
 failure mode, this script generates them. The output is a LaTeX fragment
-meant to be pasted into (or \\input from) chapters/v003/results/main.tex,
+meant to be pasted into (or \\input from) chapters/archive/v003/results/main.tex,
 so the number in the prose and the number in the table have one source.
 
 Usage:
     python scripts/render_results_narrative.py
-    python scripts/render_results_narrative.py --out ../../chapters/v003/results/_generated_summary.tex
+    python scripts/render_results_narrative.py --out ../../chapters/archive/v003/results/_generated_summary.tex
 """
 
 from __future__ import annotations

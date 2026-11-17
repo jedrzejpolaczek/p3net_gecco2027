@@ -1,0 +1,28 @@
+% v005 stage C draft (2026-11-17): reproducibility and availability. Facts from the run manifests
+% (results/runs/c674c91e*/manifest.json), the pre-registration, analysis/per_run.csv and the server (lscpu).
+% \anonrepo is a placeholder for the anonymous repository link (stage D).
+
+\section{Reproducibility}
+\label{sec:reproducibility}
+
+\paragraph{Pre-registration.} Methods, metrics, tests, margins and seeds were fixed in a pre-registration before the
+confirmatory runs; every later change is listed with its date and reason (Table~\ref{tab:deviations}). The
+budget-1000 experiment is an exploratory addendum, written before its own runs.
+
+\paragraph{Runs.} All confirmatory results come from one commit of the code, recorded with a hash of every method and
+search-space configuration in each run's manifest; the working tree was clean. Seeds 62--91 were never run before
+the confirmatory runs (seed 61 was used for resource measurement only and replaced); the exploratory experiment
+uses seeds 92--121. Every run is deterministic given its seed, which an automatic gate checked for every method
+before the runs, together with the test suites (527 library and 377 experiment tests) and a table that links every
+sentence of this paper about a method's behaviour to the test that checks it. The main track holds 26\,400 runs and the OSS Vizier track 540, about 800 hours
+of process wall-clock time in total, on one cloud virtual machine (16 vCPUs, AMD EPYC Genoa; 32\,GB memory; Ubuntu
+26.04); E1 adds 600 runs on the same machine and commit, the working tree differing only by
+its plan file. Retraining ran on one machine with an Intel Core i7-11800H (16 threads), 32\,GB of RAM and an NVIDIA GeForce
+RTX 3050 Ti (4\,GB), under Windows 11.
+
+\paragraph{Data.} Benchmark tables and surrogates are the published versions; each downloaded file is checked
+against its SHA-256 digest. The NAS-Bench-201 energy table is built from HW-NAS-Bench with an index check against
+NATS-Bench (0 mismatches of 15\,625). Oracle Pareto fronts for the tabular spaces are enumerated exactly.
+
+\paragraph{Availability.} Code, configurations, the run records, the analysis scripts that produce every table in
+this paper, and the pre-registration are available at \anonrepo.

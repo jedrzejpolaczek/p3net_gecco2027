@@ -3,13 +3,13 @@ Render every data-bearing LaTeX table in the Results section from the
 generated markdown tables.
 
 Audit finding R1 (second half): the effect-size heatmaps and fixed-budget
-tables in chapters/v003/results/main.tex were produced by hand, with the
+tables in chapters/archive/v003/results/main.tex were produced by hand, with the
 colour of every cell chosen per cell. They were correct when written, but
 nothing tied them to the data -- so when the headline metric for
 NAS-HPO-Bench-II moved from hypervolume-relative to IGD+, every one of
 those cells would have silently kept showing the old numbers.
 
-Writes, into chapters/v003/results/:
+Writes, into chapters/archive/v003/results/:
 
 * _generated_heatmaps.tex         -- one effect-size heatmap per search space
 * _generated_fixed_budget.tex     -- one median/IQR/p/delta table per search space
@@ -49,7 +49,7 @@ from scripts.render_results_narrative import (  # noqa: E402
 )
 
 TABLES_DIR = EXPERIMENTS_ROOT / "results" / "tables"
-OUT_DIR = REPO_ROOT / "chapters" / "v003" / "results"
+OUT_DIR = REPO_ROOT / "chapters" / "archive" / "v003" / "results"
 
 SPACE_ORDER = ["jahs_bench_201", "jahs_bench_201_colorectal", "jahs_bench_201_fashion", "nas_hpo_bench_ii"]
 SPACE_LABELS = {

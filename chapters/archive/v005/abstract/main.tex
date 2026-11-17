@@ -1,0 +1,38 @@
+% v005 (2026-11-17): abstract for the "empirical study" narrative. Every number is from chapters/results/main.tex
+% (reports 01-06 in notes/archive/v005/analysis-v005/reports/).
+\begin{abstract}
+Linkage-learning evolutionary algorithms such as the Parameter-less Population Pyramid (P3) exploit dependencies
+between variables, and multi-objective neural architecture search (NAS) is full of them, yet P3 has not been compared
+with the methods used for joint architecture and hyperparameter search. We report a pre-registered study of P3 on
+this task: P3 alone, P3 with a pairwise surrogate of fitness differences (P3Net) and two variants of it, and P3 with
+the eLyMPuS surrogate, against 22 optimisers---NAS-specific, evolutionary, Bayesian, Gaussian-process and
+multi-fidelity---on JAHS-Bench-201, NAS-HPO-Bench-II, four FCNet tasks and NAS-Bench-201, at budgets of 50 to 350
+evaluations with 30 seeds per cell. P3's standing depends on the budget: at 50 and 100 evaluations it is worse than
+most arms on JAHS-Bench-201, random search included, because it spends them on hill-climbing single solutions; at 200
+and 350 it is worse than no arm on two of the three JAHS-Bench-201 tasks, and its front is strongest at the accurate
+end. The surrogate changes nothing that our tests can detect: P3Net differs from P3 and from its two variants in none of 48
+comparisons, and at 1\,000 evaluations, where the surrogate screens nearly 90\,\% of the mixing steps, in none of 12, while raising the
+optimiser's time from seconds to about a minute per run. Retraining the selected architectures confirms the benchmark
+values to within about one percentage point. Code, run records and the pre-registration are public.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10010147.10010178.10010205.10010207</concept_id>
+<concept_desc>Computing methodologies~Discrete space search</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10010147.10010257.10010293.10010294</concept_id>
+<concept_desc>Computing methodologies~Neural networks</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Discrete space search}
+\ccsdesc[300]{Computing methodologies~Neural networks}
+
+\keywords{neural architecture search, hyperparameter optimisation, linkage learning, P3, surrogate,
+multi-objective optimisation, benchmarking, pre-registration}

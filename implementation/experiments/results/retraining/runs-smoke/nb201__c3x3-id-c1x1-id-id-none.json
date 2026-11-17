@@ -1,0 +1,34 @@
+{
+ "train_key": "nb201__c3x3-id-c1x1-id-id-none",
+ "search_space": "nas_bench_201_v005",
+ "arch_str": "|nor_conv_3x3~0|+|skip_connect~0|nor_conv_1x1~1|+|skip_connect~0|skip_connect~1|none~2|",
+ "protocol": {
+  "epochs": 1,
+  "lr": 0.1,
+  "batch_size": 256,
+  "schedule": "cosine_per_iteration",
+  "seed": 777,
+  "augment_valid": false
+ },
+ "valid_acc": 43.316,
+ "test_acc": 43.64,
+ "params": 344346,
+ "wall_seconds": 77.1,
+ "epochs_log": [
+  {
+   "epoch": 1,
+   "train_loss": 1.4607731103897095,
+   "seconds": 26.8,
+   "valid_acc": 43.316,
+   "test_acc": 43.64
+  }
+ ],
+ "split_sha256": "986da6174822048d4c5a25ee8ebdb7e754cd5372b51c633ffd4898ace8db9e32",
+ "device": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+ "versions": {
+  "torch": "2.14.1+cu126",
+  "torchvision": "0.29.1+cu126",
+  "xautodl": "?",
+  "python": "3.12.10"
+ }
+}

@@ -812,7 +812,8 @@ def preflight(points: Iterable[Point]) -> list[str]:
     return problems
 
 
-NOTES_PLANS = REPO_ROOT / "notes" / "plans"
+# v005 closed 2026-11-17: its cards and claims live in the archive; v006 will add its own location
+NOTES_PLANS = REPO_ROOT / "notes" / "archive" / "v005" / "plans"
 
 
 def cards_and_claims(notes: Path = NOTES_PLANS) -> dict[str, Any]:

@@ -1,5 +1,5 @@
 """Tests for p3net.surrogates.elympus: this project's own k-ary
-generalisation of eLyMPuS (notes/plans/experiments-przewozniczek-plan.md,
+generalisation of eLyMPuS (notes/archive/experiments-przewozniczek-plan.md,
 Faza 2). Three checks mirrored from the plan: (1) correctness when the
 empirical VIG equals the true VIG, (2) missing-dependency discovery
 terminates and finds a real dependency, (3) measurable evaluation savings

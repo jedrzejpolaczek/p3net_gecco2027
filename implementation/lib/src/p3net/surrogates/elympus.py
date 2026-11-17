@@ -18,7 +18,7 @@ notes/lympus-nas-adaptation-validation.md (Faza 2) for the synthetic
 validation results this module's correctness claims rest on.
 
 Design choice made here ("Candidate B" in
-notes/plans/experiments-przewozniczek-plan.md, Faza 1): generalise the
+notes/archive/experiments-przewozniczek-plan.md, Faza 1): generalise the
 binary comparison b(x_g, phi, x) in {{0},{1},{0,1}} to a per-alternative-
 value comparison against the CURRENT value of x_g, evaluated one alternative
 at a time -- k-1 comparisons per variable, mirroring the source paper's own

@@ -18,8 +18,8 @@ reads, and every one of them is rendered to results/tables/*.md by
 scripts/generate_report.py. Rule for the paper: if a number appears in the
 .tex, it appears in one of these files first.
 
-Reference: chapters/v003/results/main.tex (Diagnostics paragraphs);
-chapters/v003/conclusions/main.tex.
+Reference: chapters/archive/v003/results/main.tex (Diagnostics paragraphs);
+chapters/archive/v003/conclusions/main.tex.
 """
 
 from __future__ import annotations

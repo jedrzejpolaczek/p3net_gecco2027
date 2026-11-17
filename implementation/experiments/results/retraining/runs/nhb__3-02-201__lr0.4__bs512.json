@@ -1,0 +1,104 @@
+{
+ "train_key": "nhb__3-02-201__lr0.4__bs512",
+ "search_space": "nas_hpo_bench_ii_v005",
+ "arch_str": "|none~0|+|nor_conv_3x3~0|skip_connect~1|+|skip_connect~0|nor_conv_3x3~1|avg_pool_3x3~2|",
+ "protocol": {
+  "epochs": 12,
+  "lr": 0.4,
+  "batch_size": 512,
+  "schedule": "cosine_per_epoch",
+  "seed": 222,
+  "augment_valid": true
+ },
+ "valid_acc": 74.452,
+ "test_acc": 75.35,
+ "params": 559386,
+ "wall_seconds": 350.9,
+ "epochs_log": [
+  {
+   "epoch": 1,
+   "train_loss": 1.937119483947754,
+   "seconds": 53.8,
+   "valid_acc": 28.572
+  },
+  {
+   "epoch": 2,
+   "train_loss": 1.5450880527496338,
+   "seconds": 111.8,
+   "valid_acc": 31.088
+  },
+  {
+   "epoch": 3,
+   "train_loss": 1.5019220113754272,
+   "seconds": 130.3,
+   "valid_acc": 42.168
+  },
+  {
+   "epoch": 4,
+   "train_loss": 1.305898666381836,
+   "seconds": 149.3,
+   "valid_acc": 47.968
+  },
+  {
+   "epoch": 5,
+   "train_loss": 1.1263233423233032,
+   "seconds": 168.8,
+   "valid_acc": 49.712
+  },
+  {
+   "epoch": 6,
+   "train_loss": 1.074763298034668,
+   "seconds": 187.9,
+   "valid_acc": 55.568
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.941103458404541,
+   "seconds": 206.7,
+   "valid_acc": 54.492
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.8605130314826965,
+   "seconds": 225.5,
+   "valid_acc": 64.94
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.7502440214157104,
+   "seconds": 244.1,
+   "valid_acc": 66.516
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.6391292810440063,
+   "seconds": 262.5,
+   "valid_acc": 66.812
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.6822167038917542,
+   "seconds": 281.1,
+   "valid_acc": 71.984
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.6877992153167725,
+   "seconds": 299.9,
+   "valid_acc": 74.452,
+   "test_acc": 75.35
+  }
+ ],
+ "split_sha256": "ea50dd54c7a9355d4bf7d3f7d969db880c07ed558e5c5bbf891635becb14a3ac",
+ "loader": {
+  "workers": 8,
+  "persistent_workers": true
+ },
+ "device": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+ "versions": {
+  "torch": "2.14.1+cu126",
+  "torchvision": "0.29.1+cu126",
+  "xautodl": "?",
+  "python": "3.12.10"
+ }
+}

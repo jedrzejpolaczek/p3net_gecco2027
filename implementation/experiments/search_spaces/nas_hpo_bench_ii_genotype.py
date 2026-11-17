@@ -3,7 +3,7 @@ Concrete NAS-HPO-Bench-II search space: the SAME six-edge cell topology
 as search_spaces/nas_genotype.py (search_spaces/_cell_graph.py), but with
 NAS-HPO-Bench-II's own real operation vocabulary and hyperparameter grid
 -- which differ from what nas_genotype.py assumes, because that module
-targets JAHS-Bench-201 specifically (chapters/v003/related_work/main.tex
+targets JAHS-Bench-201 specifically (chapters/archive/v003/related_work/main.tex
 documents the two benchmarks as having different hyperparameter axes;
 Stage B's implementation mistakenly reused one shared genotype for both,
 caught while wiring real NAS-HPO-Bench-II queries).
@@ -35,7 +35,7 @@ not just the published description:
 - learning_rate / batch_size grids are copied verbatim from the loaded
   dataset (api.lrs / api.batch_sizes), not re-derived analytically.
 
-Reference: chapters/v003/related_work/main.tex ("NAS-HPO-Bench-II...
+Reference: chapters/archive/v003/related_work/main.tex ("NAS-HPO-Bench-II...
 varies only learning rate and batch size as hyperparameters").
 """
 

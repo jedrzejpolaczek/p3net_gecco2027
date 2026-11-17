@@ -1,7 +1,7 @@
 """K6, K7, K9 and the other descriptive analyses of pre-registration §5 (no tests).
 
 Choices not fixed by the pre-registration text are marked CHOICE and listed in
-notes/plans/v005-preregistration.md §5 (approved with the scripts, task 5a).
+notes/archive/v005/plans/v005-preregistration.md §5 (approved with the scripts, task 5a).
 """
 
 from __future__ import annotations

@@ -1,0 +1,57 @@
+% v005 Related Work, assembled 2026-11-17. Kept verbatim from v003: "Evolutionary NAS with surrogates",
+% the pyramid figure and "Joint NAS+HPO benchmarks". New: positioning.tex (replaces v003 "Linkage learning
+% and P3", "Surrogate-assisted linkage learning", "Scale dependence", "Closest prior work"),
+% compared_methods.tex, llm.tex (replaces the v003 LLM paragraph).
+
+\section{Related Work}
+\label{sec:related-work}
+
+\paragraph{Evolutionary NAS with surrogates.} NSGA-Net searches architectures with NSGA-II, training every
+candidate fully~\citep{lu2019nsganet}. NSGANetV2 adds an accuracy predictor refined online and inherits weights
+from a supernet, cutting the number of fully evaluated architectures to 350~\citep{lu2020nsganetv2}, at the
+documented risk of rank disagreement between weight-shared and stand-alone accuracy~\citep{yu2020evaluatingnas}.
+White et al.\ identify multi-objective evolutionary search as the most common approach to multi-objective NAS,
+with NSGANetV2 as an example~\citep{white2023insights}; Liu et al.\ list learned surrogates as one of several
+cost-reduction techniques alongside weight sharing and zero-cost proxies~\citep{liu2023survey}. Later work in
+this lineage moves toward ranking-based predictors~\citep{lu2022mosegnas}. None of three recent surveys lists
+linkage learning as a distinct NAS method category~\citep{liu2023survey,white2023insights,ozcelik2026survey}.
+
+\input{chapters/related_work/positioning}
+
+\begin{figure}[t]
+    \centering
+    \begin{tikzpicture}[
+        lvl/.style={draw, rounded corners, minimum height=6mm, font=\scriptsize, align=center},
+    ]
+        \node[lvl, minimum width=14mm] (l1) at (0,0)     {level 1};
+        \node[lvl, minimum width=22mm] (l2) at (0,-9mm)  {level 2};
+        \node[lvl, minimum width=30mm] (l3) at (0,-18mm) {level 3};
+        \node[lvl, minimum width=38mm] (l4) at (0,-27mm) {level 4};
+        \draw[{Stealth[length=2mm]}-, dashed] (l4.south) -- ++(0,-6mm)
+            node[below, font=\tiny, align=center, text width=32mm]
+            {new level added only once existing levels stop yielding improved solutions};
+    \end{tikzpicture}
+    \caption{P3's population pyramid: each level holds a population of growing size; a new level is added only
+    when the levels below it stop producing improved solutions.}
+    \Description{A vertical stack of four boxes labelled level 1 through level 4, growing wider from top to
+    bottom, with an arrow noting that a new level is added only once existing levels stop yielding improved
+    solutions.}
+    \label{fig:p3-pyramid}
+\end{figure}
+
+\input{chapters/related_work/compared_methods}
+
+\input{chapters/related_work/llm}
+
+\paragraph{Joint NAS+HPO benchmarks and their limits.} JAHS-Bench-201 answers queries through a learned surrogate
+over a mixed categorical/continuous joint space~\citep{bansal2022jahsbench}; NAS-HPO-Bench-II is a fixed lookup
+table over architecture, learning rate, and batch size~\citep{hirose2021nashpobenchii}. Only the latter admits an
+exactly enumerable oracle Pareto front, which we exploit for IGD+ (Section~\ref{sec:results}). Guerrero-Viu et
+al.\ establish SH-EMOA and MO-BOHB as baselines for this joint setting~\citep{guerreroviu2021bagofbaselines}, none
+of them a linkage-learning EA. Both benchmarks share the NAS-Bench-201 cell space~\citep{dong2020nasbench201} and
+small-scale image classification. The benchmarking literature documents that search-space design accounts for
+much of a method's reported performance and that rankings transfer poorly across
+benchmarks~\citep{yang2020nasfrustratinglyhard,mehta2022nasbenchsuite}, that this particular cell space is
+redundant and skewed toward already-good architectures~\citep{lopes2023nasbenchdesign}, and that conclusions
+transfer inconsistently across task domains~\citep{tu2022nasbench360,duan2021transnasbench101}. Any result on
+this family should be read against that.

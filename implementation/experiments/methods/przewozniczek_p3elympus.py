@@ -1,7 +1,7 @@
 """PrzewozniczekP3ELyMPuS: P3-eLyMPuS (source paper's Table 5: second-best
 of six compared optimisers, after the authors' own OLyMPuS) reconstructed
 inside this harness, run against the SAME baseline set `p3net` itself is
-compared against (notes/plans/experiments-przewozniczek-plan.md is this
+compared against (notes/archive/experiments-przewozniczek-plan.md is this
 module's full specification; Faza 4 is this file specifically).
 
 Combines pieces already built and independently validated:

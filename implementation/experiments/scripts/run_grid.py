@@ -37,7 +37,7 @@ The CLI entry point prints a live, self-updating progress bar (points
 done/total, elapsed time, rough ETA) by default -- disable with
 --no-progress for a log-friendly (non-carriage-return) output stream.
 
-Reference: chapters/v003/results/main.tex ("Baselines", Table
+Reference: chapters/archive/v003/results/main.tex ("Baselines", Table
 tab:ablation-grid, "Budgets, seeds, stopping").
 """
 

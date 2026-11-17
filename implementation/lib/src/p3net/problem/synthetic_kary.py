@@ -2,7 +2,7 @@
 `przewozniczek2026lympus` (Eq. 1, bim_ell over {0,1}) to validate eLyMPuS
 before touching binary problems. Built for
 `implementation/lib/src/p3net/surrogates/elympus.py`'s own Faza 2 synthetic
-validation (notes/plans/experiments-przewozniczek-plan.md) -- not NAS-
+validation (notes/archive/experiments-przewozniczek-plan.md) -- not NAS-
 specific, so it lives next to `genotype.py`/`objectives.py`, not in an
 experiments-* fork.
 

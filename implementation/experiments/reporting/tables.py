@@ -1,7 +1,7 @@
 """
 Fixed-budget summary table (median, IQR, corrected p-values, effect sizes),
 plus the P3-alone "number of full sweeps completed within budget" side
-table (chapters/v003/results/main.tex, "Baselines" paragraph).
+table (chapters/archive/v003/results/main.tex, "Baselines" paragraph).
 
 Per (search_space, budget, method): median/IQR of the metric that
 benchmark supports -- IGD+ against a caller-supplied oracle front for a
@@ -15,7 +15,7 @@ defined comparison set -- P3Net vs. every other arm actually present, per
 benchmark and budget tier -- never every pairwise combination, since the
 Holm-Bonferroni correction count depends on that scope being right.
 
-Reference: chapters/v003/results/main.tex ("This section reports... a
+Reference: chapters/archive/v003/results/main.tex ("This section reports... a
 fixed-budget summary table (median, IQR, corrected p values, effect
 sizes)... Findings"; "Baselines" paragraph, P3-alone sweep count).
 """
@@ -311,7 +311,7 @@ def fixed_budget_summary_table(
 def p3_alone_sweep_completion_table(
     runs: Sequence[RawRun], *, method: str = "p3_alone"
 ) -> list[SweepCompletionRow]:
-    """P3-alone's own diagnostic (chapters/v003/results/main.tex,
+    """P3-alone's own diagnostic (chapters/archive/v003/results/main.tex,
     "Baselines"): under a tight budget, P3 alone without a surrogate is
     expected to exhaust most or all of the budget within a handful of
     sweeps -- this reads the collapse as budget starvation rather than

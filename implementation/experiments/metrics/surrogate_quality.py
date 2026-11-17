@@ -18,7 +18,7 @@ sensitivity analysis (configs/experiment/kappa_threshold_sweep.yaml),
 which reports surrogate rank correlation jointly with fixed-budget
 hypervolume (p3net.metrics.hypervolume).
 
-Reference: chapters/v003/results/main.tex ("Metrics", "Surrogate error
+Reference: chapters/archive/v003/results/main.tex ("Metrics", "Surrogate error
 accumulation (kappa and acceptance threshold)").
 """
 

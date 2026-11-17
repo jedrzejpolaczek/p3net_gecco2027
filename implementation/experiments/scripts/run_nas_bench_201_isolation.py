@@ -8,7 +8,7 @@ Tests P3Net vs random_search on nas_bench_201 (architecture-only, no
 Theta) -- the direct test of whether this project's own joint
 architecture+hyperparameter genotype extension explains P3Net's failure
 to separate from random_search on both joint benchmarks
-(chapters/v003/conclusions/main.tex, "Why the results are what they
+(chapters/archive/v003/conclusions/main.tex, "Why the results are what they
 are").
 
 Aborts before the (expensive) grid run if the smoke test fails, so a

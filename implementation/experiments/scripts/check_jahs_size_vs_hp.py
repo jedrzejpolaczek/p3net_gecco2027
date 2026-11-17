@@ -1,4 +1,4 @@
-"""BM-3 (notes/plans/v005-sources/benchmarks.md): does JAHS-Bench-201's
+"""BM-3 (notes/archive/v005/plans/v005-sources/benchmarks.md): does JAHS-Bench-201's
 `size_MB` change with the hyperparameters when the cell is fixed?
 
 Decision rule, fixed before running: if the spread of `size_MB` over the HP

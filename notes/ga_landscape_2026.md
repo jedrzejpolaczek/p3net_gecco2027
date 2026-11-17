@@ -867,7 +867,7 @@ dostępny budżet obliczeniowy:
 - **Kategoria 2 z supersiecią** (model NSGANetV2) — kompromis: realny trening, ale znacznie tańszy,
   praktyczna przewaga bez konieczności posiadania klastra GPU na wyłączność.
 
-**Sprawdzone (2026-07-22):** żaden plik w aktywnym szkicu `chapters/v003/*` nie wspomina o kodowaniu
+**Sprawdzone (2026-07-22):** żaden plik w aktywnym szkicu `chapters/archive/v003/*` nie wspomina o kodowaniu
 ciągłym ani o Kategorii 1/2 explicite — to wciąż otwarta decyzja, nieprzesądzona w żadnym dokumencie.
 Wzmianki o zmiennych ciągłych istnieją tylko w starszej, niepodpiętej gałęzi `chapters/v002/` i dotyczą
 hiperparametrów treningu (learning rate, dropout), nie kodowania architektury.
@@ -940,7 +940,144 @@ Zaflagowane w `results/main.tex` jako "Open decisions (ii)", nierozstrzygnięte 
 ### 15.5 Pliki zaktualizowane w tej rundzie
 
 `refs.bib` (+4 wpisy: `zela2018towards`, `bansal2022jahsbench`, `hirose2021nashpobenchii`,
-`guerreroviu2021bagofbaselines`), `chapters/v003/related_work/main.tex` (nowe akapity o joint NAS+HPO i o
-pracy Bartnik, przepisane zdanie o luce), `chapters/v003/results/main.tex` (nowy akapit "Benchmark and
-search space", zredukowane "Open decisions" z 3 do 2 punktów), `chapters/v003/problem_formulation/main.tex`
+`guerreroviu2021bagofbaselines`), `chapters/archive/v003/related_work/main.tex` (nowe akapity o joint NAS+HPO i o
+pracy Bartnik, przepisane zdanie o luce), `chapters/archive/v003/results/main.tex` (nowy akapit "Benchmark and
+search space", zredukowane "Open decisions" z 3 do 2 punktów), `chapters/archive/v003/problem_formulation/main.tex`
 (jednozdaniowe zastrzeżenie o rozszerzeniu $\Lambda$ o wymiary ciągłe, odłożone do rozstrzygnięcia 15.4).
+
+## 16. Aktualizacja przeszukania (2026-11-16, po wynikach v005 i E1)
+
+Przeszukanie WebSearch (10 zapytań; strony arXiv otwarte bezpośrednio). **Wstępne — przed etapem C (Related Work)
+autor powtarza je sam w Google Scholar / DBLP** (DBLP GECCO 2026 Companion zablokował dostęp automatyczny; Scholar
+niedostępny z narzędzi).
+
+- **P3 (Goldman i Punch) w NAS lub NAS+HPO:** nie znaleziono żadnej pracy (zapytania: „parameter-less population
+  pyramid neural architecture search”, „linkage learning” + NAS 2025–2026, JAHS-Bench-201 + linkage learning).
+- **Rodzina GOMEA w NAS — wcześniej, niż podawała §6 (tam tylko Tran i in. 2023):**
+  - den Ottelander, Dushatskiy, Virgolin, Bosman, *Local Search is a Remarkably Strong Baseline for Neural
+    Architecture Search*, EMO 2021, arXiv:2004.08996 — MO-NAS, MO-GOMEA wśród metod. (Sprostowanie 2026-11-17: już
+    cytowane w v003 Related Work, `denottelander2021localsearch` — nie jest nowe.)
+  - Chebykin, Alderliesten, Bosman, *Evolutionary Neural Cascade Search across Supernetworks* (ENCAS), GECCO 2022,
+    arXiv:2203.04011 — MO-GOMEA (dokładność + FLOPs), wybrany jako bezparametrowy. Wspomniany w `v005-plan.md`
+    (etap C), ale bez wpisu w bib — dodany 2026-11-17 jako `chebykin2022encas`; **do cytowania**.
+  - Tran, Truong, Vo, Luong, GECCO 2023 Companion (GOMEA + Synaptic Flow) — już w §6.
+  - Bartnik 2026 (SA-P3-GOMEA, MO-NAS, NB201) — §13; w sieci nieindeksowana.
+- **Wspólne MO NAS+HPO bez linkage learning:** Bag of Baselines (Guerrero-Viu i in. 2021, arXiv:2105.01015),
+  MO-DEHB (arXiv:2305.04502, m.in. JAHS Fashion / Colorectal).
+- **Nowe 2026:** Adde, Gottschalk, *Hyperparameter and Neural Architecture Search via Evolutionary Optimization for
+  Reinforcement Learning: HPNAS-RL*, arXiv:2610.36882 (2026-10-27) — ewolucyjne MO NAS+HPO dla RL (symulator jazdy),
+  na bazie ich EMNAS; algorytm nienazwany w abstrakcie — **pełny tekst nieprzeczytany**, sprawdzić, czy nie P3/GOMEA.
+- GECCO 2026 (DBLP, tom główny): prace o linkage learning (m.in. LyMPuS promotora, GP-GOMEA) i osobno o NAS (SONATA,
+  hyper-heurystyki LS dla NAS); żadna nie łączy obu.
+
+**Wniosek dla Related Work:** „rodzina GOMEA/P3 nadaje się do NAS” nie jest nowe (od 2021). Luka do obrony:
+P3 (piramida) w wspólnym wielokryterialnym NAS+HPO; szerokie prerejestrowane porównanie z BO i multi-fidelity z kosztem
+optymalizatora; wynik o pairwise surrogate (v005 + E1, `notes/archive/v005/analysis-v005/reports/04`).
+
+### 16a. Przeszukanie autora (Google Scholar, 2026-11-17; zrzuty ekranu w rozmowie)
+
+Zapytanie typu „P3 NAS HPO”, wyniki z 2026 (~30 pozycji). Skrót „P3” w Scholarze trafia głównie w etykiety (warstwy
+FPN „P3–P7”, „P3” = punkt/uczestnik), więc to zapytanie słabo sprawdza naszą lukę.
+- **Istotne — cytować:** Hirose, Uchida, Shirakawa, *NAS-HPO-Bench-II-Plus: A Surrogate Benchmark Dataset toward
+  Practical Scenarios in Joint Neural Architecture Search and Hyperparameter Optimization*, IEEE Access, 2026.
+  Następca NAS-HPO-Bench-II (naszej przestrzeni NHB). Do sprawdzenia w pełnym tekście: czym różni się od II (przestrzeń,
+  cele, wierność), czy recenzent może zapytać, dlaczego nie użyliśmy „Plus”. Wpis bib — z „Cytuj” w Scholarze / IEEE
+  Xplore (wyszukiwarka sieciowa 2026-11-17 go nie znalazła, więc nie wpisuję z pamięci).
+- **Pobocznie (ramowanie „badania empirycznego”):** Alwan i in., *Search space matters more than search method:
+  a leakage-free, equal-budget evaluation of evolutionary ensemble search for lung nodule CT analysis*, SSRN 2026
+  (preprint) — ten sam typ wniosku co nasz (metoda wyszukiwania ma mniejsze znaczenie niż sądzono); opcjonalnie.
+- **Nieistotne:** przeglądy AutoML (Dagstuhl multivocal, wind-energy NAS review), QuaNAS (transfer wcześniejszych
+  przeszukań), TSGNAS, zastosowania HPO/NAS w medycynie, chemii, UAV itd.; brak P3/GOMEA/linkage learning w NAS+HPO.
+
+### 16b. Przeszukanie autora, pełne nazwy (Scholar, filtr „Od 2026”, 2026-11-17)
+
+Zapytania: "population pyramid" + NAS / hyperparameter; "parameter-less population pyramid" neural network;
+GOMEA + NAS / hyperparameter (od 3. strony Scholar dopasowuje Gomez/Gomes — szum); "gene-pool optimal mixing" + NAS /
+hyperparameter; "linkage learning" "neural architecture search" (bez filtra); "linkage tree" + NAS; "model-based
+evolutionary" + NAS + hyperparameter. Lata 2021–2025 pokrywają §1–§16 (decyzja autora: filtr zostaje).
+
+**Do przeczytania w pełnym tekście (mogą dotykać naszej luki):**
+1. **Chebykin, *Efficient Evolutionary Hyperparameter Optimization for Deep Learning*, PhD, TU Delft/CWI 2026**
+   (promotor Bosman; https://doi.org/10.4233/uuid:087a0074-4643-477f-abdd-8ce2d6e18217). EA do HPO sieci, wielokryterialnie,
+   MO-GOMEA (z ENCAS 2022). Najbliższa praca z rodziny GOMEA: sprawdzić, czy robi łączne NAS+HPO z linkage learning,
+   na jakich benchmarkach i z jakimi baseline'ami.
+2. **Dahi, Luque, Chicano, *Tightening the Calculation Gap in Quantum Multi-objective Pseudo-Boolean Optimisation*,
+   PPSN 2026** — „investigates NAS … studies linkage learning”; kontynuacja Dahi i in. 2024 (3LO — linkage learning
+   z grupy promotora — w NAS dla transpilacji kwantowej). Sprawdzić, czy to wielokryterialne linkage learning w NAS.
+3. **Rakhshaninejad, Fathian, Shirkoohi i in., *P3DE: … parameter-less optimization for … breast cancer biomarker
+   discovery*, Neural Computing and Applications 2026** — P3 + deep ensemble. Sprawdzić, co optymalizuje P3 (selekcja
+   cech czy hiperparametry/architektura). Jeśli hiperparametry sieci — nie piszemy „P3 nie był stosowany do HPO sieci”.
+4. **Meng, Shi, Hu, Pei, Liu, *Linkage-Guided Genetic Variation: Overcoming Operator Blindness in Genetic Algorithms*,
+   OpenReview (rok?)** — linkage learning (ELLG) oceniane m.in. na benchmarkach NAS, wielokryterialnie.
+
+**Cytować (peryferyjnie):** Qiao, *Adapting GOMEA for neuroevolution*, PhD UQ 2026 (GOMEA w neuroewolucji);
+Hirose i in., NAS-HPO-Bench-II-Plus, IEEE Access 2026 (§16a).
+
+**Luka w naszych cytowaniach (nie z przeszukania, ale wyszła przy nim):** wielokryterialny P3 już istnieje —
+**MO-P3**, Przewozniczek, Dziurzanski, Zhao, Indrusiak, Swarm and Evolutionary Computation 2021 (arXiv:2009.08929).
+Nie ma go w `refs.bib` ani w v003. P3Net jest wielokryterialnym P3 → musi być cytowany i odróżniony (MO-P3: linkage +
+różnorodność linkage, bez surogatu, problem planowania procesów). Wzmianka o „Niemczyk, Przewozniczek, Dziurzanski
+(2025) multi-objective P3 with solution comparator” (w przeglądzie Ma i in. 2026) — nie znaleziona w sieci, do sprawdzenia.
+
+**Nieistotne:** zastosowania NAS/HPO w medycynie, energetyce itd.; regresja symboliczna z GP-GOMEA; Gomez/Gomes.
+
+**Wniosek:** w 2026 nie widać pracy z P3 (piramidą) w łącznym NAS+HPO. Najbliżej: Chebykin 2026 (GOMEA, HPO+NAS?)
+i Dahi 2026 (linkage learning w NAS). Teza o luce do utrzymania po przeczytaniu 1–4.
+
+### 16c. Przeczytane pełne teksty 1–4 (2026-11-17; PDF-y w `notes/articles/` (linkage learn, NAS))
+
+1. **Chebykin, PhD TU Delft/CWI 2026** — rozdz. 2 = ENCAS (MO-GOMEA w NAS kaskad sieci z supersieci, już cytujemy
+   `chebykin2022encas`); rozdz. 3–5 = Population Based Training (PBT-NAS, IPBT; HPO i NAS osobno, bez linkage
+   learning); rozdz. 6 = synteza obrazów medycznych. **Łączne NAS+HPO zostawione jako przyszła praca** („combine IPBT
+   with PBT-NAS … to enable simultaneous architecture and hyperparameter optimization”). P3 nie występuje. → Nie
+   zawęża luki; można zacytować jako przegląd EA w HPO dla DL (opcjonalnie).
+2. **Dahi, Luque, Chicano, PPSN 2026** — w katalogu jest **tylko suplement** (Appendix A, B), nie główny artykuł.
+   Z suplementu: **P3 użyty do NAS** małego MLP (liczba warstw ukrytych i neuronów), które przewiduje parametry QAOA;
+   NAS jednokryterialny (dokładność predykcji), cel to lżejszy model; wielokryterialny jest problem kwantowy, nie NAS.
+   → **Zawęża lukę: zdania „P3 nie był stosowany w NAS” nie wolno napisać.** Zostaje: P3 w *wielokryterialnym łącznym
+   NAS+HPO* na benchmarkach NAS, z surogatem i szerokim porównaniem. Potrzebny główny tekst (bib, dokładny opis
+   przestrzeni i celu) oraz praca poprzednia Dahi i in. 2024 (3LO w NAS, transpilacja kwantowa; §16b).
+3. **P3DE, Rakhshaninejad i in., NCA 2026** — P3 robi **binarną selekcję cech** (geny); sieć (3 autoenkodery, warstwa
+   50 jednostek) jest stała i służy tylko do oceny. Ani NAS, ani HPO. → Nie zawęża luki; opcjonalnie jedno zdanie
+   „P3 w potokach ML (selekcja cech)”.
+4. **Meng i in., ELLG** — anonimowe zgłoszenie ICLR 2026 (under review): GA z wagami linkage na loci; NAS
+   jednokryterialny (Blender-10 HPO, Genetic CNN na MNIST); bez P3/GOMEA jako baseline'ów. → Nie zawęża luki;
+   niecytowalne jako opublikowane (sprawdzić, czy przyjęte).
+
+**Aktualny wniosek dla Related Work:** P3 był już użyty w NAS (Dahi 2026, jednokryterialny MLP), GOMEA w NAS od 2021
+(den Ottelander, ENCAS, Tran 2023), MO-P3 istnieje (Przewozniczek i in. 2021). Do obrony: (i) P3 w wielokryterialnym
+**łącznym NAS+HPO** na benchmarkach tabelarycznych/surogatowych; (ii) szerokie prerejestrowane porównanie z BO i MF
+z kosztem optymalizatora; (iii) negatywny wynik dla surogatu par.
+
+### 16d. „Cytowane przez” P3 (Scholar, od 2026) i profil promotora (2026-11-17)
+
+- Goldman & Punch 2014 (GECCO), cytujące od 2026 (14): P3DE, Dahi PPSN 2026, Qiao (doktorat, PPSN), prace grupy
+  promotora (Przewozniczek i in.: SLL partition crossover, hop-like, Limited Perfect Monotonical Surrogates GECCO 2026,
+  LON, wyspy z empirical linkage, ASOC 2026 alokacja zasobów MO), Tinós i in., Willemsen (strojenie HPC), Tashfeen
+  (kraty). **Poza Dahim żadna nie dotyczy NAS ani HPO sieci.**
+- Goldman & Punch 2015 (ECJ), cytujące od 2026: 1 (CGP runtime) — nieistotne.
+- Profil promotora: praca z przeglądu Ma i in. to **Niemczyk, Przewozniczek, Dziurzanski, *Pareto Front Improvements
+  Phase using linkage learning and mating restrictions for solving multi-objective industrial process planning problems
+  with low-sized Pareto fronts*, ESWA 273, 126834, 2025**. MO-P3 potwierdzony: SWEVO 60, 100773, 2021 (+ GECCO'21
+  companion). Do rozważenia przy surogacie: *Limited Perfect Monotonical Surrogates … recursive linkage discovery*,
+  GECCO 2026 (surogat + linkage, grupa promotora).
+- Dodane do `refs.bib`: `przewozniczek2021mop3`, `niemczyk2025pareto`, `dahi2026tightening` (BibTeX ze Scholara),
+  `hirose2026nashpobenchiiplus` (BibTeX ze Scholara), `przewozniczek2026monotonical`.
+
+**Wniosek:** luka z §16 bez zmian. Brakuje jeszcze zapytań pełną nazwą (zob. todo, etap C):
+„Parameter-less Population Pyramid” + NAS / hyperparameter, „GOMEA” + neural architecture, „linkage learning” +
+neural architecture search; DBLP: „population pyramid”, „GOMEA”.
+
+### 16e. Przeczytane 2026-11-17 (`notes/articles/` (HPO, NAS, MOEA, NSGA, linkage learn))
+
+- **HPNAS-RL** (Adde, Gottschalk, arXiv:2610.36882, 27.10.2026): rozszerzenie ich EMNAS — algorytm genetyczny na NSGA-II
+  (krzyżowanie jednorodne dla architektury; SBX i mutacja wielomianowa dla ciągłych hiperparametrów), łączne NAS (warstwy
+  konwolucyjne polityki RL) + HPO (hiperparametry RL), symulator jazdy; porównanie tylko z wersją „sama architektura”;
+  surogat bayesowski zapowiedziany, niezintegrowany. **Brak P3/GOMEA/linkage learning → luki nie zawęża.** Opcjonalnie
+  cytować jako przykład wielokryterialnego EA w łącznym NAS+HPO poza benchmarkami.
+- **NAS-HPO-Bench-II-Plus** (Hirose, Uchida, Shirakawa, IEEE Access 14, 2026, DOI 10.1109/ACCESS.2026.3712818,
+  publikacja 13.07.2026 — **przed zamrożeniem prerejestracji v005**): rozszerza NHB2 o 6 typów hiperparametrów
+  (ciągłe, dyskretne, kategoryczne), przestrzeń warunkową i ocenę inferencji na urządzeniach brzegowych i serwerowych;
+  surogaty MLP (średnie τ Kendalla 0.940), budżety 12 i 200 epok. Jest benchmarkiem **surogatowym** — nie daje dokładnego
+  frontu Pareto, na którym opiera się nasze IGD+ dla NHB. Uzasadnienie do tekstu: zob. `notes/plans/v006-carryover.md` C.2.
+

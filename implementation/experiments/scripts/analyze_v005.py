@@ -1,4 +1,4 @@
-"""All analyses of notes/plans/v005-preregistration.md (§3-§5) from the v005 run roots.
+"""All analyses of notes/archive/v005/plans/v005-preregistration.md (§3-§5) from the v005 run roots.
 
     uv run python scripts/analyze_v005.py results/runs/<commit> results/runs/<commit>-vizier \
         --out results/runs/<commit>/analysis
@@ -70,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
     save("budget_use", secondary.budget_use(df))
     (out / "summary.md").write_text(
         "# v005 analysis outputs\n\nRun roots: " + ", ".join(map(str, args.roots))
-        + "\n\nPre-registration: notes/plans/v005-preregistration.md\n\n| file | rows | elapsed |\n|---|---|---|\n"
+        + "\n\nPre-registration: notes/archive/v005/plans/v005-preregistration.md\n\n| file | rows | elapsed |\n|---|---|---|\n"
         + "\n".join(log) + "\n", encoding="utf-8")
     return 0
 

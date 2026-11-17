@@ -8,8 +8,8 @@ and variable dependencies (fitness relevance) are different phenomena
 that need not coincide; this module measures whether they do, it does not
 assume it.
 
-Reference: chapters/v003/introduction/main.tex (NSGA-Net duplication-rate
-paragraphs); chapters/v003/results/main.tex ("Diagnostics").
+Reference: chapters/archive/v003/introduction/main.tex (NSGA-Net duplication-rate
+paragraphs); chapters/archive/v003/results/main.tex ("Diagnostics").
 """
 
 from __future__ import annotations

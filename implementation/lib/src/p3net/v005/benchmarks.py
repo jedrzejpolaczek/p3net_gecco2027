@@ -74,7 +74,7 @@ def build_energy_table(log_path: str | Path, out_path: str | Path = DEFAULT_TABL
 
 
 #: HW-NAS-Bench-v1_0.pickle from github.com/GATECH-EIC/HW-NAS-Bench (checked 2026-10-30,
-#: notes/plans/v005-hwnasbench-check.md).
+#: notes/archive/v005/plans/v005-hwnasbench-check.md).
 HWNASBENCH_SHA256 = "57f92c2d7b88814fa337d00f4597c8ca30d507c5a855c18d6fac57e5ad872700"
 HWNASBENCH_METRIC = "edgegpu_energy"
 

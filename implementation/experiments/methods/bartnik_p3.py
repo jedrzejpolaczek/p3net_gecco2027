@@ -1,7 +1,7 @@
 """BartnikP3: reconstruction of the algorithm class Bartnik
 (`bartnik2026evolutionary`) showed separating from baselines on
 architecture-only NAS-Bench-201 -- run here against the SAME baseline set
-`p3net` itself is compared against (notes/plans/experiments-bartnik-plan.md
+`p3net` itself is compared against (notes/archive/experiments-bartnik-plan.md
 is this module's full specification; Faza 3 is this file specifically).
 
 Combines three pieces, each already built and tested independently:

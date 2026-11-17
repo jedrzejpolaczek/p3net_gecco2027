@@ -1,0 +1,100 @@
+{
+ "train_key": "nhb__0-33-213__lr0.2__bs256",
+ "search_space": "nas_hpo_bench_ii_v005",
+ "arch_str": "|nor_conv_3x3~0|+|none~0|none~1|+|skip_connect~0|avg_pool_3x3~1|none~2|",
+ "protocol": {
+  "epochs": 12,
+  "lr": 0.2,
+  "batch_size": 256,
+  "schedule": "cosine_per_epoch",
+  "seed": 222,
+  "augment_valid": true
+ },
+ "valid_acc": 78.22,
+ "test_acc": 78.73,
+ "params": 316346,
+ "wall_seconds": 603.1,
+ "epochs_log": [
+  {
+   "epoch": 1,
+   "train_loss": 1.619349718093872,
+   "seconds": 27.5,
+   "valid_acc": 37.272
+  },
+  {
+   "epoch": 2,
+   "train_loss": 1.4948639869689941,
+   "seconds": 76.0,
+   "valid_acc": 43.588
+  },
+  {
+   "epoch": 3,
+   "train_loss": 1.3096659183502197,
+   "seconds": 124.9,
+   "valid_acc": 48.944
+  },
+  {
+   "epoch": 4,
+   "train_loss": 1.1357381343841553,
+   "seconds": 173.7,
+   "valid_acc": 56.48
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.793676495552063,
+   "seconds": 222.1,
+   "valid_acc": 57.056
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.9620815515518188,
+   "seconds": 270.9,
+   "valid_acc": 63.36
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.737760066986084,
+   "seconds": 319.1,
+   "valid_acc": 65.3
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.5923148393630981,
+   "seconds": 367.4,
+   "valid_acc": 70.74
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.6470665335655212,
+   "seconds": 416.4,
+   "valid_acc": 70.128
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.6332541108131409,
+   "seconds": 464.6,
+   "valid_acc": 74.052
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.5196795463562012,
+   "seconds": 513.6,
+   "valid_acc": 76.868
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.5054421424865723,
+   "seconds": 562.5,
+   "valid_acc": 78.22,
+   "test_acc": 78.73
+  }
+ ],
+ "split_sha256": "ea50dd54c7a9355d4bf7d3f7d969db880c07ed558e5c5bbf891635becb14a3ac",
+ "device": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+ "versions": {
+  "torch": "2.14.1+cu126",
+  "torchvision": "0.29.1+cu126",
+  "xautodl": "?",
+  "python": "3.12.10"
+ }
+}

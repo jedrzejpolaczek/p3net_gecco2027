@@ -96,7 +96,9 @@ def loaders(space: str, data: Path, cache: Path, p: dict, workers: int):
                                              transform=aug if p["augment_valid"] else plain)
     test_set = torchvision.datasets.CIFAR10(str(data), train=False, download=True, transform=plain)
     g = torch.Generator().manual_seed(p["seed"])
-    kw = dict(num_workers=workers, pin_memory=True)
+    # persistent workers: on Windows every epoch otherwise re-spawns the worker processes (each re-imports torch)
+    # and the GPU idles ~70 % of the time (2026-11-16); this changes only the workers' augmentation stream
+    kw = dict(num_workers=workers, pin_memory=True, persistent_workers=workers > 0)
     bs = p["batch_size"]
     return (torch.utils.data.DataLoader(torch.utils.data.Subset(train_set, train_idx), batch_size=bs,
                                         shuffle=True, generator=g, drop_last=False, **kw),
@@ -173,6 +175,7 @@ def train_one(space: str, knee: dict, data: Path, cache: Path, epochs: int | Non
     return dict(train_key=knee["train_key"], search_space=space, arch_str=knee["arch_str"], protocol=p,
                 valid_acc=log[-1]["valid_acc"], test_acc=log[-1]["test_acc"], params=params,
                 wall_seconds=round(time.time() - started, 1), epochs_log=log, split_sha256=digest,
+                loader=dict(workers=workers, persistent_workers=workers > 0),
                 device=torch.cuda.get_device_name(0) if device.type == "cuda" else platform.processor(),
                 versions=dict(torch=torch.__version__, torchvision=torchvision.__version__,
                               xautodl=getattr(xautodl, "__version__", "?"), python=platform.python_version()))
@@ -212,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--data", type=Path, default=Path("~/cifar10").expanduser(), help="CIFAR-10 (downloaded if absent)")
     ap.add_argument("--out", type=Path, default=Path("results/retraining/runs"))
     ap.add_argument("--space", choices=list(SPLITS), default=None, help="only this space")
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--smoke", type=int, default=None, metavar="EPOCHS",
                     help="train the first job of each space for EPOCHS epochs into <out>-smoke/ (not results)")
     ap.add_argument("--report", action="store_true", help="only write results/retraining/retraining_v005.csv")

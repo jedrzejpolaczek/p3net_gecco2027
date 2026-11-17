@@ -15,8 +15,8 @@ stricter than bartnik2026evolutionary's uncorrected comparisons with no
 effect size -- a deliberate methodological choice, not something to
 "simplify away".
 
-Reference: chapters/v003/results/main.tex ("Statistical plan");
-chapters/v003/notes/main.tex ("Comparison set for correction").
+Reference: chapters/archive/v003/results/main.tex ("Statistical plan");
+chapters/archive/v003/notes/main.tex ("Comparison set for correction").
 """
 
 from __future__ import annotations

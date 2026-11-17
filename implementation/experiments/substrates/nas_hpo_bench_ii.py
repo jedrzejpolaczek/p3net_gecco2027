@@ -39,7 +39,7 @@ from substrates.base import FidelityLevel, Substrate
 MAX_TABULATED_EPOCHS = 12
 """r_K for this benchmark is fixed at the tabulated range only -- the
 200-epoch GIN+MLP surrogate extrapolation is never queried by this
-substrate (chapters/v003/related_work/main.tex, "Classifying
+substrate (chapters/archive/v003/related_work/main.tex, "Classifying
 NAS-HPO-Bench-II as Category 1...")."""
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "cache" / "nashpobench2"

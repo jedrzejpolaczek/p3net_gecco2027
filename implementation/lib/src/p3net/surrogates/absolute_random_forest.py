@@ -1,5 +1,5 @@
 """Deterministic, per-objective Random Forest absolute surrogate
-(notes/plans/experiments-bartnik-plan.md, Faza 2) -- the surrogate half of
+(notes/archive/experiments-bartnik-plan.md, Faza 2) -- the surrogate half of
 `experiments/methods/bartnik_p3.py`'s reconstruction of Bartnik's
 architecture-only NAS-Bench-201 result.
 

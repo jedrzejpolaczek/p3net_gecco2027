@@ -424,3 +424,58 @@ Implementujący ma rację: warunek wykluczał `data/cache`, bo w chwili pisania 
 jakikolwiek plik, także w `cache`. Testy, którym brakuje własnego pliku, pomijają się same (np. W-BM3 bez pickla
 HW-NAS-Bench) albo przy nieudanej konstrukcji substratu (`_substrate` → `pytest.skip`).
 
+## Runda 9 (2026-11-17) — W-K6 (claim C-46)
+
+**Dopisane** w `test_p3_canonical.py`, parametryzowane po `P3Net`, `P3NetGate`, `P3NetNoLink` i ziarnach 0, 1, 3:
+(a) historia metody na `Random(s)` = historia `P3Canonical` na `Random(s)` po jednym `getrandbits(64)`; budżet 18 = jedno
+przejście FIHC na pułapce 3 × 3 × 3 (Σ(k − 1) = 18 różnych sąsiadów), więc do mieszania (P4 po P2) ani do użycia
+surogatu (S-9 a) nie dochodzi; (b) kontrola negatywna — bez pobrania historie się różnią; (c) stan `rng` po `__init__`
+= kopia po jednym `getrandbits(64)`; dla `P3Canonical`, `P3Net(step_evaluator="oracle")` i `"real"` stan niezmieniony.
+
+### Q-52 [—] Przesunięcie strumienia bywa „wchłonięte” (uwaga do C-46)
+Na ziarnach 2, 22, 23 (z 0–39) kanoniczne P3 ma **tę samą** historię z pobraniem `getrandbits(64)` i bez niego:
+`randrange` losuje z odrzucaniem, więc przesunięty i nieprzesunięty strumień Mersenne'a potrafią się zsynchronizować
+(dla ziarna 2 już pierwsze dziewięć `randrange(3)` jest identyczne). Dlatego ziarno 2 zastąpiłem ziarnem 3 (kontrola
+negatywna na nim nie zachodzi z powodu generatora, nie implementacji). Dla tekstu artykułu: „shifts the random stream”
+jest prawdą o generatorze, ale nie zawsze zmienia trajektorię — przy liczeniu „6/6 identycznych historii” warto wiedzieć,
+że część ziaren dałaby identyczną historię także bez przesunięcia. Nie blokuje; test nie jest oznaczony.
+
+**Rozstrzygnięte** (`v005-test-answers.md`, runda 9): przyjęte; test bez zmian (ziarno 3 zamiast 2 w kontroli
+negatywnej). Zmiana tylko w tekście artykułu (Results: kontrola negatywna 5 z 6 przebiegów, wyjątek NHB seed 62).
+
+## Runda 10 (2026-11-17) — W17: wariant P3Net-gate (claim C-48)
+
+Testy `test_p3_canonical.py::test_W17_*` (ziarna 0, 1, 3; budżet 300 na pułapce 3 × 3 × 3; `surrogate.fit` → no-op,
+`surrogate.predict_chain` → stała): (a) predykcja (1e9, 1e9) — żaden krok nie jest przyjęty, zero prawdziwych ewaluacji
+w mieszaniu, rozwiązanie po mieszaniu = przed, `predict_chain` wołane z łańcuchem jednoelementowym i naprawdę ocenioną
+kotwicą; (b) predykcja (−1e9, −1e9) — historia = `P3Canonical` na generatorze po jednym `getrandbits(64)`, z kontrolą,
+że kanoniczne P3 przy tym budżecie wydaje ewaluacje w mieszaniu; (c) w wariancie (b) krok zmieniający jest przyjęty
+**wtedy i tylko wtedy**, gdy prawdziwe cele spełniają D-1 b względem bieżącego rozwiązania (odtwarzanego z `fihc_end`
+i przyjętych kroków) i wcześniejszych prawdziwych ewaluacji. Testy nie są oznaczone.
+
+### Q-53 [—] Próg bramki P3Net-gate (D-3 a)
+Karta `p3net.md` D-3 a mówi „prawdziwa ewaluacja tylko, gdy surogat przewiduje poprawę (z progiem)”, a karta
+`p3net-surrogate.md` (§1, wiersz „Bramka akceptacji na kwantylu predykcji”; §5 „bramka kwantylowa w stylu SA-P3-GOMEA /
+Bartnik”) — kwantyl. Nigdzie nie ma: (1) który kwantyl (stały? harmonogram α jak w Bartniku, γ = 0,999?); (2) kwantyl
+czego — predykcji dla rozwiązań ocenionych naprawdę (jak Z-B1′), predykcji w bieżącym poziomie, czy wartości w H_t;
+(3) czy warunek dotyczy obu celów naraz (jak Z-B1′), czy reguły D-1 na predykcjach (dominacja / remis / niezdominowanie
+przez archiwum); (4) co z krokiem, którego kandydat jest już w H_t — bramka pomijana (wartość znana za darmo, #35) czy
+stosowana. Testy W17 a)–c) są prawdziwe dla każdej bramki, która przy predykcji dominującej wszystko przepuszcza, a przy
+zdominowanej przez wszystko odrzuca, więc progu nie sprawdzają. Uwaga do (c): „archiwum elitarne” z D-1 b czytam jak
+karta („globalne archiwum niezdominowanych rozwiązań”) — niezdominowane spośród wszystkich wcześniejszych prawdziwych
+ewaluacji. Nie blokuje; jeśli próg ma być sprawdzany na poziomie 1, proszę o regułę w karcie (np. „Z-G1”), dopiszę test.
+
+**Rozstrzygnięte** (`v005-test-answers.md`, runda 10b; karta `p3net.md`, założenie **Z-G1** pod D-3): kwantyla nie ma;
+bramka = reguła D-1 b na przewidywanych celach (log) względem prawdziwych celów bieżącego rozwiązania i archiwum
+elitarnego (log); działa także dla kandydata w H_t; odczytanie archiwum w W17 c) poprawne. Test:
+`test_p3_canonical.py::test_ZG1_gate_passes_iff_predicted_objectives_satisfy_D1`.
+
+## Runda 10b (2026-11-17) — Z-G1, W-S11, W-R9
+
+Z-G1: predykcja z tabeli testu (tryb zależny od kandydata, wartość względem prawdziwych log-celów kotwicy); dla każdego
+kroku zmieniającego: kandydat spoza H_t oceniany naprawdę ⇔ bramka przepuszcza; `accepted` ⇔ bramka i D-1 b na
+prawdziwych wartościach; kotwica `predict_chain` = bieżące rozwiązanie; wszystkie przypadki z zadania wystąpiły.
+Porównanie „równe bieżącemu” zakłada, że implementacja liczy log tak samo jak `math.log` (przy różnicy o 1 ulp test by to
+pokazał). W-S11: pary rozpoznaję po wierszach `features(a, b)` (test sprawdza, że są parami różne); n = 20, 55 (≤ 3 000
+par) i 56, 80 (> 3 000); las porównany z `RandomForestRegressor().get_params()` z pominięciem `random_state`, `n_jobs`,
+`verbose`. W-R9: `config()` klasy bez parametrów. Nowych pytań brak.

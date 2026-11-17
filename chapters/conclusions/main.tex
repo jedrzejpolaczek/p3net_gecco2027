@@ -1,0 +1,37 @@
+% v005 (2026-11-17): discussion and conclusions for the "empirical study" narrative; numbers from the Results section.
+% Future work follows notes/archive/v005/plans/v005-plan.md ("Następna iteracja": P3-eLyMPuS with domain knowledge).
+\section{Discussion and Conclusions}
+\label{sec:conclusions}
+
+We measured where P3, a parameter-less linkage-learning optimiser, stands among the methods used for joint
+multi-objective architecture and hyperparameter search, and what a pairwise surrogate adds to it.
+
+\paragraph{The budget decides.} P3 is a poor choice for 50 or 100 evaluations: its first-improvement hill climber
+spends them on a few solutions before any linkage is used, and on JAHS-Bench-201 random search does better. With 200
+or 350 evaluations it is competitive on two of three JAHS-Bench-201 tasks and on three of the four FCNet tasks, with fronts that
+are strongest at the accurate end, while population-based evolutionary methods remain ahead on NAS-HPO-Bench-II. At
+small budgets the strongest arms are Gaussian-process methods and NSGANetV2, which also cost the most optimiser time;
+on a tabular benchmark that cost dominates a run, in real NAS it does not. A practitioner choosing P3 for this task
+should give it a few hundred evaluations, or start its first iterations from something other than one random solution
+at a time.
+
+\paragraph{The surrogate does not pay.} Up to 350 evaluations P3Net rarely reaches the mixing stage, so its equivalence
+to canonical P3 is mechanical; at 1\,000 evaluations the surrogate screens most mixing steps and still changes no
+tested comparison, while its own cost grows by more than an order of magnitude. This concerns one design---a pairwise
+regressor of fitness differences with linkage features---and these benchmarks. It agrees with the open problem that
+CS-GOMEA's authors name, that a surrogate should use the dependency structure in its own construction rather than
+only as features~\citep{dushatskiy2019csgomea}, and with eLyMPuS, which answers a comparison from stored ones only when the
+context of the discovered dependencies matches~\citep{przewozniczek2026lympus}. Here, too, eLyMPuS paid for discovering
+dependencies with evaluations that canonical P3 spent on search.
+
+\paragraph{The benchmarks.} The cell space shared by these benchmarks is small and redundant, and its good
+architectures are many~\citep{lopes2023nasbenchdesign}; retraining confirmed the tabular values to within about a
+point but could not separate the arms, whose selected architectures lie close together. A space where linkage matters
+more---larger, less redundant, or with stronger interactions between architecture and training---is where an
+advantage of this family would first show~\citep{denottelander2021localsearch,goldman2015fast}.
+
+\paragraph{Future work.} Two directions follow. First, giving P3's surrogate the dependencies that are already known
+in NAS and hyperparameter optimisation, as a starting dependency graph for eLyMPuS, so that it does not spend the
+budget rediscovering them; such a graph is a property of the type of search space, not of a dataset. Second, testing
+the family where evaluations are real training runs, where the optimiser's own cost no longer dominates and a
+budget of a few hundred evaluations is realistic only with a cheap optimiser.

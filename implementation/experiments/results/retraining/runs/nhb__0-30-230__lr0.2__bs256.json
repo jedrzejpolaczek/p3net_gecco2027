@@ -1,0 +1,100 @@
+{
+ "train_key": "nhb__0-30-230__lr0.2__bs256",
+ "search_space": "nas_hpo_bench_ii_v005",
+ "arch_str": "|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|skip_connect~0|none~1|nor_conv_3x3~2|",
+ "protocol": {
+  "epochs": 12,
+  "lr": 0.2,
+  "batch_size": 256,
+  "schedule": "cosine_per_epoch",
+  "seed": 222,
+  "augment_valid": true
+ },
+ "valid_acc": 83.2,
+ "test_acc": 84.03,
+ "params": 802426,
+ "wall_seconds": 691.5,
+ "epochs_log": [
+  {
+   "epoch": 1,
+   "train_loss": 1.5416643619537354,
+   "seconds": 32.2,
+   "valid_acc": 37.7
+  },
+  {
+   "epoch": 2,
+   "train_loss": 1.4145900011062622,
+   "seconds": 87.6,
+   "valid_acc": 48.456
+  },
+  {
+   "epoch": 3,
+   "train_loss": 1.1159405708312988,
+   "seconds": 142.9,
+   "valid_acc": 50.2
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.9098760485649109,
+   "seconds": 198.6,
+   "valid_acc": 62.12
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.702093780040741,
+   "seconds": 254.8,
+   "valid_acc": 61.924
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.764676034450531,
+   "seconds": 311.5,
+   "valid_acc": 71.468
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.5619224309921265,
+   "seconds": 367.8,
+   "valid_acc": 69.4
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.4077138900756836,
+   "seconds": 424.7,
+   "valid_acc": 76.38
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.4496815502643585,
+   "seconds": 480.6,
+   "valid_acc": 78.896
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.4008750915527344,
+   "seconds": 537.5,
+   "valid_acc": 80.496
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.3836445212364197,
+   "seconds": 593.3,
+   "valid_acc": 82.016
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.3006506860256195,
+   "seconds": 648.7,
+   "valid_acc": 83.2,
+   "test_acc": 84.03
+  }
+ ],
+ "split_sha256": "ea50dd54c7a9355d4bf7d3f7d969db880c07ed558e5c5bbf891635becb14a3ac",
+ "device": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+ "versions": {
+  "torch": "2.14.1+cu126",
+  "torchvision": "0.29.1+cu126",
+  "xautodl": "?",
+  "python": "3.12.10"
+ }
+}

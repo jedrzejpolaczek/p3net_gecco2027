@@ -218,7 +218,7 @@ zero-cost proxies jako przykład (nie widzą hiperparametrów, bo liczone są na
   | **razem** | | **56 348** |
 
   Preflight bez braków; test planu sprawdza m.in., że żaden punkt nie należy do dwóch etapów.
-- **Prerejestracja**: `notes/plans/v004-preregistration.md` (pytania Q1–Q7, seedy 1–30 eksploracyjne,
+- **Prerejestracja**: `notes/archive/v004-preregistration.md` (pytania Q1–Q7, seedy 1–30 eksploracyjne,
   31–60 potwierdzające, metryki, zamrożone fronty, protokół statystyczny, analizy opisowe).
   Zmiana protokołu względem v0.0.3: **test Manna–Whitneya zamiast sparowanego Wilcoxona** — przebiegi
   różnych ramion z tym samym seedem nie są parami; kod `stats/significance.py` do zmiany w fazie 5.

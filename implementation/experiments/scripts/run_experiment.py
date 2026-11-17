@@ -10,7 +10,7 @@ generic Runner (configured with stopping_rules.py's concrete StoppingRule)
 for one seed, and persists the resulting H_t (raw per-run observation log)
 under results/raw/.
 
-Reference: chapters/v003/results/main.tex ("Experimental Setup" as a
+Reference: chapters/archive/v003/results/main.tex ("Experimental Setup" as a
 whole).
 """
 

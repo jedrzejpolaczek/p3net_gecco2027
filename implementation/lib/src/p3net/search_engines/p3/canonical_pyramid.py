@@ -1,6 +1,6 @@
 """Canonical, single-individual-climbing P3 population pyramid + First-
 Improvement Hill Climber -- the population-management engine
-notes/plans/experiments-bartnik-plan.md (Faza 1) asks for as a sibling to
+notes/archive/experiments-bartnik-plan.md (Faza 1) asks for as a sibling to
 this project's own batch-bootstrap `pyramid.Pyramid`, so the two engines can
 be isolated against each other on the same search space and surrogate.
 
@@ -209,7 +209,7 @@ def climb(
     `rng`/`validity`, neither of which `climb` should need to know about).
     Every step AFTER the hill-climb (GOM sweeps, promotion) always uses
     real, multi-objective `fitness_fn` -- unchanged regardless of which
-    hill-climber ran first (notes/plans/experiments-przewozniczek-plan.md,
+    hill-climber ran first (notes/archive/experiments-przewozniczek-plan.md,
     Faza 3: "FIHC-eLyMPuS replaces the plain FIHC step", nothing else)."""
     if not pyramid.levels:
         raise ValueError("climb requires at least one existing level (call add_level first)")

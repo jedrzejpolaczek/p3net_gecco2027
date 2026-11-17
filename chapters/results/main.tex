@@ -1,0 +1,108 @@
+% v005 stage C draft (2026-11-17), narrative "empirical study" (author's decision 2026-11-16). Numbers from
+% notes/analysis-v005/reports/01 (tests), 02 (stage B), 03 (RNG), 04 (E1), all computed from
+% results/runs/c674c91e{,-vizier,-e1}/analysis/. Tables: _generated_*.tex (scripts/render_v005_tex.py,
+% scripts/analyze_e1_v005.py). Retraining (K10): reports/06, results/retraining/.
+
+\section{Results}
+\label{sec:results}
+
+All tests are those of the pre-registration: two-sided Mann--Whitney $U$ per (space, budget) cell, Holm--Bonferroni
+within the cell's family, Cliff's $\delta$ oriented so that positive favours P3Net, 30 seeds per arm. Counts of
+significant comparisons across cells are descriptive. The four primary spaces are JAHS-Bench-201 on CIFAR-10 (C10),
+Colorectal Histology (CRC) and Fashion-MNIST (FMN), measured by normalised hypervolume, and NAS-HPO-Bench-II (NHB),
+measured by IGD+ against its exact Pareto front.
+
+\paragraph{Where P3 stands (Q1).} Table~\ref{tab:v005-q1-jahs-c10} and its companions give $\delta$ of P3Net against
+the 17 comparison arms. The pattern is set by the budget more than by the space (Figure~\ref{fig:v005-rank-budget}). At $b = 50$ and $100$, P3Net is worse
+than 12--17 of the 17 arms on each JAHS space, random search included ($\delta$ between $-0.43$ and $-0.68$), and
+better than none; on NHB nearly all comparisons are not significant. At $b = 200$ and $350$ the picture reverses on
+CRC and FMN: P3Net is worse than no arm and better than 2--8 of the 14, and its median ranks first or second of 19
+arms in three of these four cells. C10 stays harder: at $b = 350$ P3Net is better than one arm and worse than four.
+On NHB at $b = 350$ it is better than three and worse than five, with population-based evolutionary methods
+(NSGANetV2, NSGA-III, SH-EMOA) ahead. Over all 16 cells, the arms most often better than P3Net are MO-BANANAS,
+NSGA-Net, NSGA-III and SH-EMOA (9 cells each) and NSGANetV2 (8). The front P3Net returns is strong at its accurate end
+and weaker at its cheap end: in the hypervolume decomposition on JAHS at $b = 350$ it ranks 7th, 3rd and 3rd of 24
+arms on the accurate end of C10, CRC and FMN, against 15th, 11th and 4th on the cheap end
+(Figure~\ref{fig:v005-fronts} shows the fronts of median runs in one such cell). The Gaussian-process
+arms, run only up to $b = 100$, are among the strongest arms at those budgets: OSS Vizier has the best median of the 22 arms in 11 of
+the 18 (space, budget) cells of all nine spaces (Table~\ref{tab:v005-s-gp}).
+
+\paragraph{What the surrogate contributes (Q2, Q3).} No comparison of P3Net with canonical P3, P3Net-gate or
+P3Net-nolink is significant (0 of 48; Table~\ref{tab:v005-q2-q3}), and P3Net is equivalent to its two variants at
+the margin $m = 0.33$ in all 16 cells. This equivalence is largely mechanical. P3Net spends its budget on the
+first-improvement hill climber and reaches the mixing stage late: the median number of mixing steps per run on the
+primary spaces is 0, 0, 1 and 8 at $b = 50$, 100, 200 and 350, so P3Net-gate and P3Net-nolink end with the same final
+value as P3Net in 94.6\,\% and 96.0\,\% of runs. With no mixing step P3Net \emph{is} canonical P3: the surrogate
+takes one draw from the random generator when it is built, which shifts the random stream, and with that offset
+removed the two produce identical histories (6 of 6 runs checked; without it, canonical P3 diverges in 5 of
+the 6). That P3Net and canonical P3 end identically in only
+5.8\,\% of runs therefore reflects mostly their different random streams, not surrogate decisions, and at these
+budgets the Q1 results describe canonical P3 as much as P3Net.
+
+\paragraph{The surrogate with room to act (E1, exploratory).} To see whether the surrogate matters once it acts, an
+exploratory addendum ran the four P3 variants and random search at $b = 1000$ on new seeds
+(Table~\ref{tab:v005-e1}). There P3Net takes 91--228 mixing steps per run, of which the surrogate screens 86--92\,\%,
+and runs are no longer copies of each other (3--17\,\% identical to canonical P3). Still, none of the 12
+comparisons is significant; at $m = 0.33$ nine are equivalent, two inconclusive, and one---canonical P3 on C10,
+$\delta = -0.26$---has a confidence interval excluding zero in canonical P3's favour, while its Mann--Whitney test is
+not significant ($p = 0.084$). The surrogate raises P3Net's optimiser time from 0--2.5\,s to 50--85\,s per run. All
+four variants beat random search ($\delta$ 0.92--1.00). Within the design tested, a pairwise regressor of fitness
+differences, the surrogate does not improve P3 on these benchmarks.
+
+\paragraph{Multi-fidelity methods (Q4).} With the budget counted in full-evaluation equivalents, P3Net is worse than
+all five multi-fidelity arms at $b = 50$ and $100$ on the three JAHS spaces (Table~\ref{tab:v005-q4-mf}). At
+$b = 350$ it is better than ASHA, Hyperband and MOSH-BANANAS on CRC and FMN, and on FMN also than SH-EMOA. On NHB most
+comparisons are not significant. Overall P3Net is better in 12, worse in 33 and indistinguishable in 35 of 80
+comparisons.
+
+\paragraph{Spaces outside the design loop (Q5).} On the four FCNet tasks, which played no part in designing P3Net,
+the balance is more favourable than on the primary spaces: P3Net is better in 64, worse in 36 and indistinguishable in
+148 of 248 comparisons (Table~\ref{tab:v005-q5-fcnet}). Protein structure is the exception, with 8 better against 21
+worse. The primary-space result therefore does not transfer as a single verdict; it holds per space and per budget.
+
+\paragraph{Optimiser cost (Q6).} Table~\ref{tab:v005-q6-costs} separates the optimiser's own time from the
+benchmark queries. The arms strongest at small budgets are also the most expensive
+(Figure~\ref{fig:v005-quality-cost}): at $b = 100$ on C10, OSS Vizier
+needs a median of 1\,160\,s per run and 14\,GB of memory (up to 25\,GB elsewhere), NSGANetV2 624\,s, and qNEHVI 160\,s, against 0.3\,s for
+P3Net; at $b = 350$ NSGANetV2 needs 2\,825\,s against 5.7\,s. On a tabular benchmark this cost dominates the run; in
+real NAS, where one evaluation is a training run, it does not---the ratio matters when evaluations are cheap.
+Measured in evaluations instead (Table~\ref{tab:v005-s-ctt}), P3Net is slow to reach a high target at $b = 350$: on
+JAHS it reaches 99\,\% of the best median final HV in 67, 87 and 90\,\% of runs on C10, CRC and FMN, after a
+median of 124, 135 and 127 evaluations, whereas most comparison arms reach it in all or nearly all runs and sooner
+(on FMN after about 20). On NHB the target is hard for every arm: 95\,\% of the best median IGD+ is reached by at
+most half of the runs of any arm (NSGANetV2) and by 3\,\% of P3Net's.
+
+\paragraph{NAS-Bench-201 (descriptive).} With energy as the second objective, NAS-Bench-201 separates methods: median
+IGD+ at $b = 350$ ranges from 0.0096 (NSGANetV2) to 0.0375 (MO-DSA), and the order of arms is stable between
+$b = 200$ and 350 (Spearman 0.95). P3Net ranks 12th of 19 at both budgets, between canonical P3 and random search
+(Table~\ref{tab:v005-s-nb201}).
+
+\paragraph{P3 with eLyMPuS (Q7, supplement).} P3 with the eLyMPuS surrogate is worse than canonical P3 in 33 of 36
+cells ($\delta$ down to $-0.38$; Table~\ref{tab:v005-s-q7}): at these budgets, discovering dependencies costs evaluations that canonical P3 spends
+on search.
+
+\paragraph{Secondary analyses (supplement).} The pre-registered descriptive analyses agree with the tests.
+The anytime curves (Figure~\ref{fig:v005-s-anytime}) show why P3 trails at small budgets: on JAHS, P3Net and canonical
+P3 rise late and in steps, the first evaluations going into hill-climbing single solutions, and they join the leading
+group only after about 110--160 evaluations on CRC and FMN, and on C10 end below the best arm. Simple regret of $f_1$ at $b = 350$
+(Table~\ref{tab:v005-s-regret}) matches the strong accurate end: on CRC and FMN P3Net's median regret (0.29 and
+0.15 percentage points) is within 0.01 of the lowest of any arm, while on C10 and NHB it lies inside the range of the
+other arms. The gap between test and validation error of the final fronts (Table~\ref{tab:v005-s-gap}) varies far more
+between spaces than between arms (CRC $+1.0$ to $+1.9$, NAS-Bench-201 $-2.4$ to $-2.9$ percentage points). Recomputing HV with the reference points
+$(1.05, 1.05)$ and $(1.2, 1.2)$ leaves the order of arms practically unchanged (Spearman $\ge 0.992$ in all 12 JAHS
+cells) and P3Net's rank unchanged (Table~\ref{tab:v005-s-hvsens}). Every arm exhausts its budget in every run except
+REINFORCE (15.8\,\% of runs; its policy converges and re-proposes one configuration), MO-DSA and MO-PSA (80.9 and
+88.0\,\%; 1\,000 iterations without a new evaluation), MOTPE (99.6\,\%) and SH-EMOA (MF), whose schedule ends just
+short of the budget (Table~\ref{tab:v005-s-budget}).
+
+\paragraph{Retraining the knee points.} To check that the tabular values carry over to real training, we retrained
+from scratch, once each, the knee point of every arm's median run at its largest budget on NAS-Bench-201 and
+NAS-HPO-Bench-II with the benchmarks' training protocols (40 trainings for 49 knee points, as arms with the same
+knee share one). On NAS-Bench-201 the retrained validation accuracy is close to the benchmark's value: mean
+difference $-0.10$ percentage points, median absolute difference 0.24, at most 0.56, and Spearman 0.75 between the
+two over the 16 trainings. On NAS-HPO-Bench-II it is lower by 0.88 points on average (median absolute difference 0.96,
+at most 3.4), with Spearman 0.92 over 24 trainings; our network for this benchmark is built with a different code
+base from the authors' (pre-registration \S8). Many knees lie close together (16 of 22 within 0.6 points on
+NAS-Bench-201; 13 of 27 within one point of P3Net's on NAS-HPO-Bench-II), so a single training per knee reorders them: P3Net's knee ranks 9th among the arms by the benchmark's value on both benchmarks and
+15th of 22 and 16th of 27 after retraining. The retraining thus confirms the benchmark values to within about a
+point, and does not separate the arms.

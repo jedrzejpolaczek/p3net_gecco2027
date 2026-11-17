@@ -1,0 +1,27 @@
+% v005 (2026-11-17): problem formulation, updated from v003 for the v005 objectives (benchmarks.md BM-1-BM-4,
+% decisions #31-#35). Claims: C-13/C-40 (f2 only from evaluation), C-38 (budget), C-39 (duplicates free).
+\section{Problem Formulation}
+\label{sec:problem-formulation}
+
+\paragraph{Search space.} A genotype $x = (x_1, \dots, x_n) \in \Lambda = \Lambda_1 \times \cdots \times \Lambda_n$
+assigns one categorical value to each of $n$ coordinates. In the cell-based spaces the first six coordinates choose
+the operation on each edge of the cell; the others choose training hyperparameters. Continuous hyperparameters are
+discretised once into a fixed grid, the same for every method, so $\Lambda$ is entirely categorical
+(Section~\ref{sec:setup}). Genotypes whose cell has no path from input to output are infeasible; we write
+$\Lambda^*$ for the feasible set.
+
+\paragraph{Objectives.} Each $x \in \Lambda^*$ has two objectives to minimise, $\mathbf{f}(x) = (f_1(x), f_2(x))$:
+$f_1$ is the validation error after full training and $f_2$ a cost of the model, both read from the benchmark at its
+highest fidelity. A method obtains $\mathbf{f}(x)$ only by evaluating $x$; in particular no method is given the cost
+$f_2$ of a configuration it has not evaluated. We seek the Pareto front
+\[
+    \mathcal{P}^* = \bigl\{ x \in \Lambda^* : \nexists\, x' \in \Lambda^*,\;
+    \mathbf{f}(x') \preceq \mathbf{f}(x) \wedge \mathbf{f}(x') \neq \mathbf{f}(x) \bigr\},
+\]
+where $\preceq$ is component-wise $\leq$, and $x'$ \emph{dominates} $x$ when $\mathbf{f}(x') \preceq \mathbf{f}(x)$
+and $\mathbf{f}(x') \neq \mathbf{f}(x)$.
+
+\paragraph{Budget.} The cost of a search is the number $b$ of full evaluations. The benchmarks answer
+deterministically, so a configuration evaluated again is answered from the run's history
+$\mathcal{H}_t = \{(x^{(i)}, \mathbf{f}(x^{(i)}))\}_{i=1}^{t}$ and costs nothing; a run stops at its $b$-th evaluation,
+even in the middle of an iteration. The result of a run is $\mathcal{H}_b$, from which its non-dominated set is taken.

@@ -4,9 +4,9 @@ scripts/run_experiment.py's output) into the paper's Results-section
 artifacts: the fixed-budget summary table and the convergence/Pareto/
 sensitivity/diagnostics figures. scripts/generate_report.py is the entry
 point that renders these into results/figures/ and results/tables/, in
-the order chapters/v003/results/main.tex promises.
+the order chapters/archive/v003/results/main.tex promises.
 
-Reference: chapters/v003/results/main.tex ("Findings" TODO block).
+Reference: chapters/archive/v003/results/main.tex ("Findings" TODO block).
 """
 
 from reporting._common import (

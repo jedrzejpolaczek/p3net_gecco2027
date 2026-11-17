@@ -1,0 +1,24 @@
+% v005 stage C draft (2026-11-17): paragraph on the compared methods, to join the v003 Related Work section.
+% Citations only for methods actually run in v005 (configs/pipeline/v005.yaml, v005-vizier.yaml). The P3/GOMEA
+% positioning paragraphs wait for the author's literature search (notes/archive/v005/plans/v005-todo.md, stage C).
+
+\paragraph{Compared methods.} The comparison covers the main families of multi-objective NAS and HPO optimisers,
+each in its published form or the closest available implementation. \emph{NAS-specific search:} NSGA-Net and
+NSGANetV2~\citep{lu2019nsganet,lu2020nsganetv2}, REINFORCE~\citep{williams1992reinforce,zoph2017nas} in the
+NAS-Bench-201 reference implementation~\citep{dong2020nasbench201} with the MONAS reward~\citep{hsu2018monas} ($\alpha = 0.75$), and regularised evolution~\citep{real2019regularized}.
+\emph{Linkage-learning and local search:} canonical P3~\citep{goldman2014parameterless}, P3 with
+eLyMPuS~\citep{przewozniczek2026lympus}, the surrogate-assisted P3-GOMEA variants MO-DSA and MO-PSA of
+Bartnik~\citep{bartnik2026evolutionary} (after~\citep{dushatskiy2021novelsurrogateassistedevolutionaryalgorithm}), and
+multi-objective local search~\citep{denottelander2021localsearch}. \emph{General evolutionary multi-objective
+algorithms:} NSGA-III~\citep{deb2014nsga3}, MOEA/D~\citep{zhang2007moead}, and SH-EMOA~\citep{guerreroviu2021bagofbaselines},
+which builds on SMS-EMOA~\citep{beume2007smsemoa}. \emph{Bayesian optimisation:} MO-BANANAS~\citep{guerreroviu2021bagofbaselines,white2021bananas},
+MOTPE~\citep{ozaki2022motpe} as implemented in Optuna~\citep{akiba2019optuna}, SMAC3 with
+ParEGO~\citep{lindauer2022smac3,knowles2006parego}, and three Gaussian-process methods: OSS
+Vizier~\citep{song2022ossvizier,song2024vizier}, and qNEHVI and qParEGO in BoTorch~\citep{daulton2021qnehvi,daulton2020qehvi,balandat2020botorch}.
+\emph{Multi-fidelity:} Hyperband~\citep{li2018hyperband}, ASHA~\citep{li2020asha} with the multi-objective promotion
+rule of MO-ASHA~\citep{schmucker2021moasha}, and the multi-fidelity versions of SH-EMOA, MO-BANANAS (MOSH-BANANAS),
+and MO-BOHB~\citep{guerreroviu2021bagofbaselines,falkner2018bohb}. Random search~\citep{bergstra2012random} is the
+reference point. Beyond JAHS-Bench-201 and NAS-HPO-Bench-II, the benchmarks are NAS-Bench-201 with energy on an
+edge GPU from HW-NAS-Bench as the second objective~\citep{dong2020nasbench201,li2021hwnasbench} and the four FCNet
+tabular tasks~\citep{klein2019tabular}. The experimental protocol follows the NAS best-practice
+checklist of Lindauer and Hutter~\citep{lindauer2020bestpractices}.

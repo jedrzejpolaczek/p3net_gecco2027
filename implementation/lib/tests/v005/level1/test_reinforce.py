@@ -241,3 +241,12 @@ def _empty_state_like(obj):
 def test_guard_rng_independence():
     assert random.Random(0).random() != random.Random(1).random()
     assert vals((1, 2)) == (1, 2)
+
+
+def test_WR9_default_configuration_is_monas_alpha_075():
+    """W-R9 (audit F10): the arm v005_reinforce is the class default --
+    MONAS reward with alpha = 0.75."""
+    m = make(_m().Reinforce, space_of([3] * 6), 50, 0)
+    cfg = m.config()
+    assert cfg["reward"] == "monas"
+    assert cfg["alpha"] == 0.75

@@ -1,0 +1,34 @@
+{
+ "train_key": "nhb__0-33-213__lr0.2__bs256",
+ "search_space": "nas_hpo_bench_ii_v005",
+ "arch_str": "|nor_conv_3x3~0|+|none~0|none~1|+|skip_connect~0|avg_pool_3x3~1|none~2|",
+ "protocol": {
+  "epochs": 1,
+  "lr": 0.2,
+  "batch_size": 256,
+  "schedule": "cosine_per_epoch",
+  "seed": 222,
+  "augment_valid": true
+ },
+ "valid_acc": 37.272,
+ "test_acc": 37.4,
+ "params": 316346,
+ "wall_seconds": 66.2,
+ "epochs_log": [
+  {
+   "epoch": 1,
+   "train_loss": 1.619349718093872,
+   "seconds": 26.4,
+   "valid_acc": 37.272,
+   "test_acc": 37.4
+  }
+ ],
+ "split_sha256": "ea50dd54c7a9355d4bf7d3f7d969db880c07ed558e5c5bbf891635becb14a3ac",
+ "device": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+ "versions": {
+  "torch": "2.14.1+cu126",
+  "torchvision": "0.29.1+cu126",
+  "xautodl": "?",
+  "python": "3.12.10"
+ }
+}
