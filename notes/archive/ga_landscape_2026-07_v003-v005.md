@@ -1,3 +1,6 @@
+> **ZARCHIWIZOWANE 2026-11-17** (zamknięcie v005). Aktualny stan i luka: `notes/literature.md`. Sekcje §1–§15 opisują
+> stan z lipca 2026 i tezy v003 (częściowo nieaktualne); §16–§16e — przeszukania po v005.
+
 # Krajobraz algorytmów genetycznych i (MO-)NAS — stan na 2026-07
 
 Notatka orientacyjna do pozycjonowania P3Net (P3 + surrogate predictor jako alternatywa dla NSGANetV2)

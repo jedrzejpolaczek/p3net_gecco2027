@@ -99,7 +99,7 @@ Do rozstrzygnięcia przez autora:
 
 1. **HPNAS-RL** (Adde, Gottschalk, arXiv:2610.36882): łączne NAS+HPO dla RL algorytmem genetycznym na NSGA-II (EMNAS);
    bez P3/GOMEA/linkage learning — **luki nie zawęża**. Opcjonalnie jedno zdanie w Related Work (wielokryterialny EA w
-   łącznym NAS+HPO poza benchmarkami). Notatka: `notes/ga_landscape_2026.md` §16e.
+   łącznym NAS+HPO poza benchmarkami). Notatka: `notes/literature.md`; szczegóły `notes/archive/ga_landscape_2026-07_v003-v005.md` §16e.
 2. **NAS-HPO-Bench-II-Plus** (IEEE Access 14, 2026; opublikowany 13.07.2026, **przed zamrożeniem prerejestracji v005**):
    rozszerza NHB2 o 6 typów hiperparametrów (ciągłe, dyskretne, kategoryczne), przestrzeń warunkową i ocenę na wielu
    urządzeniach; surogaty MLP (τ Kendalla 0.940). **Zrobione 2026-11-17:** uzasadnienie w Setup („We use

@@ -1,7 +1,7 @@
 % v005 stage C draft (2026-11-17): positioning of P3Net in the P3/GOMEA line. Replaces the v003 paragraphs
 % "Linkage learning and P3", "Surrogate-assisted linkage learning" and "Closest prior work"
 % (chapters/archive/v003/related_work/main.tex); the v003 pyramid figure (fig:p3-pyramid) can be reused unchanged.
-% Sources: notes/ga_landscape_2026.md §16-§16d (literature search 2026-11-16/17). Dahi et al. 2026 is described
+% Sources: notes/archive/ga_landscape_2026-07_v003-v005.md §16-§16d; notes/literature.md (literature search 2026-11-16/17). Dahi et al. 2026 is described
 % from its supplementary material only (main text not accessible). The sentence on the surrogate result follows the
 % current v005 + E1 results and is to be revised if the surrogate study continues.
 
@@ -33,8 +33,7 @@ variants, MO-DSA and MO-PSA, among our comparison arms.
 surrogate's failure to use linkage information in its own construction~\citep{dushatskiy2019csgomea}. LyMPuS builds
 the surrogate from the discovered linkage itself and validates it with P3 on NK landscapes, Ising spin glasses and
 Max3Sat; its empirical variant, eLyMPuS, discovers the dependency structure incrementally rather than assuming it
-known~\citep{przewozniczek2026lympus}, and related work constructs monotonic surrogates from recursive linkage
-discovery~\citep{przewozniczek2026monotonical}. P3Net's surrogate follows eLyMPuS in being relative and
+known~\citep{przewozniczek2026lympus}. P3Net's surrogate follows eLyMPuS in being relative and
 linkage-aware over an incompletely discovered structure, but regresses a continuous fitness difference between
 two solutions instead of making a discrete better/worse/ambiguous comparison, which places it closer to CS-GOMEA's
 learned model and gives up eLyMPuS's guarantee of recovering the comparison under monotonicity.
